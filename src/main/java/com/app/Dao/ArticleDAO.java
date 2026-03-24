@@ -12,9 +12,9 @@ public class ArticleDAO {
 
     public List<Article> findAll() throws SQLException{
         String sql = """
-                select * 
-                from public.articles
-                order by id asc;
+                SELECT id, name_article, description, amount, price,sold,apdated_at
+                FROM public.articles
+                ORDER BY name_article ASC 
                 """;
         List<Article> list = new ArrayList<>();
         try
@@ -34,9 +34,9 @@ public class ArticleDAO {
     // -------------------------------------------------------
 public Optional<Article> findById(int id) throws SQLException {
         String sql = """
-                select *
-                from public.articles
-                where id = ?;
+                SELECT id, name_article, description, amount, price,sold,apdated_at
+                FROM public.articles
+                WHERE id = ?;
         """;
         try (Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)){
@@ -54,10 +54,10 @@ public Optional<Article> findById(int id) throws SQLException {
     // -------------------------------------------------------
     public List<Article> findByName(String name) throws SQLException {
         String sql = """
-                select *
-                from public.articles
-                where lower(name_article) like lower(?);
-                order by name_article asc
+                SELECT id, name_article, description, amount, price,sold,apdated_at
+                FROM public.articles
+                WHERE LOWER(name_article) LIKE lower(?);
+                ORDER BY name_article ASC
         """;
         List<Article> list = new ArrayList<>();
         try (Connection con = ConnectionPool.getConnection();
@@ -75,9 +75,9 @@ public Optional<Article> findById(int id) throws SQLException {
     // -------------------------------------------------------
     public Article save(Article article) throws SQLException {
         String sql = """
-                insert into public.articles(name_article,amount, price,sold) 
-                values(?,?,?,?);
-                returning id, update_at
+                INSERT INTO public.articles(name_article, amount, price,sold) 
+                VALUES (?, ?, ?, ?)
+                RETURNING id, update_at
         """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
@@ -100,13 +100,13 @@ public Optional<Article> findById(int id) throws SQLException {
     // -------------------------------------------------------
     public boolean update(Article article) throws SQLException {
         String sql = """
-                update public.articles
-                set name_article = ?, 
+                UPDATE public.articles
+                SET name_article = ?, 
                 amount = ?, 
                 price = ?, 
-                sold = ?
-                update_at = now()
-                where id = ?
+                sold = ?,
+                update_at = NOW()
+                WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -119,7 +119,7 @@ public Optional<Article> findById(int id) throws SQLException {
         }
     }
         public boolean delete(int id) throws SQLException {
-        String sql = " delete from public.articles where id = ?";
+        String sql = " DELETE FROM public.articles WHERE id = ?";
 
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
@@ -130,10 +130,10 @@ public Optional<Article> findById(int id) throws SQLException {
 
     public List<Article> findBySold(boolean sold) throws SQLException {
         String sql = """
-                select *
-                from public.articles
-                where sold = ?;
-                order by name_article asc
+                SELECT id, name_article, description, amount, price,sold,apdated_at
+                FROM .articles
+                WHERE sold = ?
+                ORDER BY name_article ASC
         """;
         List<Article> list = new ArrayList<>();
         try (Connection con = ConnectionPool.getConnection();
@@ -150,6 +150,7 @@ public Optional<Article> findById(int id) throws SQLException {
         return new Article(
                 rs.getInt("id"),
                 rs.getString("name_article"),
+                rs.getString("description"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price"),
                 rs.getBoolean("sold"),

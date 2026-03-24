@@ -13,7 +13,9 @@ import java.util.List;
 public class ProfileDAO {
 
     public Profile findById(String id) throws SQLException{
-        String sql= "SELECT id, full_name,role, active FROM public.profile WHERE id = ?::uuid";
+        String sql= "SELECT id, full_name,rol, active " +
+                "FROM public.profile " +
+                "WHERE id = ?::uuid";
 
         try(Connection con = ConnectionPool.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)){
@@ -27,7 +29,7 @@ public class ProfileDAO {
         }
     }
     public List<Profile> findAll() throws SQLException{
-        String sql= "SELECT id, full_name,role, active FROM public.profile ORDER BY id ASC";
+        String sql= "SELECT id, full_name,rol, active FROM public.profile ORDER BY full_name ASC";
         List<Profile> list = new ArrayList<>();
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
@@ -52,7 +54,7 @@ public class ProfileDAO {
         return new Profile(
                 rs.getString("id"),
                 rs.getString("full_name"),
-                RolUser.valueOf(rs.getString("role")),
+                RolUser.valueOf(rs.getString("rol")),
                 rs.getBoolean("active")
         );
     }

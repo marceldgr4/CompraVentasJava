@@ -7,14 +7,19 @@ public class Article {
 
     private int           id;
     private String        nameArticle;
+    private String        description;
     private int           amount;
-    private BigDecimal price;
+    private BigDecimal    price;
     private boolean       sold;
     private LocalDateTime updatedAt;
 
-    public Article(int id, String nameArticle, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+    public Article(String trim, String trimmed, int i, BigDecimal bigDecimal, boolean selected) {
+    }
+
+    public Article(int id, String nameArticle, String description , int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
         this.id = id;
         this.nameArticle = nameArticle;
+        this.description = description;
         this.amount = amount;
         this.price = price;
         this.sold = sold;
@@ -35,6 +40,14 @@ public class Article {
 
     public void setNameArticle(String nameArticle) {
         this.nameArticle = nameArticle;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public int getAmount() {
@@ -69,14 +82,19 @@ public class Article {
         this.updatedAt = updatedAt;
     }
 
+
     public boolean hasStock(){
         return amount > 0;
     }
+
     public boolean canSell(){
         return sold && amount > 0;
     }
+
+
     @Override
     public String toString() {
-        return nameArticle +"| Stick:" + amount + "| Price: $ " + price + "| Sold:" + sold;
+
+        return nameArticle ;
     }
 }
