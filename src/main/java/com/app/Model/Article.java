@@ -13,8 +13,7 @@ public class Article {
     private boolean       sold;
     private LocalDateTime updatedAt;
 
-    public Article(String trim, String trimmed, int i, BigDecimal bigDecimal, boolean selected) {
-    }
+    public Article(){}
 
     public Article(int id, String nameArticle, String description , int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
         this.id = id;
@@ -24,6 +23,9 @@ public class Article {
         this.price = price;
         this.sold = sold;
         this.updatedAt = updatedAt;
+    }
+
+    public Article(String trim, String trim1, int i, BigDecimal bigDecimal, boolean selected) {
     }
 
     public int getId() {
