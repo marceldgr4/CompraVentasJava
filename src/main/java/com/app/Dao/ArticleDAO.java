@@ -12,7 +12,7 @@ public class ArticleDAO {
 
     public List<Article> findAll() throws SQLException{
         String sql = """
-                SELECT id, name_article, description, amount, price,sold,apdated_at
+                SELECT id, name_article, description, amount, price,sold,updated_at
                 FROM public.articles
                 ORDER BY name_article ASC 
                 """;
@@ -34,7 +34,7 @@ public class ArticleDAO {
     // -------------------------------------------------------
 public Optional<Article> findById(int id) throws SQLException {
         String sql = """
-                SELECT id, name_article, description, amount, price,sold,apdated_at
+                SELECT id, name_article, description, amount, price,sold,updated_at
                 FROM public.articles
                 WHERE id = ?;
         """;
@@ -54,9 +54,9 @@ public Optional<Article> findById(int id) throws SQLException {
     // -------------------------------------------------------
     public List<Article> findByName(String name) throws SQLException {
         String sql = """
-                SELECT id, name_article, description, amount, price,sold,apdated_at
+                SELECT id, name_article, description, amount, price,sold,updated_at
                 FROM public.articles
-                WHERE LOWER(name_article) LIKE lower(?);
+                WHERE LOWER(name_article) LIKE lower(?)
                 ORDER BY name_article ASC
         """;
         List<Article> list = new ArrayList<>();
@@ -77,7 +77,7 @@ public Optional<Article> findById(int id) throws SQLException {
         String sql = """
                 INSERT INTO public.articles(name_article, amount, price,sold) 
                 VALUES (?, ?, ?, ?)
-                RETURNING id, update_at
+                RETURNING id, updated_at
         """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
@@ -131,7 +131,7 @@ public Optional<Article> findById(int id) throws SQLException {
     public List<Article> findBySold(boolean sold) throws SQLException {
         String sql = """
                 SELECT id, name_article, description, amount, price,sold,apdated_at
-                FROM .articles
+                FROM public.articles
                 WHERE sold = ?
                 ORDER BY name_article ASC
         """;
@@ -160,10 +160,10 @@ public Optional<Article> findById(int id) throws SQLException {
 
     public boolean updateAmount(int id, int newAmount)  throws SQLException{
         String sql = """
-                update public.articles
-                set amount = ?;
-                update_at = now()
-                where id = ?;
+                UPDATE public.articles
+                SET amount = ?
+                update_at = NOW()
+                WHERE id = ?;
         """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
