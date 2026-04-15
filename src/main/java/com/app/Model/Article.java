@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public class Article {
 
     private int           id;
+    private  int          cliente_id;
     private String        nameArticle;
     private String        description;
     private int           amount;
@@ -15,8 +16,9 @@ public class Article {
 
     public Article(){}
 
-    public Article(int id, String nameArticle, String description , int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+    public Article(int id,int cliente_id, String nameArticle, String description , int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
         this.id = id;
+        this.cliente_id = cliente_id;
         this.nameArticle = nameArticle;
         this.description = description;
         this.amount = amount;
@@ -25,7 +27,7 @@ public class Article {
         this.updatedAt = updatedAt;
     }
 
-    public Article(String trim, String trim1, int i, BigDecimal bigDecimal, boolean selected) {
+    public Article(String trim1, int i, BigDecimal bigDecimal, boolean selected) {
     }
 
     public int getId() {
@@ -34,6 +36,13 @@ public class Article {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getCliente_id() {
+        return cliente_id;
+    }
+    public void setCliente_id(int cliente_id) {
+        this.cliente_id = cliente_id;
     }
 
     public String getNameArticle() {
