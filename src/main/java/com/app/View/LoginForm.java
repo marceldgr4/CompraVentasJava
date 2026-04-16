@@ -94,6 +94,31 @@ public class LoginForm extends JFrame {
             lblError.setText("Por favor, completa los campos.");
             return;
         }
+        lblError.setText("");
+        btnLogin.setEnabled(false);
+        btnLogin.setText("iniciando...");
+
+        SwingWorker<Void,Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                authService.Login(email,password);
+                return null;
+            }
+            @Override
+            protected void done() {
+                try{
+                    get();
+                    dispose();
+                    SwingUtilities.invokeLater(()->new MainFrame().setVisible(true));
+              }catch (Exception ex){
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    lblError.setText(ex.getMessage());
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Entrar");
+                }
+            }
+        };
+        worker.execute();
 
         // Aquí llamarías a tu authService (simulado por ahora)
         System.out.println("Login intent con: " + email);

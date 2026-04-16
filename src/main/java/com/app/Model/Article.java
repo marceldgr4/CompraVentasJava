@@ -5,18 +5,19 @@ import java.time.LocalDateTime;
 
 public class Article {
 
-    private int           id;
-    private  int          cliente_id;
-    private String        nameArticle;
-    private String        description;
-    private int           amount;
-    private BigDecimal    price;
-    private boolean       sold;
+    private int id;
+    private int cliente_id;
+    private String nameArticle;
+    private String description;
+    private int amount;
+    private BigDecimal price;
+    private boolean sold;
     private LocalDateTime updatedAt;
 
-    public Article(){}
+    public Article(String trim, String trimmed, int i, BigDecimal bigDecimal, boolean selected) {
+    }
 
-    public Article(int id,int cliente_id, String nameArticle, String description , int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+    public Article(int id, int cliente_id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
         this.id = id;
         this.cliente_id = cliente_id;
         this.nameArticle = nameArticle;
@@ -27,7 +28,13 @@ public class Article {
         this.updatedAt = updatedAt;
     }
 
-    public Article(String trim1, int i, BigDecimal bigDecimal, boolean selected) {
+    public Article(int id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+        this(0, 0, nameArticle, description, amount, price, sold, null);
+    }
+
+    public Article(int cliente_id, String nameArticle, String description, int amount,
+                   BigDecimal price, boolean sold) {
+        this(0, cliente_id, nameArticle, description, amount, price, sold, null);
     }
 
     public int getId() {
@@ -41,6 +48,7 @@ public class Article {
     public int getCliente_id() {
         return cliente_id;
     }
+
     public void setCliente_id(int cliente_id) {
         this.cliente_id = cliente_id;
     }
@@ -93,19 +101,14 @@ public class Article {
         this.updatedAt = updatedAt;
     }
 
-
-    public boolean hasStock(){
+    public boolean hasStock() {
         return amount > 0;
     }
-
-    public boolean canSell(){
+    public  boolean canSell(){
         return sold && amount > 0;
     }
-
-
     @Override
     public String toString() {
-
-        return nameArticle ;
+        return nameArticle;
     }
 }

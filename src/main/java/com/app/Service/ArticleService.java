@@ -117,7 +117,7 @@ public class ArticleService {
         requireAdmin("edit article");
         validateArticle(article);
         try{
-            boolean updated = articleDAO.update(article);
+            boolean updated = articleDAO.updated(article);
             if (!updated) {
                 throw new ServiceException("Error not find id the article "+article.getId());
             }
