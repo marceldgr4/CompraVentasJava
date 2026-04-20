@@ -81,6 +81,10 @@ public class SessionManager {
                 .orElseThrow(() -> new IllegalStateException("No active session"));
     }
 
+    public static SessionManager getInstance() {
+
+        return null;
+    }
 
 
     public static class Session

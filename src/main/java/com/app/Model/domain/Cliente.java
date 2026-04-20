@@ -1,5 +1,6 @@
 package com.app.Model.domain;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Cliente {
@@ -65,7 +66,7 @@ public class Cliente {
         return created_ad;
     }
 
-    public void setCreated_ad(Date created_ad) {
+    public void setCreated_ad(LocalDateTime created_ad) {
         this.created_ad = created_ad;
     }
 }
