@@ -1,6 +1,6 @@
 package com.app.Config;
 
-import com.app.Dao.ConnectionPool;
+import Infrastructure.DataBase.ConnectionPool;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

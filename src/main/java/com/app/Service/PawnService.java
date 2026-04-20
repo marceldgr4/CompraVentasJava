@@ -1,13 +1,12 @@
 package com.app.Service;
 
-import com.app.Dao.PawnDao;
-import com.app.Model.Pawn;
-import com.app.Model.SesionUser;
+import Infrastructure.security.SessionManager;
+import com.app.Model.Dao.PawnDao;
+import com.app.Model.domain.Pawn;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +16,7 @@ public class PawnService {
     private final PawnDao pawnDao = new PawnDao();
 
     public List<Pawn> getAll()  throws SQLException {
-        SesionUser session = SesionUser.getInstance();
+        SessionManager session = SessionManager.getInstance();
 
         if(session.isAdmin() || session.isEmployee()){
             return pawnDao.findAll();
@@ -34,7 +33,7 @@ public class PawnService {
 
         if(pawnOptional.isPresent()){
             Pawn pawn = pawnOptional.get();
-            SesionUser session = SesionUser.getInstance();
+            SessionManager session = SessionManager.getInstance();
             if(!session.isAdmin() && !pawn.getProfile_id().equals(session.getProfileId())){
                 throw new SecurityException("You are not allowed to access this pawn");
             }
@@ -46,7 +45,7 @@ public class PawnService {
      */
     public  List<Pawn>getActivePawns() throws SQLException {
         List<Pawn> allActivePawns = pawnDao.findActive();
-        SesionUser session = SesionUser.getInstance();
+        SessionManager session = SessionManager.getInstance();
         if(session.isAdmin() || session.isEmployee()){
             return allActivePawns;
         }else {
@@ -60,7 +59,7 @@ public class PawnService {
  */
     public List<Pawn> getOverduePawns() throws SQLException {
         List<Pawn> allOverduePawns = pawnDao.findOverdue();
-        SesionUser session = SesionUser.getInstance();
+        SessionManager session = SessionManager.getInstance();
         if(session.isAdmin() || session.isEmployee()){
             return allOverduePawns;
         }else {
@@ -76,7 +75,7 @@ public class PawnService {
      */
     public Pawn create(Pawn pawn) throws SQLException {
         validatePawn(pawn);
-        SesionUser session = SesionUser.getInstance();
+        SessionManager session = SessionManager.getInstance();
 
         if (pawn.getPawn_date() == null) {
             pawn.setPawn_date(LocalDate.now());
@@ -94,7 +93,7 @@ public class PawnService {
         // verificar permsisos
         Optional<Pawn> existing = pawnDao.findById(pawn.getId());
         if (existing.isPresent()) {
-            SesionUser session = SesionUser.getInstance();
+            SessionManager session = SessionManager.getInstance();
             if (!session.isAdmin() && !existing.get().getProfile_id().equals(session.getProfileId())) {
                 throw new SecurityException("You are not allowed to access this pawn");
             }
@@ -130,7 +129,7 @@ public class PawnService {
           * @throws SecurityException si no es Admin
           */
          public void markAsExpired(int id) throws SQLException{
-             if (!SesionUser.getInstance().isAdmin()) {
+             if (!SessionManager.getInstance().isAdmin()) {
                  throw new SecurityException("Only the admin can mark a pawned item as expired.");
              }
              boolean updated = pawnDao.markAsExpired(id);
@@ -145,7 +144,7 @@ public class PawnService {
      * @return Cantidad de empeños marcados como expirados
      */
     public int processOverduePawns() throws SQLException {
-        if(!SesionUser.getInstance().isAdmin()){
+        if(!SessionManager.getInstance().isAdmin()){
             throw new SecurityException("You are not allowed to access this pawn");
         }
         return pawnDao.expireOverduePawns();
@@ -156,7 +155,7 @@ public class PawnService {
      * @throws SecurityException si no es Admin
      */
      public void delete(int id) throws SQLException {
-        if (!SesionUser.getInstance().isAdmin()) {
+        if (!SessionManager.getInstance().isAdmin()) {
             throw new SecurityException("Only the admin can mark a artcile pawned item as deleted.");
         }
         boolean deleted = pawnDao.delete(id);

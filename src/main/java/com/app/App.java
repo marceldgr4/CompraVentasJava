@@ -1,7 +1,6 @@
 package com.app;
 
-import com.app.Config.ConexionVerificador;
-import com.app.View.LoginForm;
+import com.app.UI.Frame.LoginFrame;
 
 import javax.swing.*;
 
@@ -13,7 +12,7 @@ public class App {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception ignored) {}
-            new LoginForm().setVisible(true);
+            new LoginFrame().setVisible(true);
         });
     }
 }

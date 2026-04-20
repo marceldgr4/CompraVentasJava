@@ -1,9 +1,9 @@
 package com.app.Service;
 
-import com.app.Dao.ArticleDAO;
+import Infrastructure.security.SessionManager;
+import com.app.Model.Dao.ArticleDAO;
 
-import com.app.Model.Article;
-import com.app.Model.SesionUser;
+import com.app.Model.domain.Article;
 
 import java.math.BigDecimal;
 
@@ -106,7 +106,7 @@ public class ArticleService {
     }
 
     private void requireAdmin(String accion) throws ServiceException {
-        if (!SesionUser.getInstance().isAdmin()) {
+        if (!SessionManager.getInstance().isAdmin()) {
             throw new ServiceException("You are not allowed to perform this operation" + accion + "alone the admin can created new articles or items ");
         }
     }

@@ -1,7 +1,7 @@
 package com.app.Service;
 
-import com.app.Dao.ProfileDAO;
-import com.app.Model.Profile;
+import com.app.Model.Dao.ProfileDAO;
+import com.app.Model.domain.Profile;
 
 import java.sql.SQLException;
 import java.util.List;
