@@ -1,13 +1,13 @@
 package com.app.Service;
 
-import com.app.Dao.ProfileDAO;
-import com.app.Model.Profile;
+import com.app.Model.Dao.ProfileDao;
+import com.app.Model.domain.Profile;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class ProfileService {
-    private final ProfileDAO profileDAO = new ProfileDAO();
+    private final ProfileDao profileDAO = new ProfileDao();
 
     public Profile findById(String id) throws ServiceException {
         try {

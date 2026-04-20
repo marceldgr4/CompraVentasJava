@@ -1,9 +1,9 @@
 package com.app.Service;
 
 
+import Infrastructure.security.SessionManager;
 import com.app.Config.AppConfig;
-import com.app.Model.Profile;
-import com.app.Model.SesionUser;
+import com.app.Model.domain.Profile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,7 +49,7 @@ public class AuthService {
                 throw new AuthException("User disable. call Admin");
             }
 
-            SesionUser.getInstance().start(
+            SessionManager.getInstance().startSession(
                     userId,
                     profile.getFullName(),
                     profile.getRol(),
@@ -66,7 +66,7 @@ public class AuthService {
 
     // Register the employees(only admin)
     public void registerEmployee(String email, String password, String full_name) throws AuthException {
-        if (!SesionUser.getInstance().isAdmin()) {
+        if (!SessionManager.getInstance().isAdmin()) {
             throw new AuthException("Only the admin can register employees");
         }
 
@@ -97,7 +97,7 @@ public class AuthService {
 
     //LOGOUT
     public void logout() {
-        String token = SesionUser.getInstance().getAccessToken();
+        String token = SessionManager.getInstance().getAccessToken();
         if (token == null) {
             return;
         }
@@ -114,7 +114,7 @@ public class AuthService {
         } catch (Exception ignored) {
         }
 
-        SesionUser.getInstance().close();
+        SessionManager.getInstance().endSession();
     }
 
     public static class AuthException extends Exception {
