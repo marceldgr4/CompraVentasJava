@@ -1,14 +1,10 @@
 package com.app.Service;
 
 import Infrastructure.security.SessionManager;
-import com.app.Model.Dao.ArticleDAO;
-
+import com.app.Model.Dao.ArticleDao;
 import com.app.Model.domain.Article;
-
 import java.math.BigDecimal;
-
 import java.sql.SQLException;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +18,7 @@ public class ArticleService {
         }
     }
 
-    private final ArticleDAO articleDAO = new ArticleDAO();
+    private final ArticleDao articleDAO = new ArticleDao();
 
     // -------------------------------------------------------
     // READ — lista completa del inventario

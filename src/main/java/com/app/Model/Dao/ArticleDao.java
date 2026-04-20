@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ArticleDAO {
+public class ArticleDao {
 
     public List<Article> findAll() throws SQLException {
         String sql = """

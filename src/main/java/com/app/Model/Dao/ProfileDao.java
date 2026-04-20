@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfileDAO {
+public class ProfileDao {
 
     public Profile findById(String id) throws SQLException{
         String sql= "SELECT id, full_name,rol, active " +

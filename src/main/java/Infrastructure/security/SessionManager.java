@@ -80,7 +80,9 @@ public class SessionManager {
                 .map(s -> s.refreshToken)
                 .orElseThrow(() -> new IllegalStateException("No active session"));
     }
-    
+
+
+
     public static class Session
     {
         public final String profileId;

@@ -49,7 +49,7 @@ public class AuthService {
                 throw new AuthException("User disable. call Admin");
             }
 
-            SessionManager.getInstance().start(
+            SessionManager.getInstance().startSession(
                     userId,
                     profile.getFullName(),
                     profile.getRol(),
@@ -114,7 +114,7 @@ public class AuthService {
         } catch (Exception ignored) {
         }
 
-        SessionManager.getInstance().close();
+        SessionManager.getInstance().endSession();
     }
 
     public static class AuthException extends Exception {
