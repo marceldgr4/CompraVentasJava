@@ -2,12 +2,12 @@ package Infrastructure.async;
 
 import javax.swing.*;
 
-public abstract class AsnycTaskExecutor<T> extends SwingWorker<T, Void> {
+public abstract class AsyncTaskExecutor<T> extends SwingWorker<T, Void> {
     private final  Runnable onStart;
     private final OnSuccess<T> onSuccess;
     private final OnError onError;
 
-    public AsnycTaskExecutor(Runnable onStart, OnSuccess<T> onSuccess, OnError onError) {
+    public AsyncTaskExecutor(Runnable onStart, OnSuccess<T> onSuccess, OnError onError) {
         this.onStart = onStart;
         this.onSuccess = onSuccess;
         this.onError = onError;

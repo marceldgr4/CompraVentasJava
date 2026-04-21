@@ -97,7 +97,7 @@ public class AuthService {
 
     //LOGOUT
     public void logout() {
-        String token = SessionManager.getInstance().getAccessToken();
+        String token = SessionManager.getAccessToken();
         if (token == null) {
             return;
         }
@@ -114,7 +114,7 @@ public class AuthService {
         } catch (Exception ignored) {
         }
 
-        SessionManager.getInstance().endSession();
+        SessionManager.endSession();
     }
 
     public static class AuthException extends Exception {

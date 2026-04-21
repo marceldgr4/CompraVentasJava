@@ -71,4 +71,8 @@ public abstract class ModernFieldBase extends JTextField {
         this.placeholder = placeholder;
         repaint();
     }
+
+    protected char[] getPassword() {
+        
+    }
 }

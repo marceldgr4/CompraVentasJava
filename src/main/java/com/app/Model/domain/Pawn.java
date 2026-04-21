@@ -25,8 +25,8 @@ public class Pawn {
     public Pawn() {}
 
     // Constructor general sin ID ni timestamps (para crear)
-    public Pawn(String profile_id, int article_id, int cliente_id, int amount,
-                BigDecimal price, LocalDate pawn_date, LocalDate return_date, 
+    public Pawn(boolean profile_id, int article_id, int cliente_id, int amount,
+                BigDecimal price, LocalDate pawn_date, LocalDate return_date,
                 boolean expired, boolean returned) {
         this.profile_id = profile_id;
         this.article_id = article_id;
