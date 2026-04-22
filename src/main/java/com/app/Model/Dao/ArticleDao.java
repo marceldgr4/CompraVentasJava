@@ -174,11 +174,13 @@ public class ArticleDao {
     private Article mapRow(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("updated_at");
         return new Article(
+                rs.getInt("id"),
                 rs.getString("name_article"),
                 rs.getString("description"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price"),
-                rs.getBoolean("sold")
+                rs.getBoolean("sold"),
+                ts != null ? ts.toLocalDateTime() : null
         );
     }
 }

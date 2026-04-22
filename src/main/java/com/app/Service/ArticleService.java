@@ -3,21 +3,13 @@ package com.app.Service;
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ArticleDao;
 import com.app.Model.domain.Article;
+import com.app.Service.exceptions.ServiceException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ArticleService {
-    // -------------------------------------------------------
-    // Excepción propia del service
-    // -------------------------------------------------------
-    public static class ServiceException extends Exception {
-        public ServiceException(String message) {
-            super(message);
-        }
-    }
-
     private final ArticleDao articleDAO = new ArticleDao();
 
     // -------------------------------------------------------

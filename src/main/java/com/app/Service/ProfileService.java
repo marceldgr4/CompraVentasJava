@@ -1,5 +1,6 @@
 package com.app.Service;
 
+import com.app.Service.exceptions.ServiceException;
 import com.app.Model.Dao.ProfileDao;
 import com.app.Model.domain.Profile;
 
@@ -39,9 +40,4 @@ public class ProfileService {
         }
     }
 
-    public static class ServiceException extends Exception {
-        public ServiceException(String message) {
-            super(message);
-        }
-    }
 }

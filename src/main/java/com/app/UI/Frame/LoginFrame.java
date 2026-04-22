@@ -26,7 +26,7 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle("CompraVenta — Iniciar sesión");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(450, 600);
+        setSize(1050, 650);
         setLocationRelativeTo(null);
         setResizable(false);
 

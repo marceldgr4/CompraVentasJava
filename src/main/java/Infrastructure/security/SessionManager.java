@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SessionManager {
 
-    private static final ThreadLocal<Session> CURRENT_SESSION =new ThreadLocal<>();
+    private static Session currentSession = null;
     private static final ReadWriteLock SESSION_LOCK = new ReentrantReadWriteLock();
 
     private SessionManager() {}
@@ -50,7 +50,7 @@ public class SessionManager {
             String refreshToken) {
         SESSION_LOCK.writeLock().lock();
         try{
-           CURRENT_SESSION.set(new Session(profileId, fullName, rol, accessToken, refreshToken));
+           currentSession = new Session(profileId, fullName, rol, accessToken, refreshToken);
         } finally {
             SESSION_LOCK.writeLock().unlock();
         }
@@ -61,7 +61,7 @@ public class SessionManager {
     public static void endSession() {
         SESSION_LOCK.writeLock().lock();
         try{
-            CURRENT_SESSION.remove();
+            currentSession = null;
         }finally {
             SESSION_LOCK.writeLock().unlock();
         }
@@ -70,7 +70,7 @@ public class SessionManager {
     public static Optional<Session> getCurrentSession(){
         SESSION_LOCK.readLock().lock();
     try{
-        return Optional.ofNullable(CURRENT_SESSION.get());
+        return Optional.ofNullable(currentSession);
     }finally {
         SESSION_LOCK.readLock().unlock();
         }
