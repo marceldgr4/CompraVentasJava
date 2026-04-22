@@ -1,6 +1,5 @@
 package Infrastructure.DataBase;
 
-import Infrastructure.DataBase.ConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

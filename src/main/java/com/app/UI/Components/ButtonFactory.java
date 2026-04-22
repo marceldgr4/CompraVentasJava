@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class ButtonFactory {
 
-    public static JButton createPrimaryButton(String text) {
+    public static JButton createPrimaryButton(String text, Object o) {
         return createButton(text, UIConstants.PRIMARY_COLOR);
     }
 

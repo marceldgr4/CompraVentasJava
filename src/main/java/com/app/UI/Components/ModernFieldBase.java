@@ -61,7 +61,7 @@ public abstract class ModernFieldBase extends JTextField {
 
     /**
      * Obtiene el contenido del campo.
-     * Override en subclases (ej: PasswordField usa getPassword()).
+     * Override en subclases.
      */
     protected String getTextContent() {
         return getText();
@@ -70,9 +70,5 @@ public abstract class ModernFieldBase extends JTextField {
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
         repaint();
-    }
-
-    protected char[] getPassword() {
-        
     }
 }

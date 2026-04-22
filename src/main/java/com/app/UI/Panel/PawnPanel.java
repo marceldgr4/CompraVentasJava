@@ -5,13 +5,13 @@ import com.app.Model.domain.Pawn;
 import com.app.Service.ArticleService;
 import com.app.Service.ClienteService;
 import com.app.Service.PawnService;
+import com.app.Service.exceptions.ServiceException;
 import com.app.UI.dialogs.PawnDialog;
 import java.util.List;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
 import static com.app.UI.Components.ButtonFactory.createButton;
@@ -298,7 +298,7 @@ public class PawnPanel extends JPanel {
         int id = (int) tableModel.getValueAt(row, 0);  // ✅ Usar tableModel
         try {
             return pawnService.getById(id).orElse(null);
-        } catch (SQLException e) {
+        } catch (ServiceException e) {
             showError("Error loading pawn: " + e.getMessage());
             return null;
         }
@@ -537,8 +537,9 @@ public class PawnPanel extends JPanel {
         try {
             var totalValue = pawnService.getTotalActiveValues();
             lblTotal.setText("Total Active Value: $" + totalValue);
-        } catch (SQLException e) {
+        } catch (ServiceException e) {
             lblTotal.setText("Total: Error");
+            // Se podría loguear el error aquí también
         }
     }
 

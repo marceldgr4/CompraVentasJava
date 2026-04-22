@@ -1,7 +1,6 @@
 package Infrastructure.logging;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Fábrica de loggers para el sistema de compraventa/empeño.
@@ -10,14 +9,17 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Uso:
  * <pre>{@code
- *   private static final Logger log = AppLoggerFactory.getLogger(MiClase.class);
+ *   private static final Logger log = LoggerFactory.getLogger(MiClase.class);
  *   log.info("Mensaje de información");
  *   log.error("Error inesperado", exception);
  * }</pre>
+ *
+ * <p>Nota: esta clase se llama igual que {@code org.slf4j.LoggerFactory}, por eso
+ * se usa el nombre completamente calificado internamente para evitar la colisión.
  */
-public final class AppLoggerFactory {
+public final class LoggerFactory {
 
-    private AppLoggerFactory() {
+    private LoggerFactory() {
         // Clase utilitaria: no instanciar
     }
 
@@ -28,7 +30,7 @@ public final class AppLoggerFactory {
      * @return instancia de {@link Logger}
      */
     public static Logger getLogger(Class<?> clazz) {
-        return LoggerFactory.getLogger(clazz);
+        return org.slf4j.LoggerFactory.getLogger(clazz);
     }
 
     /**
@@ -38,6 +40,6 @@ public final class AppLoggerFactory {
      * @return instancia de {@link Logger}
      */
     public static Logger getLogger(String name) {
-        return LoggerFactory.getLogger(name);
+        return org.slf4j.LoggerFactory.getLogger(name);
     }
 }

@@ -17,13 +17,13 @@ public class Article {
     private boolean sold;
     private LocalDateTime updatedAt;
 
-    public Article() {}
+    public Article(int id, String name, String desc, int amount, BigDecimal bigDecimal, boolean sold, Object o) {}
 
     /**
      * Constructor completo (usado al mapear desde la base de datos).
      */
-    public Article(int id, int clienteId, String nameArticle, String description,
-                   int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+    public Article(String nameArticle, String description,
+                   int amount, BigDecimal price, boolean sold) {
         this.id          = id;
         this.clienteId   = clienteId;
         this.nameArticle = nameArticle;
@@ -39,7 +39,7 @@ public class Article {
      */
     public Article(int clienteId, String nameArticle, String description,
                    int amount, BigDecimal price, boolean sold) {
-        this(0, clienteId, nameArticle, description, amount, price, sold, null);
+        this(nameArticle, description, amount, price, sold);
     }
 
     // ---- Getters / Setters ----------------------------------------

@@ -25,7 +25,7 @@ public class Pawn {
     private String articleName;
     private String clienteName;
 
-    public Pawn() {}
+    public Pawn(boolean admin, int id, int clienteId, int amount, BigDecimal price, LocalDate pawnDate, LocalDate returnDate, boolean expired, boolean returned) {}
 
     /**
      * Constructor de creación (sin id ni timestamps).

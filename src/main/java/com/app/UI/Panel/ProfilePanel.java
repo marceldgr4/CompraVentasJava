@@ -1,4 +1,96 @@
 package com.app.UI.Panel;
 
-public class ProfilePanel {
+import Infrastructure.security.SessionManager;
+import com.app.Model.domain.Pawn; // Placeholder if needed
+import com.app.Service.AuthService;
+import com.app.UI.Components.ButtonFactory;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+
+/**
+ * Panel para la gestión de Perfiles de Usuario (Empleados).
+ * Solo accesible por Administradores.
+ */
+public class ProfilePanel extends JPanel {
+
+    private DefaultTableModel tableModel;
+    private JTable table;
+    private JLabel lblStatus;
+
+    public ProfilePanel() {
+        if (!SessionManager.isAdmin()) {
+            setLayout(new BorderLayout());
+            add(new JLabel("Acceso Denegado: Solo administradores pueden ver este panel.", SwingConstants.CENTER));
+            return;
+        }
+        initComponents();
+        loadProfiles();
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout(0, 16));
+        setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        setBackground(new Color(245, 247, 250));
+
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
+        JLabel lblTitle = new JLabel("Configuración de Cuentas / Perfiles");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitle.setForeground(new Color(30, 42, 74));
+
+        JButton btnAdd = ButtonFactory.createPrimaryButton("Registrar Nuevo Empleado", null);
+        btnAdd.addActionListener(e -> showCreateProfileDialog());
+
+        header.add(lblTitle, BorderLayout.WEST);
+        header.add(btnAdd, BorderLayout.EAST);
+
+        // Table
+        String[] columns = {"ID", "Nombre Completo", "Rol", "Estado", "Última Conexión"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        table = new JTable(tableModel);
+        table.setRowHeight(40);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+
+        // Footer
+        lblStatus = new JLabel("Gestiona los permisos y accesos del personal.");
+        lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblStatus.setForeground(Color.GRAY);
+
+        add(header, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(lblStatus, BorderLayout.SOUTH);
+    }
+
+    private void loadProfiles() {
+        // En un sistema real, aquí llamaríamos a un ProfileService.
+        // Por ahora, mostraremos un placeholder informativo.
+        tableModel.addRow(new Object[]{
+            "f47ac10b...", 
+            SessionManager.getInstance().getFullName(), 
+            "ADMIN", 
+            "ACTIVO", 
+            "Hoy 10:20 AM"
+        });
+        
+        lblStatus.setText("Nota: La integración con Supabase Management para perfiles masivos se habilitará en la Fase 2.");
+    }
+
+    private void showCreateProfileDialog() {
+        JOptionPane.showMessageDialog(this, 
+            "Para registrar un nuevo empleado, use la función de Registro de Supabase Auth.", 
+            "Gestión de Usuarios", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
 }
