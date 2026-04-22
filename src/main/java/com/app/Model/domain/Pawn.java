@@ -4,70 +4,96 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Representa un artículo empeñado en el sistema.
+ */
 public class Pawn {
     private int id;
-    private String profile_id;
-    private int article_id;
-    private int cliente_id;
+    private String profileId;
+    private int articleId;
+    private int clienteId;
     private int amount;
     private BigDecimal price;
-    private LocalDate pawn_date;
-    private LocalDate return_date;
+    private LocalDate pawnDate;
+    private LocalDate returnDate;
     private boolean expired;
     private boolean returned;
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
-    // Campos adicionales para los JOINs desde la Base de Datos
-    private String profile_name;
-    private String article_name;
-    private String cliente_name;
+    // Campos adicionales cargados mediante JOIN
+    private String profileName;
+    private String articleName;
+    private String clienteName;
 
     public Pawn() {}
 
-    // Constructor general sin ID ni timestamps (para crear)
-    public Pawn(boolean profile_id, int article_id, int cliente_id, int amount,
-                BigDecimal price, LocalDate pawn_date, LocalDate return_date,
+    /**
+     * Constructor de creación (sin id ni timestamps).
+     *
+     * @param profileId  UUID del empleado que registra el empeño
+     * @param articleId  ID del artículo empeñado
+     * @param clienteId  ID del cliente
+     * @param amount     Cantidad de unidades
+     * @param price      Precio unitario del empeño
+     * @param pawnDate   Fecha de empeño
+     * @param returnDate Fecha límite de devolución
+     * @param expired    Si el plazo ya expiró
+     * @param returned   Si el artículo fue devuelto
+     */
+    public Pawn(String profileId, int articleId, int clienteId, int amount,
+                BigDecimal price, LocalDate pawnDate, LocalDate returnDate,
                 boolean expired, boolean returned) {
-        this.profile_id = profile_id;
-        this.article_id = article_id;
-        this.cliente_id = cliente_id;
-        this.amount = amount;
-        this.price = price;
-        this.pawn_date = pawn_date;
-        this.return_date = return_date;
-        this.expired = expired;
-        this.returned = returned;
+        this.profileId   = profileId;
+        this.articleId   = articleId;
+        this.clienteId   = clienteId;
+        this.amount      = amount;
+        this.price       = price;
+        this.pawnDate    = pawnDate;
+        this.returnDate  = returnDate;
+        this.expired     = expired;
+        this.returned    = returned;
     }
 
-    // Constructor completo mapeado desde la base de datos
-    public Pawn(int id, String profile_id, int article_id, int cliente_id,
-                int amount, BigDecimal price, LocalDate pawn_date,
-                LocalDate return_date, boolean expired, boolean returned, 
-                LocalDateTime updated_at) {
-        this.id = id;
-        this.profile_id = profile_id;
-        this.article_id = article_id;
-        this.cliente_id = cliente_id;
-        this.amount = amount;
-        this.price = price;
-        this.pawn_date = pawn_date;
-        this.return_date = return_date;
-        this.expired = expired;
-        this.returned = returned;
-        this.updated_at = updated_at;
+    /**
+     * Constructor completo mapeado desde la base de datos.
+     */
+    public Pawn(int id, String profileId, int articleId, int clienteId,
+                int amount, BigDecimal price, LocalDate pawnDate,
+                LocalDate returnDate, boolean expired, boolean returned,
+                LocalDateTime updatedAt) {
+        this(profileId, articleId, clienteId, amount, price, pawnDate, returnDate, expired, returned);
+        this.id        = id;
+        this.updatedAt = updatedAt;
     }
+
+    // ---- Getters / Setters ----------------------------------------
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public String getProfile_id() { return profile_id; }
-    public void setProfile_id(String profile_id) { this.profile_id = profile_id; }
+    public String getProfileId() { return profileId; }
+    public void setProfileId(String profileId) { this.profileId = profileId; }
 
-    public int getArticle_id() { return article_id; }
-    public void setArticle_id(int article_id) { this.article_id = article_id; }
+    /** @deprecated Use {@link #getProfileId()} */
+    @Deprecated public String getProfile_id() { return profileId; }
+    /** @deprecated Use {@link #setProfileId(String)} */
+    @Deprecated public void setProfile_id(String profileId) { this.profileId = profileId; }
 
-    public int getCliente_id() { return cliente_id; }
-    public void setCliente_id(int cliente_id) { this.cliente_id = cliente_id; }
+    public int getArticleId() { return articleId; }
+    public void setArticleId(int articleId) { this.articleId = articleId; }
+
+    /** @deprecated Use {@link #getArticleId()} */
+    @Deprecated public int getArticle_id() { return articleId; }
+    /** @deprecated Use {@link #setArticleId(int)} */
+    @Deprecated public void setArticle_id(int articleId) { this.articleId = articleId; }
+
+    public int getClienteId() { return clienteId; }
+    public void setClienteId(int clienteId) { this.clienteId = clienteId; }
+
+    /** @deprecated Use {@link #getClienteId()} */
+    @Deprecated public int getCliente_id() { return clienteId; }
+    /** @deprecated Use {@link #setClienteId(int)} */
+    @Deprecated public void setCliente_id(int clienteId) { this.clienteId = clienteId; }
 
     public int getAmount() { return amount; }
     public void setAmount(int amount) { this.amount = amount; }
@@ -75,11 +101,21 @@ public class Pawn {
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
-    public LocalDate getPawn_date() { return pawn_date; }
-    public void setPawn_date(LocalDate pawn_date) { this.pawn_date = pawn_date; }
+    public LocalDate getPawnDate() { return pawnDate; }
+    public void setPawnDate(LocalDate pawnDate) { this.pawnDate = pawnDate; }
 
-    public LocalDate getReturn_date() { return return_date; }
-    public void setReturn_date(LocalDate return_date) { this.return_date = return_date; }
+    /** @deprecated Use {@link #getPawnDate()} */
+    @Deprecated public LocalDate getPawn_date() { return pawnDate; }
+    /** @deprecated Use {@link #setPawnDate(LocalDate)} */
+    @Deprecated public void setPawn_date(LocalDate pawnDate) { this.pawnDate = pawnDate; }
+
+    public LocalDate getReturnDate() { return returnDate; }
+    public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
+
+    /** @deprecated Use {@link #getReturnDate()} */
+    @Deprecated public LocalDate getReturn_date() { return returnDate; }
+    /** @deprecated Use {@link #setReturnDate(LocalDate)} */
+    @Deprecated public void setReturn_date(LocalDate returnDate) { this.returnDate = returnDate; }
 
     public boolean isExpired() { return expired; }
     public void setExpired(boolean expired) { this.expired = expired; }
@@ -87,34 +123,60 @@ public class Pawn {
     public boolean isReturned() { return returned; }
     public void setReturned(boolean returned) { this.returned = returned; }
 
-    public LocalDateTime getUpdated_at() { return updated_at; }
-    public void setUpdated_at(LocalDateTime updated_at) { this.updated_at = updated_at; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public String getProfile_name() { return profile_name; }
-    public void setProfile_name(String profile_name) { this.profile_name = profile_name; }
+    /** @deprecated Use {@link #getUpdatedAt()} */
+    @Deprecated public LocalDateTime getUpdated_at() { return updatedAt; }
+    /** @deprecated Use {@link #setUpdatedAt(LocalDateTime)} */
+    @Deprecated public void setUpdated_at(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public String getArticle_name() { return article_name; }
-    public void setArticle_name(String article_name) { this.article_name = article_name; }
+    public String getProfileName() { return profileName; }
+    public void setProfileName(String profileName) { this.profileName = profileName; }
 
-    public String getCliente_name() { return cliente_name; }
-    public void setCliente_name(String cliente_name) { this.cliente_name = cliente_name; }
+    /** @deprecated Use {@link #getProfileName()} */
+    @Deprecated public String getProfile_name() { return profileName; }
+    /** @deprecated Use {@link #setProfileName(String)} */
+    @Deprecated public void setProfile_name(String profileName) { this.profileName = profileName; }
 
+    public String getArticleName() { return articleName; }
+    public void setArticleName(String articleName) { this.articleName = articleName; }
 
-    public boolean isActive(){
+    /** @deprecated Use {@link #getArticleName()} */
+    @Deprecated public String getArticle_name() { return articleName; }
+    /** @deprecated Use {@link #setArticleName(String)} */
+    @Deprecated public void setArticle_name(String articleName) { this.articleName = articleName; }
+
+    public String getClienteName() { return clienteName; }
+    public void setClienteName(String clienteName) { this.clienteName = clienteName; }
+
+    /** @deprecated Use {@link #getClienteName()} */
+    @Deprecated public String getCliente_name() { return clienteName; }
+    /** @deprecated Use {@link #setClienteName(String)} */
+    @Deprecated public void setCliente_name(String clienteName) { this.clienteName = clienteName; }
+
+    // ---- Lógica de negocio ----------------------------------------
+
+    /** Retorna {@code true} si el empeño está activo (no devuelto ni expirado). */
+    public boolean isActive() {
         return !expired && !returned;
     }
 
+    /** Calcula el valor total del empeño (precio × cantidad). */
     public BigDecimal getTotal() {
+        if (price == null) return BigDecimal.ZERO;
         return price.multiply(BigDecimal.valueOf(amount));
     }
+
+    /** Retorna un estado legible del empeño. */
     public String getStatus() {
-        if(returned) return "Returned";
-        if (expired) return "Expired";
-        if (isOverdue()) return "Overdue";
-        return "activo";
+        if (returned) return "Devuelto";
+        if (expired)  return "Expirado";
+        if (isOverdue()) return "Vencido";
+        return "Activo";
     }
 
     private boolean isOverdue() {
-        return LocalDate.now().isAfter(return_date) && !returned;
+        return returnDate != null && LocalDate.now().isAfter(returnDate) && !returned;
     }
 }

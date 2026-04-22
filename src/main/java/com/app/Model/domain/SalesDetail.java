@@ -1,59 +1,64 @@
 package com.app.Model.domain;
 
+import java.math.BigDecimal;
+
+/**
+ * Representa el detalle de una línea de venta (artículo incluido en una venta).
+ */
 public class SalesDetail {
-    int id;
-    int sale_id;
-    int article_id;
-    int amount;
-    int unit_price;
 
-    public SalesDetail(){}
+    private int id;
+    private int saleId;
+    private int articleId;
+    private int amount;
+    private BigDecimal unitPrice;   // Precio unitario al momento de la venta
 
-    public SalesDetail(int id, int sale_id, int article_id, int amount, int unit_price) {
+    public SalesDetail() {}
+
+    /**
+     * Constructor de creación (sin id).
+     */
+    public SalesDetail(int saleId, int articleId, int amount, BigDecimal unitPrice) {
+        this.saleId    = saleId;
+        this.articleId = articleId;
+        this.amount    = amount;
+        this.unitPrice = unitPrice;
+    }
+
+    /**
+     * Constructor completo (desde base de datos).
+     */
+    public SalesDetail(int id, int saleId, int articleId, int amount, BigDecimal unitPrice) {
+        this(saleId, articleId, amount, unitPrice);
         this.id = id;
-        this.sale_id = sale_id;
-        this.article_id = article_id;
-        this.amount = amount;
-        this.unit_price = unit_price;
     }
 
-    public int getId() {
-        return id;
-    }
+    // ---- Getters / Setters ----------------------------------------
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public int getSale_id() {
-        return sale_id;
-    }
+    public int getSaleId() { return saleId; }
+    public void setSaleId(int saleId) { this.saleId = saleId; }
 
-    public void setSale_id(int sale_id) {
-        this.sale_id = sale_id;
-    }
+    public int getArticleId() { return articleId; }
+    public void setArticleId(int articleId) { this.articleId = articleId; }
 
-    public int getArticle_id() {
-        return article_id;
-    }
+    public int getAmount() { return amount; }
+    public void setAmount(int amount) { this.amount = amount; }
 
-    public void setArticle_id(int article_id) {
-        this.article_id = article_id;
-    }
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
 
-    public int getAmount() {
-        return amount;
-    }
+    // ---- Lógica de negocio ----------------------------------------
 
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
-
-    public int getUnit_price() {
-        return unit_price;
-    }
-
-    public void setUnit_price(int unit_price) {
-        this.unit_price = unit_price;
+    /**
+     * Calcula el subtotal de esta línea (precio unitario × cantidad).
+     *
+     * @return subtotal, o {@link BigDecimal#ZERO} si el precio es null
+     */
+    public BigDecimal getSubtotal() {
+        if (unitPrice == null) return BigDecimal.ZERO;
+        return unitPrice.multiply(BigDecimal.valueOf(amount));
     }
 }

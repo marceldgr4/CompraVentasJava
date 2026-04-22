@@ -4,6 +4,7 @@ import Infrastructure.security.SessionManager;
 import com.app.UI.Components.NavButton;
 import com.app.Service.AuthService;
 import com.app.UI.Panel.ArticlePanel;
+import com.app.UI.Panel.DashboardPanel;
 import com.app.UI.Panel.PawnPanel;
 
 import javax.swing.*;
@@ -87,7 +88,7 @@ public class MainFrame extends JFrame {
         left.add(btnHamburger);
         left.add(lblApp);
         // Right: user info + logout
-        SessionManager session = SessionManager.getInstance();
+        SessionManager session = SessionManager.isEmployee();
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
 
@@ -123,7 +124,7 @@ public class MainFrame extends JFrame {
         addNavItem("🤝", "Empeños",    PANEL_PAWNS);
         addNavItem("💰", "Ventas",     PANEL_SALES);
         addNavItem("👤", "Clientes",   PANEL_CLIENTS);
-        if (SessionManager.getInstance().isAdmin()) {
+        if (SessionManager.isAdmin()) {
             addNavItem("👥", "Perfiles", PANEL_PROFILES);
         }
         sidebar.add(Box.createVerticalGlue());
@@ -150,7 +151,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(buildPlaceholder("💰 Ventas — próximamente"), PANEL_SALES);
         contentPanel.add(new ClientePanel(),PANEL_CLIENTS);
 
-        if (SessionManager.getInstance().isAdmin()) {
+        if (SessionManager.isAdmin()) {
             contentPanel.add(buildPlaceholder("Gestion de perfiles"),PANEL_PROFILES);
         }
         return contentPanel;

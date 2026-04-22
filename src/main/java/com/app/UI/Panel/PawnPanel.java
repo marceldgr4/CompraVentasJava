@@ -40,7 +40,7 @@ public class PawnPanel extends JPanel {
     private JButton btnMarkReturned;
 
     private JLabel lblStatus;
-    private JLabel lblTotal;  // ✅ AHORA INICIALIZADO
+    private JLabel lblTotal;
 
     private final PawnService pawnService = new PawnService();
     private final ArticleService articleService = new ArticleService();
@@ -49,7 +49,7 @@ public class PawnPanel extends JPanel {
     public PawnPanel() {
         initComponents();
         configurePermissions();
-        loadData();  // ✅ Cargar datos al iniciar
+        loadData();
     }
 
     private void configurePermissions() {
@@ -79,7 +79,7 @@ public class PawnPanel extends JPanel {
     private JScrollPane createTable() {
         tableModel = new DefaultTableModel(COLUMNS, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {  // ✅ PARÁMETROS CORRECTOS
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
@@ -107,7 +107,7 @@ public class PawnPanel extends JPanel {
         lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblStatus.setForeground(Color.DARK_GRAY);
 
-        // ✅ INICIALIZAR lblTotal
+        //  INICIALIZAR lblTotal
         lblTotal = new JLabel("Total Active Value: $0.00");
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTotal.setForeground(new Color(56, 142, 60));
