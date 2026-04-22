@@ -17,29 +17,42 @@ public class Article {
     private boolean sold;
     private LocalDateTime updatedAt;
 
-    public Article(int id, String name, String desc, int amount, BigDecimal bigDecimal, boolean sold, Object o) {}
-
     /**
-     * Constructor completo (usado al mapear desde la base de datos).
+     * Constructor completo para uso general.
      */
-    public Article(String nameArticle, String description,
-                   int amount, BigDecimal price, boolean sold) {
-        this.id          = id;
-        this.clienteId   = clienteId;
+    public Article(int id, int clienteId, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+        this.id = id;
+        this.clienteId = clienteId;
         this.nameArticle = nameArticle;
         this.description = description;
-        this.amount      = amount;
-        this.price       = price;
-        this.sold        = sold;
-        this.updatedAt   = updatedAt;
+        this.amount = amount;
+        this.price = price;
+        this.sold = sold;
+        this.updatedAt = updatedAt;
+    }
+
+    /**
+     * Constructor usado al mapear desde la base de datos (con id).
+     */
+    public Article(int id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+        this.id = id;
+        this.nameArticle = nameArticle;
+        this.description = description;
+        this.amount = amount;
+        this.price = price;
+        this.sold = sold;
+        this.updatedAt = updatedAt;
     }
 
     /**
      * Constructor de creación (sin id ni timestamps).
      */
-    public Article(int clienteId, String nameArticle, String description,
-                   int amount, BigDecimal price, boolean sold) {
-        this(nameArticle, description, amount, price, sold);
+    public Article(String nameArticle, String description, int amount, BigDecimal price, boolean sold) {
+        this.nameArticle = nameArticle;
+        this.description = description;
+        this.amount = amount;
+        this.price = price;
+        this.sold = sold;
     }
 
     // ---- Getters / Setters ----------------------------------------

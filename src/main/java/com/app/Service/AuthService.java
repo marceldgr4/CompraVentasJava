@@ -5,6 +5,7 @@ import Infrastructure.security.SessionManager;
 import com.app.Config.AppConfig;
 import com.app.Model.Dao.AuthResponse;
 import com.app.Model.domain.Profile;
+import com.app.Service.exceptions.ServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -69,9 +70,9 @@ public class AuthService {
                     authResponse.getRefreshToken()
             );
         } catch (IOException | InterruptedException e) {
-            throw new AuthException("Error the connection" + e.getMessage());
-        } catch (ProfileService.ServiceException e) {
-            throw new AuthException("Error loading profile" + e.getMessage());
+            throw new AuthException("Fallo de red al conectar con Supabase Auth: " + e.getMessage());
+        } catch (ServiceException e) {
+            throw new AuthException("Fallo al conectar con la base de datos para cargar el perfil: " + e.getMessage());
         }
     }
 

@@ -40,6 +40,7 @@ public class AuthResponse {
     public UserInfo getUser() {
         return user;
     }
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class UserInfo {
 
         @JsonProperty("id")

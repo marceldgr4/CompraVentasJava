@@ -1,10 +1,15 @@
 package com.app.UI.dialogs;
 
 import com.app.Model.domain.Article;
+import com.app.Model.domain.Cliente;
+import com.app.Service.ClienteService;
 
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.util.List;
+
+
 
 public class ArticleDialog extends JDialog {
 
@@ -13,6 +18,7 @@ public class ArticleDialog extends JDialog {
     private JTextField txtAmount;
     private JTextField txtPrice;
     private JCheckBox chkSold;
+    private JComboBox<Cliente> cmbCliente;
     private JButton btnSave;
     private JButton btnCancel;
 
@@ -111,6 +117,21 @@ public class ArticleDialog extends JDialog {
         setContentPane(form);
     }
 
+    private void loadClientes(){
+        try{
+            ClienteService clienteService = new ClienteService();
+            List<Cliente> list = clienteService.getAll();
+            cmbCliente.removeAllItems();
+            for(Cliente c : list){
+                cmbCliente.addItem(c);
+            }
+
+        }catch (Exception ex){
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo cargar los clientes:\n" + ex.getMessage(),
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
     private void fillFields(Article a) {
         if (a != null) {
             txtName.setText(a.getNameArticle());
@@ -145,12 +166,16 @@ public class ArticleDialog extends JDialog {
     }
 
     public Article getArticle() {
-        return new Article(
+        Cliente cliente = (Cliente) cmbCliente.getSelectedItem();
+        int clienteId = (cliente != null) ? cliente.getId() : 0;
+        Article article = new Article(
                 txtName.getText().trim(),
                 txtDescription.getText().trim(),
                 Integer.parseInt(txtAmount.getText().trim()),
                 new BigDecimal(txtPrice.getText().trim()),
                 chkSold.isSelected()
         );
+        article.setClienteId(clienteId);
+        return article;
     }
 }

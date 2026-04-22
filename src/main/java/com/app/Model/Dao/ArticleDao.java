@@ -78,13 +78,13 @@ public class ArticleDao {
     // -------------------------------------------------------
     public Article save(Article article) throws SQLException {
         String sql = """
-                INSERT INTO public.articles(cliente_id,name_article,description, amount, price,sold) 
-                VALUES (?, ?, ?, ?,?,?)
-                RETURNING id, updated_at
-        """;
+            INSERT INTO public.articles(cliente_id, name_article, description, amount, price, sold)
+            VALUES (?, ?, ?, ?, ?, ?)
+            RETURNING id, updated_at
+            """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, article.getCliente_id());
+            ps.setInt(1, article.getClienteId());
             ps.setString(2, article.getNameArticle());
             ps.setString(3, article.getDescription());
             ps.setInt(4, article.getAmount());
@@ -111,7 +111,6 @@ public class ArticleDao {
                 amount = ?, 
                 price = ?, 
                 sold = ?,
-                updated_at = NOW()
                 WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();
@@ -174,11 +173,13 @@ public class ArticleDao {
     private Article mapRow(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("updated_at");
         return new Article(
+                rs.getInt("id"),
                 rs.getString("name_article"),
                 rs.getString("description"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price"),
-                rs.getBoolean("sold")
+                rs.getBoolean("sold"),
+                ts != null ? ts.toLocalDateTime() : null
         );
     }
 }
