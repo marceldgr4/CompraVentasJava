@@ -3,6 +3,7 @@ package com.app.Service;
 
 import Infrastructure.security.SessionManager;
 import com.app.Config.AppConfig;
+import com.app.Model.Dao.AuthResponse;
 import com.app.Model.domain.Profile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,10 +18,18 @@ import java.time.Duration;
 public class AuthService {
     private static final String BASE_URL = AppConfig.get("SUPABASE_URL");
     private static final String ANON_KEY = AppConfig.get("SUPABASE_ANON_KEY");
-    private static final HttpClient http = HttpClient.newHttpClient();
+    private static final Duration TIMEOUT = Duration.ofSeconds(60);
+    
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public void Login(String email, String password) throws AuthException {
+        if(email == null || email.isBlank()) {
+        throw new AuthException("The Email is obligatory");
+        }
+        if(password == null || password.isBlank()) {
+            throw new AuthException("The Password is obligatory");
+        }
 
         String body = String.format(
                 "{\"email\": \"%s\",\"password\":\"%s\"}", email, password);
@@ -32,15 +41,18 @@ public class AuthService {
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
         try {
-            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
                 throw new AuthException("Email o password incorrect");
             }
+            AuthResponse authResponse = mapper.readValue(response.body(), AuthResponse.class);
+            String userId = authResponse.getUser().getId();
+            
             JsonNode json = mapper.readTree(response.body());
             String accessToken = json.get("access_token").asText();
             String refreshToken = json.has("refresh_token") ? json.get("refresh_token").asText() : null;
-            String userId = json.get("user").get("id").asText();
+         
 
             //Load profile from database to obtain full name and role
             ProfileService profileService = new ProfileService();
@@ -49,12 +61,12 @@ public class AuthService {
                 throw new AuthException("User disable. call Admin");
             }
 
-            SessionManager.getInstance().startSession(
+            SessionManager.startSession(
                     userId,
                     profile.getFullName(),
                     profile.getRol(),
-                    accessToken,
-                    refreshToken
+                    authResponse.getAccesoToken(),
+                    authResponse.getRefreshToken()
             );
         } catch (IOException | InterruptedException e) {
             throw new AuthException("Error the connection" + e.getMessage());
@@ -66,7 +78,7 @@ public class AuthService {
 
     // Register the employees(only admin)
     public void registerEmployee(String email, String password, String full_name) throws AuthException {
-        if (!SessionManager.getInstance().isAdmin()) {
+        if (!SessionManager.isAdmin()) {
             throw new AuthException("Only the admin can register employees");
         }
 
@@ -82,7 +94,7 @@ public class AuthService {
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
         try {
-            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200 && response.statusCode() != 201) {
                 JsonNode err = mapper.readTree(response.body());
                 String msg = err.has("msg")
@@ -97,10 +109,11 @@ public class AuthService {
 
     //LOGOUT
     public void logout() {
-        String token = SessionManager.getInstance().getAccessToken();
-        if (token == null) {
-            return;
+       if(!SessionManager.isActive()){
+       return;
         }
+        String token = SessionManager.getAccessToken();
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/auth/v1/logout"))
                 .header("Authorization", "Bearer " + token)
@@ -108,13 +121,12 @@ public class AuthService {
                 .timeout(Duration.ofSeconds(5))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
-
         try {
-            http.send(request, HttpResponse.BodyHandlers.discarding());
+            HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
         } catch (Exception ignored) {
         }
 
-        SessionManager.getInstance().endSession();
+        SessionManager.endSession();
     }
 
     public static class AuthException extends Exception {

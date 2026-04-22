@@ -102,7 +102,7 @@ public class ArticleService {
     }
 
     private void requireAdmin(String accion) throws ServiceException {
-        if (!SessionManager.getInstance().isAdmin()) {
+        if (!SessionManager.isAdmin()) {
             throw new ServiceException("You are not allowed to perform this operation" + accion + "alone the admin can created new articles or items ");
         }
     }
@@ -113,7 +113,7 @@ public class ArticleService {
         requireAdmin("edit article");
         validateArticle(article);
         try{
-            boolean updated = articleDAO.updated(article);
+            boolean updated = articleDAO.update(article);
             if (!updated) {
                 throw new ServiceException("Error not find id the article "+article.getId());
             }

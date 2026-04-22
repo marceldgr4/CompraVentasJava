@@ -13,15 +13,51 @@ public class SessionManager {
 
     private SessionManager() {}
 
-    public static void startSession(String profileId, String fullName, RolUser rol,String accessToken, String refreshToken) {
+    // -------------------------------------------------------
+    // API de compatibilidad para llamadas de instancia
+    // -------------------------------------------------------
+
+    /**
+     * Retorna un proxy de sesión para compatibilidad con código que usaba
+     * {@code SessionManager.getInstance().isAdmin()} etc.
+     * Preferir los métodos estáticos directamente.
+     *
+     * @return proxy de sesión (nunca null)
+     */
+    public static SessionProxy getInstance() {
+        return new SessionProxy();
+    }
+
+    /**
+     * Proxy liviano que delega a los métodos estáticos de {@link SessionManager}.
+     * Existe solo para mantener compatibilidad con código que llamaba
+     * {@code SessionManager.getInstance().isAdmin()}.
+     */
+    public static final class SessionProxy {
+        private SessionProxy() {}
+        public boolean isAdmin()     { return SessionManager.isAdmin(); }
+        public boolean isEmployee()  { return SessionManager.isEmployee(); }
+        public boolean isActive()    { return SessionManager.isActive(); }
+        public String  getProfileId(){ return SessionManager.getProfileId(); }
+        public String  getFullName() { return SessionManager.getFullName(); }
+    }
+
+    public static void startSession(
+            String profileId,
+            String fullName,
+            RolUser rol,
+            String accessToken,
+            String refreshToken) {
         SESSION_LOCK.writeLock().lock();
         try{
-            Session session = new Session(profileId,fullName,rol,accessToken,refreshToken);
-            CURRENT_SESSION.set(session);
+           CURRENT_SESSION.set(new Session(profileId, fullName, rol, accessToken, refreshToken));
         } finally {
             SESSION_LOCK.writeLock().unlock();
         }
     }
+    /*
+    * cerrar sesion o fin de la sesion
+    * */
     public static void endSession() {
         SESSION_LOCK.writeLock().lock();
         try{
@@ -30,6 +66,7 @@ public class SessionManager {
             SESSION_LOCK.writeLock().unlock();
         }
     }
+
     public static Optional<Session> getCurrentSession(){
         SESSION_LOCK.readLock().lock();
     try{
@@ -38,28 +75,46 @@ public class SessionManager {
         SESSION_LOCK.readLock().unlock();
         }
     }
+    /*
+    * @retorna
+    * @codigo verdadero
+    * si la sesion es actuamente activa
+    * */
     public static boolean isActive(){
         return getCurrentSession().isPresent();
     }
+    /*
+    * @retorna @codigo verdadero si el usuario tiene el rol de admin
+    * */
     public static boolean isAdmin(){
         return getCurrentSession()
-                .map(s ->s.rol == RolUser.Admin)
+                .map(session ->session.rol == RolUser.Admin)
                 .orElse(false);
     }
+    /*
+    *@retorna codigo verdadero si el usuario activo es empleado
+    * */
     public static boolean isEmployee(){
         return getCurrentSession()
-                .map(s -> s.rol == RolUser.Empleado)
+                .map(session -> session.rol == RolUser.Empleado)
                 .orElse(false);
     }
+    /*
+    * @retorna si el "id" del perfil del usario está activo
+    * @throws IllegalStateException si no hay ninguna sesión activa
+    * */
     public static String getProfileId() {
         return getCurrentSession()
-                .map(s -> s.profileId)
+                .map(session -> session.profileId)
                 .orElseThrow(() -> new IllegalStateException("No active session"));
     }
-
+    /*
+    * @retorna el nombre completo del usurio
+    * @throws IllegalStateException si no hay ninguna sesión activa
+    * */
     public static String getFullName() {
         return getCurrentSession()
-                .map(s -> s.fullName)
+                .map(session -> session.fullName)
                 .orElseThrow(() -> new IllegalStateException("No active session"));
     }
 
@@ -79,11 +134,6 @@ public class SessionManager {
         return getCurrentSession()
                 .map(s -> s.refreshToken)
                 .orElseThrow(() -> new IllegalStateException("No active session"));
-    }
-
-    public static SessionManager getInstance() {
-
-        return null;
     }
 
 

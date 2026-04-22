@@ -1,4 +1,15 @@
 package com.app.Service.exceptions;
 
-public class AuthException {
+/**
+ * Excepción lanzada cuando ocurre un error de autenticación o autorización.
+ */
+public class AuthException extends Exception {
+
+    public AuthException(String message) {
+        super(message);
+    }
+
+    public AuthException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

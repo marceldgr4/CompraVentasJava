@@ -104,7 +104,7 @@ public class ArticleDao {
     // -------------------------------------------------------
     // UPDATE — actualizar artículo completo (solo Admin)
     // -------------------------------------------------------
-    public boolean updated(Article article) throws SQLException {
+    public boolean update(Article article) throws SQLException {
         String sql = """
                 UPDATE public.articles
                 SET name_article = ?, 
@@ -135,6 +135,9 @@ public class ArticleDao {
         }
     }
 
+    /**
+     * Actualiza la cantidad de stock de un artículo.
+     */
     public boolean updateAmount(int id, int newAmount) throws SQLException {
         String sql = """
                 UPDATE public.articles
@@ -171,14 +174,11 @@ public class ArticleDao {
     private Article mapRow(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("updated_at");
         return new Article(
-                rs.getInt("id"),
-                rs.getInt("cliente_id"),
                 rs.getString("name_article"),
                 rs.getString("description"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price"),
-                rs.getBoolean("sold"),
-                ts != null ? ts.toLocalDateTime() : null
+                rs.getBoolean("sold")
         );
     }
 }

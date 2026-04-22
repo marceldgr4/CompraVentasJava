@@ -3,10 +3,13 @@ package com.app.Model.domain;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Representa un artículo en el inventario del sistema de compraventa/empeño.
+ */
 public class Article {
 
     private int id;
-    private int cliente_id;
+    private int clienteId;
     private String nameArticle;
     private String description;
     private int amount;
@@ -14,99 +17,80 @@ public class Article {
     private boolean sold;
     private LocalDateTime updatedAt;
 
-    public Article(String trim, String trimmed, int i, BigDecimal bigDecimal, boolean selected) {
-    }
+    public Article(int id, String name, String desc, int amount, BigDecimal bigDecimal, boolean sold, Object o) {}
 
-    public Article(int id, int cliente_id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
-        this.id = id;
-        this.cliente_id = cliente_id;
+    /**
+     * Constructor completo (usado al mapear desde la base de datos).
+     */
+    public Article(String nameArticle, String description,
+                   int amount, BigDecimal price, boolean sold) {
+        this.id          = id;
+        this.clienteId   = clienteId;
         this.nameArticle = nameArticle;
         this.description = description;
-        this.amount = amount;
-        this.price = price;
-        this.sold = sold;
-        this.updatedAt = updatedAt;
+        this.amount      = amount;
+        this.price       = price;
+        this.sold        = sold;
+        this.updatedAt   = updatedAt;
     }
 
-    public Article(int id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
-        this(0, 0, nameArticle, description, amount, price, sold, null);
+    /**
+     * Constructor de creación (sin id ni timestamps).
+     */
+    public Article(int clienteId, String nameArticle, String description,
+                   int amount, BigDecimal price, boolean sold) {
+        this(nameArticle, description, amount, price, sold);
     }
 
-    public Article(int cliente_id, String nameArticle, String description, int amount,
-                   BigDecimal price, boolean sold) {
-        this(0, cliente_id, nameArticle, description, amount, price, sold, null);
-    }
+    // ---- Getters / Setters ----------------------------------------
 
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    /** @deprecated Use {@link #getClienteId()} */
+    @Deprecated
+    public int getCliente_id() { return clienteId; }
 
-    public int getCliente_id() {
-        return cliente_id;
-    }
+    public int getClienteId() { return clienteId; }
+    public void setClienteId(int clienteId) { this.clienteId = clienteId; }
 
-    public void setCliente_id(int cliente_id) {
-        this.cliente_id = cliente_id;
-    }
+    /** @deprecated Use {@link #setClienteId(int)} */
+    @Deprecated
+    public void setCliente_id(int clienteId) { this.clienteId = clienteId; }
 
-    public String getNameArticle() {
-        return nameArticle;
-    }
+    public String getNameArticle() { return nameArticle; }
+    public void setNameArticle(String nameArticle) { this.nameArticle = nameArticle; }
 
-    public void setNameArticle(String nameArticle) {
-        this.nameArticle = nameArticle;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getDescription() {
-        return description;
-    }
+    public int getAmount() { return amount; }
+    public void setAmount(int amount) { this.amount = amount; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
-    public int getAmount() {
-        return amount;
-    }
+    public boolean isSold() { return sold; }
+    public void setSold(boolean sold) { this.sold = sold; }
 
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
+    // ---- Lógica de negocio ----------------------------------------
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public boolean isSold() {
-        return sold;
-    }
-
-    public void setSold(boolean sold) {
-        this.sold = sold;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
+    /** Retorna {@code true} si hay unidades disponibles en inventario. */
     public boolean hasStock() {
         return amount > 0;
     }
-    public  boolean canSell(){
-        return sold && amount > 0;
+
+    /**
+     * Retorna {@code true} si el artículo está marcado para venta Y aún tiene stock.
+     * Nota: la lógica original tenía un error semántico (sold = ya fue vendido).
+     */
+    public boolean canSell() {
+        return !sold && amount > 0;
     }
+
     @Override
     public String toString() {
         return nameArticle;
