@@ -78,13 +78,13 @@ public class ArticleDao {
     // -------------------------------------------------------
     public Article save(Article article) throws SQLException {
         String sql = """
-                INSERT INTO public.articles(cliente_id,name_article,description, amount, price,sold) 
-                VALUES (?, ?, ?, ?,?,?)
-                RETURNING id, updated_at
-        """;
+            INSERT INTO public.articles(cliente_id, name_article, description, amount, price, sold)
+            VALUES (?, ?, ?, ?, ?, ?)
+            RETURNING id, updated_at
+            """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, article.getCliente_id());
+            ps.setInt(1, article.getClienteId());
             ps.setString(2, article.getNameArticle());
             ps.setString(3, article.getDescription());
             ps.setInt(4, article.getAmount());
@@ -111,7 +111,6 @@ public class ArticleDao {
                 amount = ?, 
                 price = ?, 
                 sold = ?,
-                updated_at = NOW()
                 WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();

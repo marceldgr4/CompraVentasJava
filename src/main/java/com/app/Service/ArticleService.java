@@ -26,7 +26,7 @@ public class ArticleService {
 
     public List<Article> getSellable() throws ServiceException {
         try{
-            return articleDAO.findBySold(true)
+            return articleDAO.findBySold(false)
                     .stream()
                     .filter(Article::hasStock)
                     .collect(Collectors.toList());

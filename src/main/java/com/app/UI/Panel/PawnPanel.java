@@ -27,7 +27,7 @@ public class PawnPanel extends JPanel {
             "FECHA INGRESO", "FECHA LIMITE", "ESTADO", "EMPLEADO"
     };
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private JTable table;
     private DefaultTableModel tableModel;
