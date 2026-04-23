@@ -1,229 +1,369 @@
 package com.app.UI.Frame;
 
-import com.app.UI.Components.ModernButton;
-import com.app.UI.Components.ModernPasswordField;
-import com.app.UI.Components.ModernTextField;
 import com.app.Service.AuthService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import java.util.concurrent.ExecutionException;
 
-
+/**
+ * LoginFrame rediseñado para coincidir exactamente con el mockup:
+ * - Panel izquierdo: gradiente azul oscuro, logo "Compra Venta" grande, tagline
+ * - Panel derecho: blanco, título "Iniciar Sesión", campos redondeados con borde azul, botón azul grande
+ * - Ventana sin decoración nativa, bordes redondeados
+ */
 public class LoginFrame extends JFrame {
-    private  static final Logger log = LoggerFactory.getLogger(LoginFrame.class);
 
-    private ModernTextField txtEmail;
-    private ModernPasswordField txtPassword;
-    private ModernButton btnLogin;
-    private JButton btnTogglePassword;
-    private JLabel lblError;
-    private boolean passwordVisible = false;
+    // ── Colores del diseño ────────────────────────────────────────────────────
+    private static final Color GRAD_TOP    = new Color(13,  42,  93);   // #0D2A5D azul muy oscuro
+    private static final Color GRAD_BOT    = new Color(30,  90, 180);   // #1E5AB4 azul medio
+    private static final Color BLUE_FIELD  = new Color(30, 136, 229);   // borde activo campo
+    private static final Color FIELD_BG    = new Color(245, 247, 250);  // fondo campo inactivo
+    private static final Color BTN_BLUE    = new Color(30, 136, 229);
+    private static final Color TEXT_DARK   = new Color(15,  25,  50);
+    private static final Color TEXT_MUTED  = new Color(110, 120, 140);
+    private static final Color DOT_ACTIVE  = new Color(100, 181, 246);
+    private static final Color DOT_INACT   = new Color(255, 255, 255, 80);
+
+    // ── Campos ───────────────────────────────────────────────────────────────
+    private RoundedField     txtEmail;
+    private RoundedPassField txtPassword;
+    private JButton          btnLogin;
+    private JLabel           lblError;
 
     private final AuthService authService = new AuthService();
 
     public LoginFrame() {
-        initComponents();
-        setupListeners();
-    }
-/*
-* Diseño del login UI
-* */
-    private void initComponents() {
-        setTitle("CompraVenta — Iniciar sesión");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(450, 650);
+        setUndecorated(true);                    // sin barra nativa de Windows
+        setSize(860, 620);
         setLocationRelativeTo(null);
-        setResizable(false);
-        setContentPane(buildMainPanel());
-    }
-        // Panel Principal con Gradiente Moderno
-        private JPanel buildMainPanel() {
-        JPanel mainPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, new Color(245, 247, 250), 0, getHeight(), new Color(210, 220, 235));
-                g2d.setPaint(gp);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // Contenedor principal con borde redondeado
+        JPanel root = new JPanel(new BorderLayout()) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
             }
         };
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(new EmptyBorder(50, 60, 50, 60));
+        root.setOpaque(false);
+        root.add(buildLeftPanel(),  BorderLayout.WEST);
+        root.add(buildRightPanel(), BorderLayout.CENTER);
 
-        // Título
-        JLabel lblTitle = new JLabel("COMPRA VENTA");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 30));
-        lblTitle.setForeground(new Color(44, 62, 80));
-        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // Fondo real de la ventana (para el recorte redondeado)
+        setContentPane(root);
+        setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 20, 20));
+    }
 
-        JLabel lblSubtitle = new JLabel("Gestiona tus ventas fácilmente");
-        lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lblSubtitle.setForeground(new Color(127, 140, 141));
-        lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // ── Panel izquierdo ───────────────────────────────────────────────────────
 
-        // Inputs
-        txtEmail = new ModernTextField("Correo electrónico");
-        txtPassword = new ModernPasswordField("Contraseña");
+    private JPanel buildLeftPanel() {
+        JPanel panel = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Gradiente diagonal azul oscuro → azul medio
+                GradientPaint gp = new GradientPaint(
+                        0, 0,           GRAD_TOP,
+                        getWidth(), getHeight(), GRAD_BOT);
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, getWidth() + 20, getHeight(), 20, 20);
+                g2.dispose();
+            }
+        };
+        panel.setPreferredSize(new Dimension(340, 620));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(60, 40, 50, 40));
+
+        // "SISTEMA DE GESTIÓN"
+        JLabel lblTag = new JLabel("SISTEMA DE GESTIÓN");
+        lblTag.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblTag.setForeground(new Color(255, 255, 255, 140));
+        lblTag.setAlignmentX(CENTER_ALIGNMENT);
+        lblTag.setBorder(new EmptyBorder(0, 0, 20, 0));
+
+        // Logo grande "Compra Venta"
+        JLabel lblLogo = new JLabel("<html><center>Compra<br>Venta</center></html>");
+        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 52));
+        lblLogo.setForeground(Color.WHITE);
+        lblLogo.setAlignmentX(CENTER_ALIGNMENT);
+        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Tagline
+        JLabel lblTag2 = new JLabel(
+                "<html><center>Gestiona compras, ventas y empeños<br>en un solo lugar.</center></html>");
+        lblTag2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblTag2.setForeground(new Color(255, 255, 255, 180));
+        lblTag2.setAlignmentX(CENTER_ALIGNMENT);
+        lblTag2.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTag2.setBorder(new EmptyBorder(20, 0, 40, 0));
+
+        // Puntos decorativos
+        JPanel dots = buildDots();
+        dots.setOpaque(false);
+        dots.setAlignmentX(CENTER_ALIGNMENT);
+
+        panel.add(Box.createVerticalGlue());
+        panel.add(lblTag);
+        panel.add(lblLogo);
+        panel.add(lblTag2);
+        panel.add(dots);
+        panel.add(Box.createVerticalGlue());
+
+        // Arrastrar ventana desde el panel izquierdo
+        addDragBehavior(panel);
+        return panel;
+    }
+
+    private JPanel buildDots() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+        p.setOpaque(false);
+        for (int i = 0; i < 3; i++) {
+            final int idx = i;
+            JPanel dot = new JPanel() {
+                @Override protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(idx == 0 ? DOT_ACTIVE : DOT_INACT);
+                    g2.fillOval(0, 0, 10, 10);
+                    g2.dispose();
+                }
+                @Override public Dimension getPreferredSize() { return new Dimension(10, 10); }
+            };
+            dot.setOpaque(false);
+            p.add(dot);
+        }
+        return p;
+    }
+
+    // ── Panel derecho ─────────────────────────────────────────────────────────
+
+    private JPanel buildRightPanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(80, 60, 80, 60));
+
+        JLabel lblTitle = new JLabel("Iniciar Sesión");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblTitle.setForeground(TEXT_DARK);
+        lblTitle.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel lblSub = new JLabel("Ingresa tus credenciales para continuar");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblSub.setForeground(TEXT_MUTED);
+        lblSub.setAlignmentX(LEFT_ALIGNMENT);
+        lblSub.setBorder(new EmptyBorder(6, 0, 36, 0));
+
+        // Campo email
+        JLabel lblEmail = fieldLabel("Correo electrónico");
+        txtEmail = new RoundedField("admin@compraventa.com", false);
+        txtEmail.setAlignmentX(LEFT_ALIGNMENT);
+
+        // Campo contraseña
+        JLabel lblPass = fieldLabel("Contraseña");
+        lblPass.setBorder(new EmptyBorder(16, 0, 6, 0));
+        txtPassword = new RoundedPassField("••••••••••••");
+        txtPassword.setAlignmentX(LEFT_ALIGNMENT);
+
         // Botón
-        btnLogin = new ModernButton("Entrar");
+        btnLogin = buildLoginButton();
+        btnLogin.setAlignmentX(LEFT_ALIGNMENT);
 
-        lblError = buildErroLabel();
-        /*lblError.setForeground(new Color(231, 76, 60));
-        lblError.setAlignmentX(Component.CENTER_ALIGNMENT);*/
+        // Error label
+        lblError = new JLabel(" ");
+        lblError.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblError.setForeground(new Color(220, 50, 50));
+        lblError.setAlignmentX(LEFT_ALIGNMENT);
+        lblError.setBorder(new EmptyBorder(8, 0, 0, 0));
 
-        // Agregar al panel con espaciado
-        mainPanel.add(lblTitle);
-        mainPanel.add(Box.createVerticalStrut(10));
-        mainPanel.add(lblSubtitle);
-        mainPanel.add(Box.createVerticalStrut(50));
-        mainPanel.add(txtEmail);
-        mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(buildPaswordRow());
+        panel.add(Box.createVerticalGlue());
+        panel.add(lblTitle);
+        panel.add(lblSub);
+        panel.add(lblEmail);
+        panel.add(txtEmail);
+        panel.add(lblPass);
+        panel.add(txtPassword);
+        panel.add(Box.createRigidArea(new Dimension(0, 28)));
+        panel.add(btnLogin);
+        panel.add(lblError);
+        panel.add(Box.createVerticalGlue());
 
-        mainPanel.add(Box.createVerticalStrut(40));
-        mainPanel.add(btnLogin);
-        mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(lblError);
-        return mainPanel;
-
-       //setContentPane(mainPanel);
+        txtPassword.addActionListener(e -> doLogin());
+        txtEmail   .addActionListener(e -> doLogin());
+        return panel;
     }
 
-    private JPanel buildPaswordRow() {
-        JPanel container = new JPanel(null);
-        container.setOpaque(false);
-        container.setPreferredSize(new Dimension(300, 45));
-        container.setMaximumSize(new Dimension(300, 45));
-        container.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        txtPassword = new ModernPasswordField("Contraseña");
-        txtPassword.setBounds(0,0,300,45);
-
-        btnTogglePassword = buildToggleButtom();
-        btnTogglePassword.setBounds(262,10,30,26);
-        container.add(btnTogglePassword);
-        container.add(txtPassword);
-        return container;
+    private JLabel fieldLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(TEXT_DARK);
+        lbl.setAlignmentX(LEFT_ALIGNMENT);
+        lbl.setBorder(new EmptyBorder(0, 0, 6, 0));
+        return lbl;
     }
 
-    private JButton buildToggleButtom() {
-        JButton btn = new JButton("👁");
-        btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
-        btn.setOpaque(false);
+    private JButton buildLoginButton() {
+        JButton btn = new JButton("Entrar al Sistema") {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color fill = getModel().isPressed()   ? BTN_BLUE.darker()
+                        : getModel().isRollover()  ? BTN_BLUE.brighter()
+                          : BTN_BLUE;
+                g2.setColor(fill);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                super.paintComponent(g2);
+                g2.dispose();
+            }
+        };
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btn.setForeground(Color.WHITE);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        btn.setOpaque(false);
+        btn.setPreferredSize(new Dimension(340, 52));
+        btn.setMaximumSize (new Dimension(Integer.MAX_VALUE, 52));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setToolTipText("Mostar contraseña");
+        btn.addActionListener(e -> doLogin());
         return btn;
     }
-    private JLabel buildErroLabel() {
-        JLabel lblError = new JLabel(" ");
-        lblError.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblError.setForeground(new Color(231, 76, 60));
-        lblError.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblError.setHorizontalAlignment(SwingConstants.CENTER);
-        lblError.setPreferredSize(new Dimension(300, 45));
-        return lblError;
-    }
 
+    // ── Drag window ───────────────────────────────────────────────────────────
 
-       private void setupListeners() {
-        btnLogin.addActionListener(e -> doLogin());
-        txtPassword.addActionListener(e -> doLogin());
-        btnTogglePassword.addActionListener(e -> togglePasswordVisible());
-    }
-    /*
-    * Accion
-    * */
-    private void togglePasswordVisible() {
-        passwordVisible = !passwordVisible;
-        if (passwordVisible) {
-            txtPassword.setEchoChar((char) 0);
-            btnTogglePassword.setText(" 🙈");
-            btnTogglePassword.setToolTipText("Ocultar password");
-            log.debug("password field set to Visible");
-        }else{
-            txtPassword.setEchoChar('*');
-            btnTogglePassword.setText("👁");
-            btnTogglePassword.setToolTipText("Mostrar password");
-            log.debug("Passwrod field set to Hidden");
-        }
-    }
-
-    private void doLogin() {
-        String email = txtEmail.getText().trim();
-        String password = new String(txtPassword.getPassword());
-
-        if (email.isEmpty() || password.isEmpty()) {
-            lblError.setText("Por favor, completa los campos.");
-            return;
-        }
-        lblError.setText("");
-        btnLogin.setEnabled(false);
-        btnLogin.setText("iniciando...");
-
-        SwingWorker<Void,Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                authService.Login(email,password);
-                return null;
-            }
-            @Override
-            protected void done() {
-                try{
-                    get();
-                    log.info("Login OK - completed, email={}.", email);
-                    dispose();
-                    SwingUtilities.invokeLater(()->new MainFrame().setVisible(true));
-              }catch (ExecutionException ex){
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    String userMsg = extractUserMessage(cause);
-                    log.error("Login FAILED - email={} | cause={} | msg={}",
-                            email, cause.getClass().getSimpleName(), cause.getMessage(), cause);
-                   showError(userMsg);
-                   setFormEnable(true);
-                } catch (InterruptedException ex){
-                    Thread.currentThread().interrupt();
-                    log.error("Login interrupte- email={}",email, ex);
-                    showError("la operacion fue interrumpida");
-                    setFormEnable(true);
+    private void addDragBehavior(JPanel panel) {
+        final Point[] start = {null};
+        panel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent e) { start[0] = e.getPoint(); }
+        });
+        panel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+                if (start[0] != null) {
+                    Point loc = getLocation();
+                    setLocation(loc.x + e.getX() - start[0].x,
+                            loc.y + e.getY() - start[0].y);
                 }
             }
-        };
-        worker.execute();
+        });
     }
-    private String extractUserMessage(Throwable cause) {
-        String raw = cause.getMessage();
-        if (raw == null || raw.isBlank()) {
-            return "Erro desconhecido. verificar tu conexion. ";
-        }
-        int colon = raw.indexOf(":");
-        if (colon > 0) {
-            String prefix = raw.substring(0, colon);
-            if (!prefix.endsWith(" ")) {
-                return raw.substring(colon + 1).trim();
-            }
-        }
-        return raw;
-    }
-    private void showError(String message) {
-        lblError.setText("<html><center>" + message + "</center></html>");
-    }
-    private void clearError() {
-        lblError.setText(" ");
-    }
-    private void setFormEnable(boolean enabled) {
-        btnLogin.setEnabled(enabled);
-        btnLogin.setText(enabled ? "Login" : "Login");
-        txtEmail.setEnabled(enabled);
-        txtPassword.setEnabled(enabled);
-        btnTogglePassword.setEnabled(enabled);
 
+    // ── Lógica de login ───────────────────────────────────────────────────────
+
+    private void doLogin() {
+        String email    = txtEmail.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            lblError.setText("Por favor completa todos los campos.");
+            return;
+        }
+        lblError.setText(" ");
+        btnLogin.setEnabled(false);
+        btnLogin.setText("Iniciando...");
+
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() throws Exception {
+                authService.Login(email, password);
+                return null;
+            }
+            @Override protected void done() {
+                try {
+                    get();
+                    dispose();
+                    SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
+                } catch (ExecutionException ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    lblError.setText("<html>" + cause.getMessage() + "</html>");
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Entrar al Sistema");
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }.execute();
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // Componentes personalizados internos
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Campo de texto con bordes redondeados y borde azul al enfocar.
+     */
+    private static class RoundedField extends JTextField {
+        private static final int R = 10;
+        private boolean focused = false;
+
+        RoundedField(String placeholder, boolean isPass) {
+            setText(placeholder);
+            setOpaque(false);
+            setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            setForeground(new Color(100, 110, 130));
+            setBorder(new EmptyBorder(12, 14, 12, 14));
+            setPreferredSize(new Dimension(340, 50));
+            setMaximumSize  (new Dimension(Integer.MAX_VALUE, 50));
+
+            addFocusListener(new java.awt.event.FocusAdapter() {
+                public void focusGained(java.awt.event.FocusEvent e) {
+                    if (getText().equals(placeholder)) { setText(""); setForeground(new Color(15, 25, 50)); }
+                    focused = true; repaint();
+                }
+                public void focusLost(java.awt.event.FocusEvent e) {
+                    if (getText().isEmpty()) { setText(placeholder); setForeground(new Color(100, 110, 130)); }
+                    focused = false; repaint();
+                }
+            });
+        }
+
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(FIELD_BG);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), R*2, R*2);
+            g2.setColor(focused ? BLUE_FIELD : new Color(210, 218, 230));
+            g2.setStroke(new BasicStroke(focused ? 2f : 1.5f));
+            g2.drawRoundRect(1, 1, getWidth()-2, getHeight()-2, R*2, R*2);
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    /** Campo de contraseña con el mismo estilo redondeado. */
+    private static class RoundedPassField extends JPasswordField {
+        private static final int R = 10;
+        private boolean focused = false;
+        private final String placeholder;
+
+        RoundedPassField(String placeholder) {
+            this.placeholder = placeholder;
+            setEchoChar('•');
+            setOpaque(false);
+            setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            setBorder(new EmptyBorder(12, 14, 12, 14));
+            setPreferredSize(new Dimension(340, 50));
+            setMaximumSize  (new Dimension(Integer.MAX_VALUE, 50));
+
+            addFocusListener(new java.awt.event.FocusAdapter() {
+                public void focusGained(java.awt.event.FocusEvent e) { focused = true;  repaint(); }
+                public void focusLost  (java.awt.event.FocusEvent e) { focused = false; repaint(); }
+            });
+        }
+
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(FIELD_BG);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), R*2, R*2);
+            g2.setColor(focused ? BLUE_FIELD : new Color(210, 218, 230));
+            g2.setStroke(new BasicStroke(focused ? 2f : 1.5f));
+            g2.drawRoundRect(1, 1, getWidth()-2, getHeight()-2, R*2, R*2);
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 }
