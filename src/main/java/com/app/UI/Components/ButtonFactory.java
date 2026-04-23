@@ -3,77 +3,131 @@ package com.app.UI.Components;
 import javax.swing.*;
 import java.awt.*;
 
-public class ButtonFactory {
+public final class ButtonFactory {
+    // ── Colores oficiales de la aplicación ────────────────────────────────────
+    private static final Color PRIMARY = UIConstants.PRIMARY_COLOR;  // #1E88E5
+    private static final Color SUCCESS = UIConstants.SUCCESS_COLOR;  // #388E3C
+    private static final Color WARNING = UIConstants.WARNING_COLOR;  // #F57C00
+    private static final Color DANGER = UIConstants.DANGER_COLOR;   // #D32F2F
+    private static final Color NEUTRAL = UIConstants.NEUTRAL_COLOR;  // #616161
+    private static final Color AMBER = new Color(255, 143, 0);     // #FF8F00
 
-    public static JButton createPrimaryButton(String text, Object o) {
-        return createButton(text, UIConstants.PRIMARY_COLOR);
+    private ButtonFactory() {
     }
 
+    // ── Métodos de conveniencia ────────────────────────────────────────────────
+
+    /** Botón azul primario (crear, buscar, guardar). */
+    public static JButton createPrimaryButton(String text) {
+        return createButton(text, PRIMARY);
+    }
+
+    /** Sobrecarga de compatibilidad con código que pasaba un segundo argumento. */
+    public static JButton createPrimaryButton(String text, Object ignored) {
+        return createButton(text, PRIMARY);
+    }
+
+    /** Botón verde (marcar devuelto, confirmar). */
     public static JButton createSuccessButton(String text) {
-        return createButton(text, UIConstants.SUCCESS_COLOR);
+        return createButton(text, SUCCESS);
     }
 
+    /** Botón naranja/amarillo (editar, advertencia). */
     public static JButton createWarningButton(String text) {
-        return createButton(text, UIConstants.WARNING_COLOR);
+        return createButton(text, WARNING);
     }
 
+    /** Botón rojo (eliminar, acción destructiva). */
     public static JButton createDangerButton(String text) {
-        return createButton(text, UIConstants.DANGER_COLOR);
+        return createButton(text, DANGER);
     }
 
+    /** Botón gris neutro (refresh, cancelar). */
     public static JButton createNeutralButton(String text) {
-        return createButton(text, UIConstants.NEUTRAL_COLOR);
+        return createButton(text, NEUTRAL);
+    }
+
+    /** Botón ámbar (procesar vencidos, acciones de alerta media). */
+    public static JButton createAmberButton(String text) {
+        return createButton(text, AMBER);
     }
 
     public static JButton createButton(String text, Color background) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
 
-                Color fillColor = background;
-                if (getModel().isPressed()) {
-                    fillColor = darken(background, 0.8f);
+                Color fill = background;
+                if (!isEnabled()) {
+                    fill = desaturate(background, 0.4f);
+                } else if (getModel().isPressed()) {
+                    fill = darken(background, 0.78f);
                 } else if (getModel().isRollover()) {
-                    fillColor = brighten(background, 1.1f);
+                    fill = brighten(background, 1.12f);
                 }
 
-                g2.setColor(fillColor);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), UIConstants.BORDER_RADIUS, UIConstants.BORDER_RADIUS);
-                super.paintComponent(g);
+                g2.setColor(fill);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(),
+                        UIConstants.BORDER_RADIUS, UIConstants.BORDER_RADIUS);
+
+                // Texto: llamar al super sobre fondo transparente
+                super.paintComponent(g2);
                 g2.dispose();
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                // Sin borde nativo; el redondeado ya actúa como borde visual
             }
         };
 
-        btn.setContentAreaFilled(false);
+        btn.setContentAreaFilled(false);  // desactiva relleno nativo del L&F
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        btn.setOpaque(false);
         btn.setForeground(Color.WHITE);
-        btn.setFont(UIConstants.FONT_HEADER);
+        btn.setFont(UIConstants.FONT_HEADER);  // Segoe UI Bold 14
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Padding interno uniforme
+        btn.setMargin(new Insets(5, 14, 5, 14));
 
         return btn;
     }
 
-    private static Color darken(Color color, float factor) {
+    // ── Helpers de color ──────────────────────────────────────────────────────
+
+    private static Color darken(Color c, float factor) {
         return new Color(
-                (int) (color.getRed() * factor),
-                (int) (color.getGreen() * factor),
-                (int) (color.getBlue() * factor),
-                color.getAlpha()
-        );
+                clamp((int) (c.getRed()   * factor)),
+                clamp((int) (c.getGreen() * factor)),
+                clamp((int) (c.getBlue()  * factor)),
+                c.getAlpha());
     }
 
-    private static Color brighten(Color color, float factor) {
+    private static Color brighten(Color c, float factor) {
         return new Color(
-                Math.min((int) (color.getRed() * factor), 255),
-                Math.min((int) (color.getGreen() * factor), 255),
-                Math.min((int) (color.getBlue() * factor), 255),
-                color.getAlpha()
-        );
+                clamp((int) (c.getRed()   * factor)),
+                clamp((int) (c.getGreen() * factor)),
+                clamp((int) (c.getBlue()  * factor)),
+                c.getAlpha());
     }
 
-    private ButtonFactory() {}
+    /** Mezcla el color con gris para simular estado deshabilitado. */
+    private static Color desaturate(Color c, float mix) {
+        int gray = (c.getRed() + c.getGreen() + c.getBlue()) / 3;
+        return new Color(
+                clamp((int) (c.getRed()   * (1 - mix) + gray * mix)),
+                clamp((int) (c.getGreen() * (1 - mix) + gray * mix)),
+                clamp((int) (c.getBlue()  * (1 - mix) + gray * mix)),
+                c.getAlpha());
+    }
+
+    private static int clamp(int v) {
+        return Math.max(0, Math.min(255, v));
+    }
 }
