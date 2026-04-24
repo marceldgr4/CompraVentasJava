@@ -26,10 +26,10 @@ public class AuthService {
 
     public void Login(String email, String password) throws AuthException {
         if(email == null || email.isBlank()) {
-        throw new AuthException("The Email is obligatory");
+        throw new AuthException("El correo electrónico es obligatorio");
         }
         if(password == null || password.isBlank()) {
-            throw new AuthException("The Password is obligatory");
+            throw new AuthException("La contraseña es obligatoria");
         }
 
         String body = String.format(
@@ -45,7 +45,7 @@ public class AuthService {
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new AuthException("Email o password incorrect");
+                throw new AuthException("Correo o contraseña incorrectos");
             }
             AuthResponse authResponse = mapper.readValue(response.body(), AuthResponse.class);
             String userId = authResponse.getUser().getId();
@@ -59,7 +59,7 @@ public class AuthService {
             ProfileService profileService = new ProfileService();
             Profile profile = profileService.findById(userId);
             if (!profile.isActive()) {
-                throw new AuthException("User disable. call Admin");
+                throw new AuthException("Usuario deshabilitado. Llame al administrador");
             }
 
             SessionManager.startSession(
@@ -80,7 +80,7 @@ public class AuthService {
     // Register the employees(only admin)
     public void registerEmployee(String email, String password, String full_name) throws AuthException {
         if (!SessionManager.isAdmin()) {
-            throw new AuthException("Only the admin can register employees");
+            throw new AuthException("Solo el administrador puede registrar empleados");
         }
 
         String body = String.format(
@@ -100,11 +100,11 @@ public class AuthService {
                 JsonNode err = mapper.readTree(response.body());
                 String msg = err.has("msg")
                         ? err.get("msg").asText()
-                :err.path("message").asText("ERRO Register user");
+                :err.path("message").asText("Error al registrar usuario");
                 throw new AuthException(msg);
             }
         } catch (IOException | InterruptedException e) {
-            throw new AuthException("Error the RED" + e.getMessage());
+            throw new AuthException("Error de red: " + e.getMessage());
         }
     }
 

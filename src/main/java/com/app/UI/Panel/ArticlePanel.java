@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
 public class ArticlePanel extends JPanel {
 
     private static final String[] COLUMNS = {
-            "Id", "Name", "Description", "Amount", "Price", "Sold"
+            "Id", "Nombre", "Descripción", "Cantidad", "Precio", "Vendido"
     };
 
     private JTable             table;
@@ -74,14 +74,14 @@ public class ArticlePanel extends JPanel {
 
         txtSearch = new JTextField(20);
         txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtSearch.putClientProperty("JTextField.placeholderText", "Search Article...");
+        txtSearch.putClientProperty("JTextField.placeholderText", "Buscar artículo...");
         txtSearch.addActionListener(e -> doSearch());
 
         // Botón Search — usa ButtonFactory (color azul correcto en Windows)
-        JButton btnSearch = ButtonFactory.createPrimaryButton("Search");
+        JButton btnSearch = ButtonFactory.createPrimaryButton("Buscar");
         btnSearch.addActionListener(e -> doSearch());
 
-        panel.add(new JLabel("Search: "));
+        panel.add(new JLabel("Buscar: "));
         panel.add(txtSearch);
         panel.add(btnSearch);
         return panel;
@@ -92,10 +92,10 @@ public class ArticlePanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         panel.setOpaque(false);
 
-        btnNew     = ButtonFactory.createPrimaryButton("+ New");
-        btnEdit    = ButtonFactory.createWarningButton("Edit");
-        btnDelete  = ButtonFactory.createDangerButton("Delete");
-        btnRefresh = ButtonFactory.createNeutralButton("Refresh");
+        btnNew     = ButtonFactory.createPrimaryButton("+ Nuevo");
+        btnEdit    = ButtonFactory.createWarningButton("Editar");
+        btnDelete  = ButtonFactory.createDangerButton("Eliminar");
+        btnRefresh = ButtonFactory.createNeutralButton("Actualizar");
 
         btnNew    .addActionListener(e -> openNewDialog());
         btnEdit   .addActionListener(e -> openEditDialog());
@@ -137,7 +137,7 @@ public class ArticlePanel extends JPanel {
     }
 
     private JLabel buildStatusBar() {
-        lblStatus = new JLabel("Loading...");
+        lblStatus = new JLabel("Cargando...");
         lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblStatus.setForeground(Color.DARK_GRAY);
         lblStatus.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
@@ -155,7 +155,7 @@ public class ArticlePanel extends JPanel {
     // ── Operaciones ───────────────────────────────────────────────────────────
 
     private void loadTable() {
-        lblStatus.setText("Loading...");
+        lblStatus.setText("Cargando...");
         tableModel.setRowCount(0);
         new LoadTask().execute();
     }
@@ -164,7 +164,7 @@ public class ArticlePanel extends JPanel {
         String term = txtSearch.getText().trim();
         if (term.isEmpty()) { loadTable(); return; }
         tableModel.setRowCount(0);
-        lblStatus.setText("Searching...");
+        lblStatus.setText("Buscando...");
         new SearchTask(term).execute();
     }
 
@@ -179,7 +179,7 @@ public class ArticlePanel extends JPanel {
 
     private void openEditDialog() {
         Article selected = getSelectedArticle();
-        if (selected == null) { showWarning("Select an article to edit."); return; }
+        if (selected == null) { showWarning("Seleccione un artículo para editar."); return; }
 
         ArticleDialog dlg = new ArticleDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), selected);
@@ -194,12 +194,12 @@ public class ArticlePanel extends JPanel {
 
     private void doDelete() {
         Article selected = getSelectedArticle();
-        if (selected == null) { showWarning("Select an article to delete."); return; }
+        if (selected == null) { showWarning("Seleccione un artículo para eliminar."); return; }
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
-                "Delete \"" + selected.getNameArticle() + "\"?",
-                "Confirm Delete",
+                "¿Eliminar \"" + selected.getNameArticle() + "\"?",
+                "Confirmar eliminación",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         if (choice == JOptionPane.YES_OPTION) {
@@ -217,7 +217,7 @@ public class ArticlePanel extends JPanel {
         String desc   = (String) tableModel.getValueAt(row, 2);
         int    amount = (int)    tableModel.getValueAt(row, 3);
         String price  = tableModel.getValueAt(row, 4).toString().replace("$", "");
-        boolean sold  = "Yes".equals(tableModel.getValueAt(row, 5));
+        boolean sold  = "Sí".equals(tableModel.getValueAt(row, 5));
         return new Article(id, name, desc, amount, new BigDecimal(price), sold, null);
     }
 
@@ -230,19 +230,19 @@ public class ArticlePanel extends JPanel {
                     a.getDescription(),
                     a.getAmount(),
                     "$" + a.getPrice(),
-                    a.isSold() ? "Yes" : "No"
+                    a.isSold() ? "Sí" : "No"
             });
         }
     }
 
     private void showWarning(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, msg, "Advertencia", JOptionPane.WARNING_MESSAGE);
     }
     private void showError(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
     private void showSuccess(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Success", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // ── SwingWorker tasks ─────────────────────────────────────────────────────
@@ -255,10 +255,10 @@ public class ArticlePanel extends JPanel {
             try {
                 List<Article> list = get();
                 populateTable(list);
-                lblStatus.setText(list.size() + " article(s) loaded");
+                lblStatus.setText(list.size() + " artículo(s) cargado(s)");
             } catch (ExecutionException ex) {
-                lblStatus.setText("Error loading data");
-                showError("Load failed: " + ex.getCause().getMessage());
+                lblStatus.setText("Error al cargar datos");
+                showError("Error al cargar: " + ex.getCause().getMessage());
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
@@ -276,9 +276,9 @@ public class ArticlePanel extends JPanel {
             try {
                 List<Article> list = get();
                 populateTable(list);
-                lblStatus.setText(list.size() + " result(s)");
+                lblStatus.setText(list.size() + " resultado(s)");
             } catch (ExecutionException ex) {
-                showError("Search failed: " + ex.getCause().getMessage());
+                showError("Error en la búsqueda: " + ex.getCause().getMessage());
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
@@ -293,8 +293,8 @@ public class ArticlePanel extends JPanel {
             articleService.create(article); return null;
         }
         @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Article created."); }
-            catch (ExecutionException ex) { showError("Create failed: " + ex.getCause().getMessage()); }
+            try { get(); loadTable(); showSuccess("Artículo creado."); }
+            catch (ExecutionException ex) { showError("Error al crear: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -307,8 +307,8 @@ public class ArticlePanel extends JPanel {
             articleService.edit(article); return null;
         }
         @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Article updated."); }
-            catch (ExecutionException ex) { showError("Update failed: " + ex.getCause().getMessage()); }
+            try { get(); loadTable(); showSuccess("Artículo actualizado."); }
+            catch (ExecutionException ex) { showError("Error al actualizar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -321,8 +321,8 @@ public class ArticlePanel extends JPanel {
             articleService.remove(id); return null;
         }
         @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Article deleted."); }
-            catch (ExecutionException ex) { showError("Delete failed: " + ex.getCause().getMessage()); }
+            try { get(); loadTable(); showSuccess("Artículo eliminado."); }
+            catch (ExecutionException ex) { showError("Error al eliminar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }

@@ -14,11 +14,11 @@ public class ProfileService {
         try {
             Profile profile = profileDAO.findById(id);
             if (profile == null) {
-                throw new ServiceException("profile not found for id:" + id);
+                throw new ServiceException("No se encontró el perfil con ID: " + id);
             }
             return profile;
         } catch (SQLException e) {
-            throw new ServiceException("Error search ´profile" + e.getMessage());
+            throw new ServiceException("Error al buscar perfil: " + e.getMessage());
         }
     }
 
@@ -26,7 +26,7 @@ public class ProfileService {
         try {
             return profileDAO.findAll();
         } catch (SQLException e) {
-            throw new ServiceException("Error list the profile");
+            throw new ServiceException("Error al listar los perfiles");
         }
     }
 
@@ -35,7 +35,7 @@ public class ProfileService {
             profileDAO.updateActive(id, active);
 
         } catch (SQLException e) {
-            throw new ServiceException("Error update status:" + e.getMessage());
+            throw new ServiceException("Error al actualizar el estado: " + e.getMessage());
 
         }
     }

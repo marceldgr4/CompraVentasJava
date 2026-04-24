@@ -25,7 +25,7 @@ public class PawnDialog extends JDialog {
     private Pawn pawn;
 
     public PawnDialog(JFrame parent, Pawn pawn) {
-        super(parent, pawn == null ? "New Pawn Record" : "Edit Pawn Record", true);
+        super(parent, pawn == null ? "Nuevo Registro de Empeño" : "Editar Registro de Empeño", true);
         this.pawn = pawn;
         initComponents();
         if (pawn != null) fillFields(pawn);
@@ -134,7 +134,7 @@ public class PawnDialog extends JDialog {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Error loading clientes: " + ex.getMessage(),
+                    "Error al cargar clientes: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -149,7 +149,7 @@ public class PawnDialog extends JDialog {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Error loading articles: " + ex.getMessage(),
+                    "Error al cargar artículos: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }

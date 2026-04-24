@@ -15,7 +15,7 @@ public class ClienteDialog extends JDialog {
     private boolean confirmed = false;
 
     public ClienteDialog(JFrame parent, Cliente cliente) {
-        super(parent, cliente == null ? "New Client" : "Edit Client", true);
+        super(parent, cliente == null ? "Nuevo Cliente" : "Editar Cliente", true);
         initComponents();
         if (cliente != null) fillFields(cliente);
         setSize(400, 280);
@@ -35,7 +35,7 @@ public class ClienteDialog extends JDialog {
 
         // First Name
         gc.gridx = 0; gc.gridy = 0; gc.weightx = 0;
-        form.add(new JLabel("First Name:"), gc);
+        form.add(new JLabel("Nombre:"), gc);
         gc.gridx = 1; gc.weightx = 1;
         txtFirstName = new JTextField();
         txtFirstName.setFont(fieldFont);
@@ -43,7 +43,7 @@ public class ClienteDialog extends JDialog {
 
         // Last Name
         gc.gridx = 0; gc.gridy = 1; gc.weightx = 0;
-        form.add(new JLabel("Last Name:"), gc);
+        form.add(new JLabel("Apellido:"), gc);
         gc.gridx = 1; gc.weightx = 1;
         txtLastName = new JTextField();
         txtLastName.setFont(fieldFont);
@@ -51,7 +51,7 @@ public class ClienteDialog extends JDialog {
 
         // Email
         gc.gridx = 0; gc.gridy = 2; gc.weightx = 0;
-        form.add(new JLabel("Email:"), gc);
+        form.add(new JLabel("Correo electrónico:"), gc);
         gc.gridx = 1; gc.weightx = 1;
         txtEmail = new JTextField();
         txtEmail.setFont(fieldFont);
@@ -59,7 +59,7 @@ public class ClienteDialog extends JDialog {
 
         // Phone
         gc.gridx = 0; gc.gridy = 3; gc.weightx = 0;
-        form.add(new JLabel("Phone:"), gc);
+        form.add(new JLabel("Teléfono:"), gc);
         gc.gridx = 1; gc.weightx = 1;
         txtPhone = new JTextField();
         txtPhone.setFont(fieldFont);
@@ -68,9 +68,9 @@ public class ClienteDialog extends JDialog {
         // Buttons
         gc.gridy = 4; gc.gridwidth = 2;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        btnCancel = new JButton("Cancel");
+        btnCancel = new JButton("Cancelar");
         btnCancel.addActionListener(e -> dispose());
-        btnSave = new JButton("Save");
+        btnSave = new JButton("Guardar");
         btnSave.setBackground(new Color(30, 136, 229));
         btnSave.setForeground(Color.WHITE);
         btnSave.setBorderPainted(false);
@@ -94,7 +94,7 @@ public class ClienteDialog extends JDialog {
 
     private void doSave() {
         if (txtFirstName.getText().isBlank() || txtLastName.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Name is required");
+            JOptionPane.showMessageDialog(this, "El nombre y apellido son obligatorios");
             return;
         }
         confirmed = true;
