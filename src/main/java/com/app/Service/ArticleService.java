@@ -20,7 +20,7 @@ public class ArticleService {
             return articleDAO.findAll();
 
         } catch (SQLException e) {
-            throw new ServiceException("Error loading inventory " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario: " + e.getMessage());
         }
     }
 
@@ -31,7 +31,7 @@ public class ArticleService {
                     .filter(Article::hasStock)
                     .collect(Collectors.toList());
         }catch (SQLException e){
-            throw new ServiceException("Error loading article sold " + e.getMessage());
+            throw new ServiceException("Error al cargar los artículos vendidos: " + e.getMessage());
         }
     }
 
@@ -40,12 +40,12 @@ public class ArticleService {
     // -------------------------------------------------------
     public List<Article> search(String name) throws ServiceException {
         if (name == null || name.isBlank()) {
-            throw new ServiceException("Name cannot be null or blank");
+            throw new ServiceException("El nombre no puede ser nulo o estar vacío");
         }
         try {
             return articleDAO.findByName(name.trim());
         } catch (SQLException e) {
-            throw new ServiceException("Error in search " + e.getMessage());
+            throw new ServiceException("Error en la búsqueda: " + e.getMessage());
         }
     }
 
@@ -59,7 +59,7 @@ public class ArticleService {
                     .filter(Article::hasStock)
                     .collect(Collectors.toList());
         } catch (SQLException e) {
-            throw new ServiceException("Error loading inventory for employee " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario del empleado: " + e.getMessage());
         }
     }
 
@@ -68,49 +68,49 @@ public class ArticleService {
     // -------------------------------------------------------
 
     public Article create(Article article) throws ServiceException {
-        requireAdmin("create new articles");
+        requireAdmin("crear nuevos artículos");
         validateArticle(article);
         try {
             return articleDAO.save(article);
         } catch (SQLException e) {
-            throw new ServiceException("Error creating article " + e.getMessage());
+            throw new ServiceException("Error al crear el artículo: " + e.getMessage());
         }
     }
 
     private void validateArticle(Article article) throws ServiceException {
         if (article.getNameArticle() == null || article.getNameArticle().isBlank()) {
-            throw new ServiceException("Name article cannot be null or blank");
+            throw new ServiceException("El nombre del artículo no puede ser nulo o estar vacío");
         }
         if (article.getNameArticle().length() > 255) {
-            throw new ServiceException("Name article is too long");
+            throw new ServiceException("El nombre del artículo es demasiado largo");
         }
         if (article.getPrice() == null || article.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ServiceException("The price must be greater than 0.  ");
+            throw new ServiceException("El precio debe ser mayor que 0.");
         }
         if (article.getAmount() < 0) {
-            throw new ServiceException("The amount cannot be negative.");
+            throw new ServiceException("La cantidad no puede ser negativa.");
         }
 
     }
 
     private void requireAdmin(String accion) throws ServiceException {
         if (!SessionManager.isAdmin()) {
-            throw new ServiceException("You are not allowed to perform this operation" + accion + "alone the admin can created new articles or items ");
+            throw new ServiceException("No tiene permisos para " + accion + ". Solo el administrador puede realizar esta operación.");
         }
     }
     // -------------------------------------------------------
     // UPDATE — editar nombre, precio y tipo (solo Admin)
     // -------------------------------------------------------
     public void edit(Article article) throws ServiceException {
-        requireAdmin("edit article");
+        requireAdmin("editar artículo");
         validateArticle(article);
         try{
             boolean updated = articleDAO.update(article);
             if (!updated) {
-                throw new ServiceException("Error not find id the article "+article.getId());
+                throw new ServiceException("Error: no se encontró el artículo con ID " + article.getId());
             }
         } catch (SQLException e){
-            throw new ServiceException("Error updating article " + e.getMessage());
+            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage());
         }
     }
         //---------
@@ -118,54 +118,54 @@ public class ArticleService {
         //--------
     public void addStock(int articleId, int quantity) throws ServiceException {
         if (quantity <= 0) {
-            throw new ServiceException("The quantity must be greater than 0.");
+            throw new ServiceException("La cantidad debe ser mayor que 0.");
         }
         try{
             Article article = articleDAO.findById(articleId)
                     .orElseThrow(()-> new ServiceException(
-                            "Article id" + articleId+ " not find"
+                            "No se encontró el artículo con ID " + articleId
                     ));
             int newAmount = article.getAmount() + quantity;
             articleDAO.updateAmount(articleId, newAmount);
         } catch (SQLException e){
-            throw new ServiceException("Error updating article " + e.getMessage());
+            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage());
         }
 
     }
     public void removeStock(int articleId, int quantity) throws ServiceException {
         if (quantity <= 0) {
-            throw new ServiceException("The quantity must be greater than 0.");
+            throw new ServiceException("La cantidad debe ser mayor que 0.");
 
         }
         try {
             Article article = articleDAO.findById(articleId).orElseThrow(() -> new ServiceException(
-                    "Article id" + articleId + "not find"));
+                    "No se encontró el artículo con ID " + articleId));
 
             if (article.getAmount() < quantity) {
-                throw new ServiceException("The out of stock. disponible " + article.getAmount() + "- Required" + quantity);
+                throw new ServiceException("Sin stock suficiente. Disponible: " + article.getAmount() + " - Requerido: " + quantity);
 
             }
             int newAmount = article.getAmount() - quantity;
             articleDAO.updateAmount(articleId, newAmount);
         } catch (SQLException e) {
-            throw new ServiceException("Error remove article " + e.getMessage());
+            throw new ServiceException("Error al retirar stock: " + e.getMessage());
         }
     }
 
         public void remove(int articleId) throws ServiceException{
-        requireAdmin("deleted article");
+        requireAdmin("eliminar artículo");
         try{
             articleDAO.findById(articleId).orElseThrow(()-> new ServiceException(
-                    "Article id" + articleId+ "not find"
+                    "No se encontró el artículo con ID " + articleId
             ));
 
             boolean deleted = articleDAO.delete(articleId);
             if (!deleted) {
-                throw  new ServiceException("not can deleted article."+ "can sale in procese");
+                throw  new ServiceException("No se pudo eliminar el artículo. Puede estar en una venta en proceso.");
             }
 
         }catch (SQLException e){
-            throw new ServiceException("Error deleted article"+ e.getMessage());
+            throw new ServiceException("Error al eliminar el artículo: " + e.getMessage());
         }
     }
 }

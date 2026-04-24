@@ -8,13 +8,13 @@ public class TestDb {
         String user = "postgres.scmpgdbjihllikburuub";
         String pass = "Marceldgr304i";
 
-        System.out.println("Testing connection to: " + url + " with user " + user);
+        System.out.println("Probando conexión a: " + url + " con usuario " + user);
         try (Connection con = DriverManager.getConnection(url, user, pass)) {
-            System.out.println("SUCCESS! Connection established on port 6543.");
+            System.out.println("¡ÉXITO! Conexión establecida en el puerto 6543.");
             boolean isValid = con.isValid(5);
-            System.out.println("Connection valid: " + isValid);
+            System.out.println("Conexión válida: " + isValid);
         } catch (SQLException e) {
-            System.err.println("FAILED! Error details:");
+            System.err.println("¡FALLÓ! Detalles del error:");
             e.printStackTrace();
         }
     }

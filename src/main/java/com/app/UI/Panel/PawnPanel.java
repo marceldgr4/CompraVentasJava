@@ -80,11 +80,11 @@ public class PawnPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         panel.setOpaque(false);
 
-        JLabel lbl = new JLabel("Filter:");
+        JLabel lbl = new JLabel("Filtro:");
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         cmbFilter = new JComboBox<>(
-                new String[]{"All", "Active", "Overdue", "Returned", "Expired"});
+                new String[]{"Todos", "Activos", "Vencidos", "Devueltos", "Expirados"});
         cmbFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cmbFilter.addActionListener(e -> applyFilter());
 
@@ -101,12 +101,12 @@ public class PawnPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         panel.setOpaque(false);
 
-        btnNew            = ButtonFactory.createPrimaryButton("+ New Pawn");
-        btnEdit           = ButtonFactory.createWarningButton("Edit");
-        btnMarkReturned   = ButtonFactory.createSuccessButton("Mark Returned");
-        btnDelete         = ButtonFactory.createDangerButton("Delete");
-        btnProcessOverdue = ButtonFactory.createAmberButton("Process Overdue");
-        btnRefresh        = ButtonFactory.createNeutralButton("Refresh");
+        btnNew            = ButtonFactory.createPrimaryButton("+ Nuevo empeño");
+        btnEdit           = ButtonFactory.createWarningButton("Editar");
+        btnMarkReturned   = ButtonFactory.createSuccessButton("Marcar devuelto");
+        btnDelete         = ButtonFactory.createDangerButton("Eliminar");
+        btnProcessOverdue = ButtonFactory.createAmberButton("Procesar vencidos");
+        btnRefresh        = ButtonFactory.createNeutralButton("Actualizar");
 
         btnNew           .addActionListener(e -> openNewDialog());
         btnEdit          .addActionListener(e -> openEditDialog());
@@ -146,11 +146,11 @@ public class PawnPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
-        lblStatus = new JLabel("Loading...");
+        lblStatus = new JLabel("Cargando...");
         lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblStatus.setForeground(Color.DARK_GRAY);
 
-        lblTotal = new JLabel("Total Active Value: $0.00");
+        lblTotal = new JLabel("Valor total activo: $0.00");
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTotal.setForeground(new Color(56, 142, 60));
 
@@ -171,18 +171,18 @@ public class PawnPanel extends JPanel {
     // ── Operaciones ───────────────────────────────────────────────────────────
 
     private void loadData() {
-        lblStatus.setText("Loading...");
+        lblStatus.setText("Cargando...");
         tableModel.setRowCount(0);
         new LoadPawnsTask().execute();
     }
 
     private void applyFilter() {
         String filter = (String) cmbFilter.getSelectedItem();
-        if (filter == null || "All".equals(filter)) {
+        if (filter == null || "Todos".equals(filter)) {
             loadData();
             return;
         }
-        lblStatus.setText("Filtering: " + filter);
+        lblStatus.setText("Filtrando: " + filter);
         tableModel.setRowCount(0);
         new FilterPawnsTask(filter).execute();
     }
@@ -196,7 +196,7 @@ public class PawnPanel extends JPanel {
 
     private void openEditDialog() {
         Pawn selected = getSelectedPawn();
-        if (selected == null) { showWarning("Select a pawn to edit."); return; }
+        if (selected == null) { showWarning("Seleccione un empeño para editar."); return; }
         PawnDialog dlg = new PawnDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), selected);
         dlg.setVisible(true);
@@ -205,27 +205,27 @@ public class PawnPanel extends JPanel {
 
     private void doMarkReturned() {
         Pawn selected = getSelectedPawn();
-        if (selected == null) { showWarning("Select a pawn to mark as returned."); return; }
+        if (selected == null) { showWarning("Seleccione un empeño para marcar como devuelto."); return; }
         int ok = JOptionPane.showConfirmDialog(this,
-                "Mark pawn #" + selected.getId() + " as returned?",
-                "Confirm", JOptionPane.YES_NO_OPTION);
+                "¿Marcar empeño #" + selected.getId() + " como devuelto?",
+                "Confirmar", JOptionPane.YES_NO_OPTION);
         if (ok == JOptionPane.YES_OPTION) new MarkReturnedTask(selected.getId()).execute();
     }
 
     private void doDelete() {
         Pawn selected = getSelectedPawn();
-        if (selected == null) { showWarning("Select a pawn to delete."); return; }
+        if (selected == null) { showWarning("Seleccione un empeño para eliminar."); return; }
         int ok = JOptionPane.showConfirmDialog(this,
-                "Delete pawn #" + selected.getId() + "?",
-                "Confirm Delete", JOptionPane.YES_NO_OPTION,
+                "¿Eliminar empeño #" + selected.getId() + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         if (ok == JOptionPane.YES_OPTION) new DeleteTask(selected.getId()).execute();
     }
 
     private void doProcessOverdue() {
         int ok = JOptionPane.showConfirmDialog(this,
-                "Process all overdue pawns? This marks them as expired.",
-                "Confirm", JOptionPane.YES_NO_OPTION,
+                "¿Procesar todos los empeños vencidos? Esto los marcará como expirados.",
+                "Confirmar", JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         if (ok == JOptionPane.YES_OPTION) new ProcessOverdueTask().execute();
     }
@@ -237,7 +237,7 @@ public class PawnPanel extends JPanel {
         if (row < 0) return null;
         int id = (int) tableModel.getValueAt(row, 0);
         try { return pawnService.getById(id).orElse(null); }
-        catch (ServiceException e) { showError("Error loading pawn: " + e.getMessage()); return null; }
+        catch (ServiceException e) { showError("Error al cargar empeño: " + e.getMessage()); return null; }
     }
 
     private void populateTable(List<Pawn> pawns) {
@@ -261,23 +261,23 @@ public class PawnPanel extends JPanel {
     private void refreshTotalValue() {
         try {
             var total = pawnService.getTotalActiveValues();
-            lblTotal.setText("Total Active Value: $" + total);
+            lblTotal.setText("Valor total activo: $" + total);
         } catch (ServiceException e) {
             lblTotal.setText("Total: Error");
         }
     }
 
     private void showError  (String msg) { JOptionPane.showMessageDialog(this, msg, "Error",   JOptionPane.ERROR_MESSAGE); }
-    private void showWarning(String msg) { JOptionPane.showMessageDialog(this, msg, "Warning", JOptionPane.WARNING_MESSAGE); }
-    private void showSuccess(String msg) { JOptionPane.showMessageDialog(this, msg, "Success", JOptionPane.INFORMATION_MESSAGE); }
+    private void showWarning(String msg) { JOptionPane.showMessageDialog(this, msg, "Advertencia", JOptionPane.WARNING_MESSAGE); }
+    private void showSuccess(String msg) { JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE); }
 
     // ── SwingWorker tasks ─────────────────────────────────────────────────────
 
     private class LoadPawnsTask extends SwingWorker<List<Pawn>, Void> {
         @Override protected List<Pawn> doInBackground() throws Exception { return pawnService.getAll(); }
         @Override protected void done() {
-            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " pawns loaded"); refreshTotalValue(); }
-            catch (ExecutionException ex) { showError("Load failed: " + ex.getCause().getMessage()); }
+            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " empeño(s) cargado(s)"); refreshTotalValue(); }
+            catch (ExecutionException ex) { showError("Error al cargar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -287,14 +287,14 @@ public class PawnPanel extends JPanel {
         FilterPawnsTask(String f) { this.filter = f; }
         @Override protected List<Pawn> doInBackground() throws Exception {
             return switch (filter) {
-                case "Active"  -> pawnService.getActivePawns();
-                case "Overdue" -> pawnService.getOverduePawns();
+                case "Activos"  -> pawnService.getActivePawns();
+                case "Vencidos" -> pawnService.getOverduePawns();
                 default        -> pawnService.getAll();
             };
         }
         @Override protected void done() {
-            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " pawns"); refreshTotalValue(); }
-            catch (ExecutionException ex) { showError("Filter failed: " + ex.getCause().getMessage()); }
+            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " empeño(s)"); refreshTotalValue(); }
+            catch (ExecutionException ex) { showError("Error de filtrado: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -304,8 +304,8 @@ public class PawnPanel extends JPanel {
         CreatePawnTask(Pawn p) { this.pawn = p; }
         @Override protected Void doInBackground() throws Exception { pawnService.create(pawn); return null; }
         @Override protected void done() {
-            try { get(); loadData(); showSuccess("Pawn created."); }
-            catch (ExecutionException ex) { showError("Create failed: " + ex.getCause().getMessage()); }
+            try { get(); loadData(); showSuccess("Empeño creado."); }
+            catch (ExecutionException ex) { showError("Error al crear: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -315,8 +315,8 @@ public class PawnPanel extends JPanel {
         UpdatePawnTask(Pawn p) { this.pawn = p; }
         @Override protected Void doInBackground() throws Exception { pawnService.update(pawn); return null; }
         @Override protected void done() {
-            try { get(); loadData(); showSuccess("Pawn updated."); }
-            catch (ExecutionException ex) { showError("Update failed: " + ex.getCause().getMessage()); }
+            try { get(); loadData(); showSuccess("Empeño actualizado."); }
+            catch (ExecutionException ex) { showError("Error al actualizar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -326,8 +326,8 @@ public class PawnPanel extends JPanel {
         DeleteTask(int id) { this.id = id; }
         @Override protected Void doInBackground() throws Exception { pawnService.delete(id); return null; }
         @Override protected void done() {
-            try { get(); loadData(); showSuccess("Pawn deleted."); }
-            catch (ExecutionException ex) { showError("Delete failed: " + ex.getCause().getMessage()); }
+            try { get(); loadData(); showSuccess("Empeño eliminado."); }
+            catch (ExecutionException ex) { showError("Error al eliminar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -337,8 +337,8 @@ public class PawnPanel extends JPanel {
         MarkReturnedTask(int id) { this.id = id; }
         @Override protected Void doInBackground() throws Exception { pawnService.markAsReturned(id); return null; }
         @Override protected void done() {
-            try { get(); loadData(); showSuccess("Pawn marked as returned."); }
-            catch (ExecutionException ex) { showError("Mark failed: " + ex.getCause().getMessage()); }
+            try { get(); loadData(); showSuccess("Empeño marcado como devuelto."); }
+            catch (ExecutionException ex) { showError("Error al marcar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }
@@ -346,8 +346,8 @@ public class PawnPanel extends JPanel {
     private class ProcessOverdueTask extends SwingWorker<Integer, Void> {
         @Override protected Integer doInBackground() throws Exception { return pawnService.processOverduePawns(); }
         @Override protected void done() {
-            try { int n = get(); loadData(); showSuccess(n + " overdue pawn(s) processed."); }
-            catch (ExecutionException ex) { showError("Process failed: " + ex.getCause().getMessage()); }
+            try { int n = get(); loadData(); showSuccess(n + " empeño(s) vencido(s) procesado(s)."); }
+            catch (ExecutionException ex) { showError("Error al procesar: " + ex.getCause().getMessage()); }
             catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
         }
     }

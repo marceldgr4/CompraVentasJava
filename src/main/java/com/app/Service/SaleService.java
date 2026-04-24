@@ -20,38 +20,38 @@ public class SaleService {
             return saleDao.findAll();
 
         }catch(SQLException e){
-            throw new ServiceException("Error loading all Sale"+e.getMessage(),e);
+            throw new ServiceException("Error al cargar todas las ventas: "+e.getMessage(),e);
         }
     }
     public Sale findById(int id) throws ServiceException{
         try{
-            return saleDao.findById(id).orElseThrow(()-> new ServiceException("Sale"+id+" not found"));
+            return saleDao.findById(id).orElseThrow(()-> new ServiceException("Venta "+id+" no encontrada"));
         }catch (SQLException e){
-            throw new ServiceException("Sale"+id+" not found",e);
+            throw new ServiceException("Venta "+id+" no encontrada",e);
         }
     }
     public List<Sale> findByCliente(int clienteId) throws ServiceException{
         try{
             return saleDao.findClientes(clienteId);
         }catch (SQLException e){
-            throw new ServiceException("Error the Sale not found cliente" + e.getMessage(),e);
+            throw new ServiceException("Error: cliente de la venta no encontrado: " + e.getMessage(),e);
         }
     }
     public List<Sale> findByProfile(String profile) throws ServiceException{
         try{
             return saleDao.findByProfile(profile);
         }catch (SQLException e){
-            throw new ServiceException("Error the Sale not found profile" + e.getMessage(),e);
+            throw new ServiceException("Error: perfil de la venta no encontrado: " + e.getMessage(),e);
         }
     }
        public List<Sale> finByDateRange(LocalDate from, LocalDate to) throws ServiceException{
         if(from == null||to == null|| from.isAfter(to)){
-            throw new BusinessException("Error the range from "+from+" to "+to);
+            throw new BusinessException("Error en el rango de fechas de "+from+" a "+to);
         }
         try{
             return saleDao.findByDateRange(from,to);
         }catch (SQLException e){
-            throw new ServiceException("Error the Sale not found date"+e.getMessage(),e);
+            throw new ServiceException("Error al buscar ventas por fecha: "+e.getMessage(),e);
         }
     }
     // -------------------------------------------------------
@@ -77,7 +77,7 @@ public class SaleService {
                     articleService.addStock(detail.getArticleId(),detail.getAmount());
                 } catch (ServiceException ignored){}
             }
-            throw new ServiceException("Error the persister a Sale not found"+e.getMessage(),e);
+            throw new ServiceException("Error: no se pudo guardar la venta: "+e.getMessage(),e);
         }
     }
 
@@ -86,20 +86,20 @@ public class SaleService {
     // -------------------------------------------------------
 
     public void delete(int id) throws ServiceException{
-        requireAdmin("delect Sale");
+        requireAdmin("eliminar venta");
         try{
             boolean deletec = saleDao.delete(id);
             if(!deletec){
-                throw new ServiceException("Sale"+id+" not found");
+                throw new ServiceException("Venta "+id+" no encontrada");
             }
         }
         catch (SQLException e){
-            throw new ServiceException("Erro the deletec Sale"+id+" not found"+e.getMessage(), e);
+            throw new ServiceException("Error al eliminar la venta "+id+": "+e.getMessage(), e);
         }
     }
     private void requireAdmin(String action) throws ServiceException{
         if(!SessionManager.isAdmin()){
-            throw new ServiceException("You are not admin, Only administrator hava "+ action);
+            throw new ServiceException("No es administrador. Solo el administrador tiene permiso para "+ action);
         }
     }
     private void validateSale(Sale sale) throws ServiceException{
