@@ -191,7 +191,7 @@ public class PawnPanel extends JPanel {
         PawnDialog dlg = new PawnDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) new CreatePawnTask(dlg.getPawn()).execute();
+        if (dlg.isConfirmed()) new CreatePawnTask(dlg.getExistingPawn()).execute();
     }
 
     private void openEditDialog() {
@@ -200,7 +200,7 @@ public class PawnPanel extends JPanel {
         PawnDialog dlg = new PawnDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), selected);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) new UpdatePawnTask(dlg.getPawn()).execute();
+        if (dlg.isConfirmed()) new UpdatePawnTask(dlg.getExistingPawn()).execute();
     }
 
     private void doMarkReturned() {

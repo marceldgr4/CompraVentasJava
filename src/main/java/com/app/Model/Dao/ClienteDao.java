@@ -2,6 +2,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Cliente;
+import com.app.Model.domain.ClienteStatus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,29 +17,36 @@ public class ClienteDao {
     // -------------------------------------------------------
     // READ — lista completa
     // -------------------------------------------------------
+    public List<Cliente> getAllActive() throws SQLException {
+        return findByStatus(ClienteStatus.Activo);
+    }
+
     public List<Cliente> findAll() throws SQLException {
         String sql = """
-                   SELECT id, first_name, last_name, email, phone, created_at
+                   SELECT id, first_name, last_name, email, phone,status, created_at,updated_at
                    FROM public.clientes
                    ORDER BY last_name ASC, first_name ASC
                    """;
-        List<Cliente> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRow(rs));
-        }
-        return list;
+        return executeListQuery(sql, ps -> {});
     }
+    public List<Cliente> findByStatus(ClienteStatus status) throws SQLException {
+        String sql = """
+                SELECT id, first_name, last_name, email, phone,status, created_at,updated_at
+                FROM public.clientes
+                WHERE BY last_name ASC, first_name ASC
+                """;
+        return executeListQuery(sql, ps-> ps.setString(1,status.name()));
+    }
+
 
     // -------------------------------------------------------
     // READ — buscar por id
     // -------------------------------------------------------
     public Optional<Cliente> findById(int id) throws SQLException {
         String sql = """
-                SELECT id, first_name, last_name, email, phone, created_at
+                SELECT id, first_name, last_name, email, phone,status, created_at, updated_at
                 FROM public.clientes
-                WHERE id = ?
+                WHERE id=?
         """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -53,12 +61,13 @@ public class ClienteDao {
     // -------------------------------------------------------
     // READ — búsqueda por término (nombre, apellido o email)
     // -------------------------------------------------------
-    public List<Cliente> findByTerm(String term) throws SQLException {
+    public List<Cliente> findByTerm(String term, ClienteStatus filter) throws SQLException {
         String sql = """
-                SELECT id, first_name, last_name, email, phone, created_at
+                SELECT id, first_name, last_name, email, phone, Status, created_at, updated_at
                 FROM public.clientes
                 WHERE LOWER(last_name || ' ' || first_name) LIKE LOWER(?)
-                   OR LOWER(email) LIKE LOWER(?)
+                   OR LOWER(email) LIKE LOWER(?))
+                """ +(filter != null ? "AND status =?::cliente_status":"") + """
                 ORDER BY last_name ASC, first_name ASC
         """;
         List<Cliente> list = new ArrayList<>();
@@ -67,6 +76,7 @@ public class ClienteDao {
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
+            if(filter != null) ps.setString(3, filter.name());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
@@ -79,9 +89,9 @@ public class ClienteDao {
     // -------------------------------------------------------
     public Cliente save(Cliente cliente) throws SQLException {
         String sql = """
-                INSERT INTO public.clientes(first_name, last_name, email, phone)
-                VALUES (?, ?, ?, ?)
-                RETURNING id, created_at
+                INSERT INTO public.clientes(first_name, last_name, email, phone,status)
+                VALUES (?, ?, ?, ?,?::cliente_status)
+                RETURNING id, created_at,updated_at
                 """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -92,7 +102,9 @@ public class ClienteDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     cliente.setId(rs.getInt("id"));
+                    cliente.setStatus(ClienteStatus.Activo);
                     cliente.setCreatedAt(rs.getTimestamp("created_at"));
+                    cliente.setUpdatedAt(rs.getTimestamp("updated_at"));
                 }
             }
         }
@@ -122,6 +134,19 @@ public class ClienteDao {
     // -------------------------------------------------------
     // DELETE — eliminar cliente por id
     // -------------------------------------------------------
+    public boolean softDelete(int id) throws SQLException {
+        String sql = """
+                    UPDATE public.clientes
+                    SET status ='Eliminado' WHERE id = ?::cliente_status"
+                    WHERE id=?
+        """;
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)){
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM public.clientes WHERE id = ?";
         try (Connection con = ConnectionPool.getConnection();
@@ -132,16 +157,39 @@ public class ClienteDao {
     }
 
     // -------------------------------------------------------
-    // Mapping
+    // Mapping Helpers
     // -------------------------------------------------------
+    private List<Cliente> executeListQuery(String sql, SqlSetter setter) throws SQLException {
+        List<Cliente> list = new ArrayList<>();
+        try (Connection con = ConnectionPool.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
+            setter.set(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+
+                }
+            }
+        return list;
+
+    }
+
+
+
     private Cliente mapRow(ResultSet rs) throws SQLException {
+        ClienteStatus status = ClienteStatus.valueOf(rs.getString("status"));
         return new Cliente(
                 rs.getInt("id"),
                 rs.getString("first_name"),
                 rs.getString("last_name"),
                 rs.getString("email"),
                 rs.getString("phone"),
-                rs.getTimestamp("created_at")
+                status,
+                rs.getTimestamp("created_at"),
+                rs.getTimestamp("updated_at")
         );
+    }
+    @FunctionalInterface
+    private interface SqlSetter{
+        void set(PreparedStatement ps) throws SQLException;
     }
 }

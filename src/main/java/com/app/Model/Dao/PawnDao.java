@@ -2,6 +2,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Pawn;
+import com.app.Model.domain.PawnStatus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,52 +16,34 @@ import java.util.Optional;
  */
 public class PawnDao {
 
-    /**
-     * Obtiene todos los empeños con información relacionada.
-     * Incluye nombre del empleado, artículo y cliente.
-     */
+    private static final String SELECT_COLS = """
+            p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
+            p.price, p.weight_grams, p.installment_count, p.installments_paid,
+            p.installments_missed, p.pawn_date, p.return_date,
+            p.status, p.notes, p.updated_at,
+            pr.full_name  AS profile_name,
+            a.name_article AS article_name,
+            CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
+            """;
+
+    private static final String FROM_JOINS = """
+            FROM public.pawns p
+            LEFT JOIN public.profile  pr ON p.profile_id  = pr.id
+            LEFT JOIN public.articles  a ON p.article_id  = a.id
+            LEFT JOIN public.clientes  c ON p.cliente_id  = c.id
+            """;
+
+    //----READ-----
+
     public List<Pawn> findAll() throws SQLException {
-        String sql = """
-                SELECT
-                    p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
-                    p.price, p.pawn_date, p.return_date, p.expired, p.returned, p.updated_at,
-                    pr.full_name AS profile_name,
-                    a.name_article AS article_name,
-                    CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
-                FROM public.pawns p
-                LEFT JOIN public.profile pr ON p.profile_id = pr.id
-                LEFT JOIN public.articles a ON p.article_id = a.id
-                LEFT JOIN public.clientes c ON p.cliente_id = c.id
-                ORDER BY p.pawn_date DESC, p.id DESC
-                """;
-        List<Pawn> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-        }
-        return list;
+        String sql = "SELECT" + SELECT_COLS + FROM_JOINS + " ORDER BY p.pawn_date DESC ,p.id DESC";
+
+        return executeList(sql, ps -> {
+        });
     }
 
-    /**
-     * Busca un empeño por ID con información relacionada.
-     */
     public Optional<Pawn> findById(int id) throws SQLException {
-        String sql = """
-                SELECT
-                    p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
-                    p.price, p.pawn_date, p.return_date, p.expired, p.returned, p.updated_at,
-                    pr.full_name AS profile_name,
-                    a.name_article AS article_name,
-                    CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
-                FROM public.pawns p
-                LEFT JOIN public.profile pr ON p.profile_id = pr.id
-                LEFT JOIN public.articles a ON p.article_id = a.id
-                LEFT JOIN public.clientes c ON p.cliente_id = c.id
-                WHERE p.id = ?
-                """;
+        String sql = "SELECT" + SELECT_COLS + FROM_JOINS + " WHERE p.id = ?";
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -73,132 +56,68 @@ public class PawnDao {
         return Optional.empty();
     }
 
-    /**
-     * Obtiene empeños de un empleado específico.
-     *
-     * @param profileId UUID del empleado
-     */
+
     public List<Pawn> findByProfile(String profileId) throws SQLException {
-        String sql = """
-                SELECT
-                    p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
-                    p.price, p.pawn_date, p.return_date, p.expired, p.returned, p.updated_at,
-                    pr.full_name AS profile_name,
-                    a.name_article AS article_name,
-                    CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
-                FROM public.pawns p
-                LEFT JOIN public.profile pr ON p.profile_id = pr.id
-                LEFT JOIN public.articles a ON p.article_id = a.id
-                LEFT JOIN public.clientes c ON p.cliente_id = c.id
-                WHERE p.profile_id = ?::uuid
-                ORDER BY p.pawn_date DESC
-                """;
-        List<Pawn> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, profileId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRow(rs));
-                }
-            }
-        }
-        return list;
+        String sql = "SELECT" + SELECT_COLS + FROM_JOINS +
+                "WHERE p.profile_id = ?::uuid " +
+                "ORDER BY p.pawn_date DESC ";
+
+                return executeList(sql, ps-> ps.setString(1, profileId));
+    }
+    public List<Pawn> findByStatus(PawnStatus status) throws SQLException {
+        String sql = "SELECT" + SELECT_COLS+ FROM_JOINS+
+                "WHERE p.status = ?::pawn_status "
+                + "ORDER BY p.pawn_date DESC ";
+        return executeList(sql, ps-> ps.setString(1,status.name()));
     }
 
-    /**
-     * Obtiene empeños activos (no devueltos ni expirados).
-     */
     public List<Pawn> findActive() throws SQLException {
-        String sql = """
-                SELECT
-                    p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
-                    p.price, p.pawn_date, p.return_date, p.expired, p.returned, p.updated_at,
-                    pr.full_name AS profile_name,
-                    a.name_article AS article_name,
-                    CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
-                FROM public.pawns p
-                LEFT JOIN public.profile pr ON p.profile_id = pr.id
-                LEFT JOIN public.articles a ON p.article_id = a.id
-                LEFT JOIN public.clientes c ON p.cliente_id = c.id
-                WHERE p.returned = false AND p.expired = false
-                ORDER BY p.return_date ASC
-                """;
-        List<Pawn> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-        }
-        return list;
+        return findByStatus(PawnStatus.Activo);
     }
 
-    /**
-     * Obtiene empeños vencidos (pasaron la fecha de devolución y no fueron
-     * devueltos).
-     */
     public List<Pawn> findOverdue() throws SQLException {
-        String sql = """
-                SELECT
-                    p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
-                    p.price, p.pawn_date, p.return_date, p.expired, p.returned, p.updated_at,
-                    pr.full_name AS profile_name,
-                    a.name_article AS article_name,
-                    CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
-                FROM public.pawns p
-                LEFT JOIN public.profile pr ON p.profile_id = pr.id
-                LEFT JOIN public.articles a ON p.article_id = a.id
-                LEFT JOIN public.clientes c ON p.cliente_id = c.id
-                WHERE p.return_date < CURRENT_DATE
-                  AND p.returned = false
-                  AND p.expired = false
-                ORDER BY p.return_date ASC
-                """;
-        List<Pawn> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-        }
-        return list;
+        return findByStatus(PawnStatus.Vencido);
     }
+    // ── CREATE ─────────────────────────────────────────────────────────────────
 
-    /**
+    /*
      * Guarda un nuevo empeño.
-     *
-     * @return El empeño con ID y timestamp asignados
+     * La reducción de stock del artículo debe hacerse en la misma transacción JDBC
+     * desde {@code PawnService
      */
-    public Pawn save(Pawn pawn) throws SQLException {
+
+    public Pawn save( Pawn pawn) throws SQLException {
         String sql = """
                 INSERT INTO public.pawns(
-                    profile_id, article_id, cliente_id, amount, price,
-                    pawn_date, return_date, expired, returned
+                    profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
+                    installments_paid,installments_missed, pawn_date, return_date, status, notes
+                    
                 )
-                VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?::uuid, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
                 """;
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, pawn.getProfile_id());
-            ps.setInt(2, pawn.getArticle_id());
-            ps.setInt(3, pawn.getCliente_id());
+            ps.setString(1, pawn.getProfileId());
+            ps.setInt(2, pawn.getArticleId());
+            ps.setInt(3, pawn.getClienteId());
             ps.setInt(4, pawn.getAmount());
             ps.setBigDecimal(5, pawn.getPrice());
-            ps.setDate(6, Date.valueOf(pawn.getPawn_date()));
-            ps.setDate(7, Date.valueOf(pawn.getReturn_date()));
-            ps.setBoolean(8, pawn.isExpired());
-            ps.setBoolean(9, pawn.isReturned());
+
+            ps.setBigDecimal(6,pawn.getWeightGramas());
+            ps.setInt(7, pawn.getInstallMentCount());
+
+            ps.setDate(8, Date.valueOf(pawn.getPawnDate()));
+            ps.setDate(9, Date.valueOf(pawn.getReturnDate()));
+            ps.setString(10, PawnStatus.Activo.name());
+            ps.setString(11, pawn.getNotes());
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     pawn.setId(rs.getInt("id"));
                     Timestamp ts = rs.getTimestamp("updated_at");
                     if (ts != null) {
-                        pawn.setUpdated_at(ts.toLocalDateTime());
+                        pawn.setUpdatedAt(ts.toLocalDateTime());
                     }
                 }
             }
@@ -206,93 +125,76 @@ public class PawnDao {
         return pawn;
     }
 
+    /*
+     * Versión transaccional de {@link #save} — usa conexión externa para
+     * participar en la transacción del llamador (necesario para reducir stock
+     * atómicamente en el mismo commit).
+     */
+    public Pawn save(Connection con, Pawn pawn) throws SQLException {
+        String sql = """
+                INSERT INTO public.pawns(
+                profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
+                installment_paid,installments_missed, pawn_date, return_date, status, notes)
+                VALUES(?::UUID, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
+                RETURNING id, updated_at
+        """;
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pawn.getProfileId());
+            ps.setInt(2, pawn.getArticleId());
+            ps.setInt(3, pawn.getClienteId());
+            ps.setInt(4, pawn.getAmount());
+            ps.setBigDecimal(5, pawn.getPrice());
+            ps.setBigDecimal(6, pawn.getWeightGramas());
+            ps.setInt(7, pawn.getInstallMentCount());
+            ps.setDate(8, Date.valueOf(pawn.getPawnDate()));
+            ps.setDate(9, Date.valueOf(pawn.getReturnDate()));
+            ps.setString(10, PawnStatus.Activo.name());
+            ps.setString(11, pawn.getNotes());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pawn.setId(rs.getInt("id"));
+                    Timestamp ts = rs.getTimestamp("updated_at");
+                    if (ts != null) pawn.setUpdatedAt(ts.toLocalDateTime());
+                }
+            }
+        }
+        return pawn;
+    }
+
+
     /**
      * Actualiza un empeño existente.
      */
-    public boolean update(Pawn pawn) throws SQLException {
+    public boolean updateStatus(int id, PawnStatus newStatus) throws SQLException {
         String sql = """
                 UPDATE public.pawns
-                SET article_id = ?,
-                    cliente_id = ?,
-                    amount = ?,
-                    price = ?,
-                    pawn_date = ?,
-                    return_date = ?,
-                    expired = ?,
-                    returned = ?,
-                    updated_at = NOW()
+                SET status = ?::pawn_status
                 WHERE id = ?
                 """;
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, pawn.getArticle_id());
-            ps.setInt(2, pawn.getCliente_id());
-            ps.setInt(3, pawn.getAmount());
-            ps.setBigDecimal(4, pawn.getPrice());
-            ps.setDate(5, Date.valueOf(pawn.getPawn_date()));
-            ps.setDate(6, Date.valueOf(pawn.getReturn_date()));
-            ps.setBoolean(7, pawn.isExpired());
-            ps.setBoolean(8, pawn.isReturned());
-            ps.setInt(9, pawn.getId());
+            ps.setString(1, newStatus.name());
+            ps.setInt(2, id);
             return ps.executeUpdate() > 0;
         }
     }
-
-    /**
-     * Marca un empeño como devuelto.
-     *
-     * @param id ID del empeño a marcar
-     * @return true si se actualizó exitosamente
-     */
-    public boolean markAsReturned(int id) throws SQLException {
-        String sql = """
-                UPDATE public.pawns
-                SET returned = true,
-                    updated_at = NOW()
-                WHERE id = ?
-                """;
-        try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        }
+    public boolean markAsReturned(int id) throws SQLException{
+        return updateStatus(id, PawnStatus.Retirado);
     }
-
-    /**
-     * Marca un empeño como expirado.
-     */
     public boolean markAsExpired(int id) throws SQLException {
-        String sql = """
-                UPDATE public.pawns
-                SET expired = true,
-                    updated_at = NOW()
-                WHERE id = ?
-                """;
-        try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        }
+        return updateStatus(id, PawnStatus.Vencido);
     }
 
-    /**
-     * Marca automáticamente como expirados todos los empeños vencidos.
-     *
-     * @return Cantidad de empeños marcados como expirados
-     */
+
     public int expireOverduePawns() throws SQLException {
-        String sql = """
-                UPDATE public.pawns
-                SET expired = true,
-                    updated_at = NOW()
-                WHERE return_date < CURRENT_DATE
-                  AND returned = false
-                  AND expired = false
-                """;
+        String sql = "SELECT  public.fn_expire_overdue_pawn()";
+
         try (Connection con = ConnectionPool.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-            return ps.executeUpdate();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()){
+           if(rs.next()) return rs.getInt(1);
         }
+        return 0;
     }
 
     /**
@@ -311,10 +213,26 @@ public class PawnDao {
      * Mapea un ResultSet a un objeto Pawn.
      * Incluye campos de JOIN si están disponibles.
      */
+
+    private List<Pawn> executeList(String sql, SqlSetter setter) throws SQLException {
+        List<Pawn>list = new ArrayList<>();
+        try (Connection con = ConnectionPool.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)){
+            setter.set(ps);
+            try (ResultSet rs = ps.executeQuery()){
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+
+
     private Pawn mapRow(ResultSet rs) throws SQLException {
-        Timestamp ts = rs.getTimestamp("updated_at");
+       PawnStatus status = PawnStatus.valueOf(rs.getString("status"));
         Date pawnDateSql = rs.getDate("pawn_date");
         Date returnDateSql = rs.getDate("return_date");
+        Timestamp updated = rs.getTimestamp("updated_at");
 
         Pawn pawn = new Pawn(
                 rs.getInt("id"),
@@ -323,21 +241,33 @@ public class PawnDao {
                 rs.getInt("cliente_id"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price"),
+                rs.getBigDecimal("weight_grams"),
+                rs.getInt("installment_count"),
+                rs.getInt("installment_paid"),
+                rs.getInt("installment_missed"),
+
                 pawnDateSql != null ? pawnDateSql.toLocalDate() : null,
                 returnDateSql != null ? returnDateSql.toLocalDate() : null,
-                rs.getBoolean("expired"),
-                rs.getBoolean("returned"),
-                ts != null ? ts.toLocalDateTime() : null);
+
+                status,
+                rs.getString("notes"),
+                updated != null ? updated.toLocalDateTime():null);
 
         // Campos del JOIN (pueden ser null si no se hizo JOIN)
         try {
-            pawn.setProfile_name(rs.getString("profile_name"));
-            pawn.setArticle_name(rs.getString("article_name"));
-            pawn.setCliente_name(rs.getString("cliente_name"));
+            pawn.setProfileName(rs.getString("profile_name"));
+            pawn.setArticleName(rs.getString("article_name"));
+            pawn.setClienteName(rs.getString("cliente_name"));
         } catch (SQLException ignored) {
             // Columnas no presentes en esta query
         }
 
         return pawn;
     }
+
+    @FunctionalInterface
+    private interface SqlSetter {
+        void set(PreparedStatement ps) throws SQLException;
+    }
+
 }
