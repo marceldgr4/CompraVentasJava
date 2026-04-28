@@ -3,7 +3,7 @@ package com.app.Service;
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ArticleDao;
 import com.app.Model.domain.Article;
-import com.app.Model.domain.ArticleCategory;
+import com.app.Model.Enum.ArticleCategory;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 import java.math.BigDecimal;
@@ -13,14 +13,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ArticleService {
-    private final ArticleDao articleDAO = new ArticleDao();
+    private final ArticleDao articleDao = new ArticleDao();
 
     // -------------------------------------------------------
     // READ — lista completa del inventario
     // -------------------------------------------------------
     public List<Article> getAll() throws ServiceException {
         try {
-            return articleDAO.findAll();
+            return articleDao.findAll();
 
         } catch (SQLException e) {
             throw new ServiceException("Error al cargar el inventario: " + e.getMessage());
@@ -29,7 +29,7 @@ public class ArticleService {
 
    public List<Article> getAvilableForSaleOrPawn() throws ServiceException {
         try{
-            return articleDAO.findAvailable();
+            return articleDao.findAvailable();
 
         }catch (SQLException e){
             throw new ServiceException("Error al cargar el inventario disponible: " + e.getMessage());
@@ -44,7 +44,7 @@ public class ArticleService {
             throw new ServiceException("El nombre no puede ser nulo o estar vacío");
         }
         try {
-            return articleDAO.findByName(name.trim());
+            return articleDao.findByName(name.trim());
         } catch (SQLException e) {
             throw new ServiceException("Error en la búsqueda...: " + e.getMessage());
         }
@@ -55,7 +55,7 @@ public class ArticleService {
     // -------------------------------------------------------
     public List<Article> getAvailableForPawn() throws ServiceException {
         try {
-            return articleDAO.findAll()
+            return articleDao.findAll()
                     .stream()
                     .filter(Article::hasStock)
                     .collect(Collectors.toList());
@@ -65,7 +65,7 @@ public class ArticleService {
     }
     public Article getById(int id) throws ServiceException {
         try{
-            return articleDAO.findById(id).orElseThrow(()-> new ServiceException("Articulo no encotrado con ID:"+id));
+            return articleDao.findById(id).orElseThrow(()-> new ServiceException("Articulo no encotrado con ID:"+id));
         }catch (SQLException e){
             throw new ServiceException("Error al buscar articulo:"+ e.getMessage(),e);
         }
@@ -76,10 +76,9 @@ public class ArticleService {
     // -------------------------------------------------------
 
     public Article create(Article article) throws ServiceException {
-        requireAdmin("crear nuevos artículos");
         validateArticle(article);
         try {
-            return articleDAO.save(article);
+            return articleDao.save(article);
         } catch (SQLException e) {
             throw new ServiceException("Error al crear el artículo: " + e.getMessage());
         }
@@ -120,7 +119,7 @@ public class ArticleService {
             throw new BusinessException("la categoria es obligatoria");
         }
         try{
-            boolean update = articleDAO.updateBasicFields(id,nameArticle.trim(),description,category);
+            boolean update = articleDao.updateBasicFields(id,nameArticle.trim(),description,category);
             if(!update) {
                 throw new ServiceException("Articulo no encontrado con ID:"+id);
             }
@@ -139,9 +138,9 @@ public class ArticleService {
             throw new ServiceException("La cantidad debe ser mayor que 0.");
         }
         try{
-            Optional<Article> article = articleDAO.findById(id);
+            Optional<Article> article = articleDao.findById(id);
             article.get().setPrice(newPrice);
-            articleDAO.update(article.orElse(null));
+            articleDao.update(article.orElse(null));
         }catch (SQLException e){
             throw new ServiceException("Error al actualizar el articulo: " + e.getMessage());
         }
@@ -151,7 +150,7 @@ public class ArticleService {
         requireAdmin("editar artículo");
         validateArticle(article);
         try{
-            boolean updated = articleDAO.update(article);
+            boolean updated = articleDao.update(article);
             if (!updated) {
                 throw new ServiceException("Error: no se encontró el artículo con ID " + article.getId());
             }
@@ -167,12 +166,12 @@ public class ArticleService {
             throw new ServiceException("La cantidad debe ser mayor que 0.");
         }
         try{
-            Article article = articleDAO.findById(articleId)
+            Article article = articleDao.findById(articleId)
                     .orElseThrow(()-> new ServiceException(
                             "No se encontró el artículo con ID " + articleId
                     ));
             int newAmount = article.getAmount() + quantity;
-            articleDAO.updateAmount(articleId, newAmount);
+            articleDao.updateAmount(articleId, newAmount);
         } catch (SQLException e){
             throw new ServiceException("Error al actualizar el artículo: " + e.getMessage());
         }
@@ -189,7 +188,7 @@ public class ArticleService {
                 throw new BusinessException("Stock insufucuente para el articulo:'" + article.getNameArticle()+
                         "'. disponible: " + article.getAmount()+ "requerido: " + quantity);
             }
-            articleDAO.updateAmount(articleId, article.getAmount() - quantity);
+            articleDao.updateAmount(articleId, article.getAmount() - quantity);
         }
         catch (SQLException e){
             throw new ServiceException("Error al retirar stock: " + e.getMessage(),e);
@@ -199,11 +198,11 @@ public class ArticleService {
         public void remove(int articleId) throws ServiceException{
         requireAdmin("eliminar artículo");
         try{
-            articleDAO.findById(articleId).orElseThrow(()-> new ServiceException(
+            articleDao.findById(articleId).orElseThrow(()-> new ServiceException(
                     "No se encontró el artículo con ID " + articleId
             ));
 
-            boolean deleted = articleDAO.delete(articleId);
+            boolean deleted = articleDao.delete(articleId);
             if (!deleted) {
                 throw  new ServiceException("No se pudo eliminar el artículo. Puede estar en una venta en proceso.");
             }

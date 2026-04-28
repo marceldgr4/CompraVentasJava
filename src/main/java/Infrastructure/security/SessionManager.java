@@ -1,6 +1,6 @@
 package Infrastructure.security;
 
-import com.app.Model.domain.RolUser;
+import com.app.Model.Enum.RolUser;
 
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;

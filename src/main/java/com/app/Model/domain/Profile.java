@@ -1,5 +1,7 @@
 package com.app.Model.domain;
 
+import com.app.Model.Enum.RolUser;
+
 public class Profile {
     private  String id;
     private String fullName;

@@ -1,5 +1,7 @@
 package com.app.Model.domain;
 
+import com.app.Model.Enum.PawnStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -75,7 +77,6 @@ public class Pawn {
     /**
      * Constructor completo mapeado desde la base de datos.
      */
-    public int flotante = 123;
 
     public Pawn(int id, String profileId, int articleId, int clienteId,
                 int amount, BigDecimal price, BigDecimal weightGrams,
@@ -244,7 +245,7 @@ public class Pawn {
     return Math.max(0, installMentCount - installmentsPaid);
     }
 
-public BigDecimal getToTola(){
+public BigDecimal getTotal(){
     if(price == null) return BigDecimal.ZERO;
     return price.multiply(BigDecimal.valueOf(amount));
     }

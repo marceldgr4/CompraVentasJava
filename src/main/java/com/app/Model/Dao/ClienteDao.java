@@ -2,7 +2,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Cliente;
-import com.app.Model.domain.ClienteStatus;
+import com.app.Model.Enum.ClienteStatus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -33,7 +33,8 @@ public class ClienteDao {
         String sql = """
                 SELECT id, first_name, last_name, email, phone,status, created_at,updated_at
                 FROM public.clientes
-                WHERE BY last_name ASC, first_name ASC
+                WHERE status =?::cliente_status 
+                ORDER BY last_name ASC, first_name ASC
                 """;
         return executeListQuery(sql, ps-> ps.setString(1,status.name()));
     }
@@ -63,12 +64,12 @@ public class ClienteDao {
     // -------------------------------------------------------
     public List<Cliente> findByTerm(String term, ClienteStatus filter) throws SQLException {
         String sql = """
-                SELECT id, first_name, last_name, email, phone, Status, created_at, updated_at
-                FROM public.clientes
-                WHERE LOWER(last_name || ' ' || first_name) LIKE LOWER(?)
-                   OR LOWER(email) LIKE LOWER(?))
-                """ +(filter != null ? "AND status =?::cliente_status":"") + """
-                ORDER BY last_name ASC, first_name ASC
+               SELECT id, first_name, last_name, email, phone, status, created_at, updated_at
+              FROM public.clientes
+              WHERE (LOWER(last_name || ' ' || first_name) LIKE LOWER(?)
+                 OR  LOWER(email) LIKE LOWER(?))
+              ""\" + (filter != null ? "AND status = ?::cliente_status " : "") + ""\"
+              ORDER BY last_name ASC, first_name ASC
         """;
         List<Cliente> list = new ArrayList<>();
         String pattern = "%" + term + "%";
@@ -137,7 +138,7 @@ public class ClienteDao {
     public boolean softDelete(int id) throws SQLException {
         String sql = """
                     UPDATE public.clientes
-                    SET status ='Eliminado' WHERE id = ?::cliente_status"
+                    SET status ='Eliminado' WHERE id = ?::cliente_status
                     WHERE id=?
         """;
         try (Connection con = ConnectionPool.getConnection();

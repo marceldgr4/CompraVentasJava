@@ -1,5 +1,7 @@
 package com.app.Model.domain;
 
+import com.app.Model.Enum.ClienteStatus;
+
 import java.sql.Timestamp;
 
 /**

@@ -2,7 +2,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Pawn;
-import com.app.Model.domain.PawnStatus;
+import com.app.Model.Enum.PawnStatus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class PawnDao {
 
 
     public List<Pawn> findByProfile(String profileId) throws SQLException {
-        String sql = "SELECT" + SELECT_COLS + FROM_JOINS +
+        String sql = "SELECT " + SELECT_COLS + FROM_JOINS +
                 "WHERE p.profile_id = ?::uuid " +
                 "ORDER BY p.pawn_date DESC ";
 
@@ -90,9 +90,7 @@ public class PawnDao {
         String sql = """
                 INSERT INTO public.pawns(
                     profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
-                    installments_paid,installments_missed, pawn_date, return_date, status, notes
-                    
-                )
+                    installments_paid,installments_missed, pawn_date, return_date, status, notes)
                 VALUES (?::uuid, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
                 """;
@@ -134,7 +132,7 @@ public class PawnDao {
         String sql = """
                 INSERT INTO public.pawns(
                 profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
-                installment_paid,installments_missed, pawn_date, return_date, status, notes)
+                installments_paid,installments_missed, pawn_date, return_date, status, notes)
                 VALUES(?::UUID, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
         """;
@@ -187,7 +185,7 @@ public class PawnDao {
 
 
     public int expireOverduePawns() throws SQLException {
-        String sql = "SELECT  public.fn_expire_overdue_pawn()";
+        String sql = "SELECT  public.fn_expire_overdue_pawns()";
 
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql);
@@ -243,8 +241,8 @@ public class PawnDao {
                 rs.getBigDecimal("price"),
                 rs.getBigDecimal("weight_grams"),
                 rs.getInt("installment_count"),
-                rs.getInt("installment_paid"),
-                rs.getInt("installment_missed"),
+                rs.getInt("installments_paid"),
+                rs.getInt("installments_missed"),
 
                 pawnDateSql != null ? pawnDateSql.toLocalDate() : null,
                 returnDateSql != null ? returnDateSql.toLocalDate() : null,

@@ -1,5 +1,6 @@
 package com.app.ViewModel;
 
+import com.app.Model.Enum.PawnStatus;
 import com.app.Model.domain.Pawn;
 import com.app.Service.PawnService;
 import com.app.Service.exceptions.ServiceException;
@@ -43,16 +44,11 @@ public class PawnViewModel extends BaseViewModel {
         notifyObservers("Pawn_Updated", pawn);
     }
 
-    public void markAsResturned(int pawId) throws ServiceException {
-        pawnService.markAsReturned(pawId);
-        Pawn pawn = pawns.stream()
-                .filter(p -> p.getId() == pawId)
-                .findFirst()
-                .orElse(null);
-        if (pawn != null) {
-            pawn.setReturned(true);
-            notifyObservers("Pawn_Mark_As_Returned", pawn);
-        }
+    public void markAsResturned(int pawnId) throws ServiceException {
+        pawnService.markAsReturned(pawnId);
+        pawns.stream().filter(p-> p.getId() == pawnId).findFirst().
+                ifPresent(p -> p.setStatus(PawnStatus.Retirado));
+        notifyObservers("Pawn_Mark_As_Returned", pawns);
     }
 
     public void deletePawn(int pawnId) throws ServiceException {

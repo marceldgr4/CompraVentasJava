@@ -3,7 +3,7 @@ package com.app.Service;
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ClienteDao;
 import com.app.Model.domain.Cliente;
-import com.app.Model.domain.ClienteStatus;
+import com.app.Model.Enum.ClienteStatus;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 

@@ -14,18 +14,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Panel de gestión del inventario de artículos.
- *
- * <p><strong>Corrección de color en botones:</strong>
- * El método local {@code createButton()} con {@code setBackground()} no funcionaba
- * en Windows porque el L&F nativo ignora ese método. Ahora todos los botones
- * se crean con {@link ButtonFactory}, que usa {@code paintComponent} personalizado.
- */
+
 public class ArticlePanel extends JPanel {
 
     private static final String[] COLUMNS = {
-            "Id", "Nombre", "Descripción", "Cantidad", "Precio", "Vendido"
+            "Id", "Nombre", "Descripción", "Cantidad", "Precio", "Estado"
     };
 
     private JTable             table;
@@ -212,13 +205,13 @@ public class ArticlePanel extends JPanel {
     private Article getSelectedArticle() {
         int row = table.getSelectedRow();
         if (row < 0) return null;
-        int    id     = (int)    tableModel.getValueAt(row, 0);
-        String name   = (String) tableModel.getValueAt(row, 1);
-        String desc   = (String) tableModel.getValueAt(row, 2);
-        int    amount = (int)    tableModel.getValueAt(row, 3);
-        String price  = tableModel.getValueAt(row, 4).toString().replace("$", "");
-        boolean sold  = "Sí".equals(tableModel.getValueAt(row, 5));
-        return new Article(id, name, desc, amount, new BigDecimal(price), sold, null);
+        int id = (int) tableModel.getValueAt(row, 0);
+        try {
+            return articleService.getById(id);
+        }catch (ServiceException e){
+            showError("Error: "+e.getMessage());
+            return null;
+        }
     }
 
     private void populateTable(List<Article> articles) {
@@ -230,7 +223,8 @@ public class ArticlePanel extends JPanel {
                     a.getDescription(),
                     a.getAmount(),
                     "$" + a.getPrice(),
-                    a.isSold() ? "Sí" : "No"
+                    a.getStockStatus()
+
             });
         }
     }

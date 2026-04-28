@@ -2,7 +2,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Profile;
-import com.app.Model.domain.RolUser;
+import com.app.Model.Enum.RolUser;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

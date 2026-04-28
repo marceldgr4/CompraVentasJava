@@ -1,4 +1,4 @@
-package com.app.Model.domain;
+package com.app.Model.Enum;
 
 public enum ClienteStatus {
     Activo,

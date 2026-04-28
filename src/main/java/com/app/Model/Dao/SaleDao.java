@@ -32,7 +32,7 @@ public class SaleDao {
                 }
             }
             String sqlDetail = """
-                    INSET INTO public.sale_details(sale_id,article_id,amount,unit_price)
+                    INSERT INTO public.sales_details(sale_id,article_id,amount,unit_price)
                     VALUES (?,?,?,?);
                     RETURNING id
                     """;
@@ -73,9 +73,7 @@ public class SaleDao {
         String sql = """
                 SELECT * 
                 FROM public.sales
-                order by id desc;
-                              
-                
+                order by id desc
         """;
         List<Sale> saleList = new ArrayList<>();
         try (Connection con = ConnectionPool.getConnection();
@@ -94,17 +92,16 @@ public class SaleDao {
                 SELECT *
                 FROM public.sales
                 WHERE cliente_id = ?;
-                order by sale date desc;
+                order by sale_date desc
         """;
         return findByParam(sql, ps -> ps.setInt(1,clienteId));
     }
     public List<Sale> findByProfile(String profileId) throws SQLException {
-        String sql =
-                """
+        String sql = """
                 SELECT *
                 FROM public.sales
-                WHERE profile_id = ?::uudi;
-                order by sale date desc;
+                WHERE profile_id = ?::uuid;
+                order by sale_date desc
         """;
         return findByParam(sql, ps -> ps.setString(1,profileId));
         }
@@ -142,7 +139,7 @@ public class SaleDao {
         try (Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
-            return ps.executeUpdate() == 0;
+            return ps.executeUpdate() > 0;
         }
     }
     private List<Sale> findByParam(String sql, SqlParamSetter setter) throws SQLException{

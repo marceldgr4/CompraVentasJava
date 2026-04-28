@@ -3,7 +3,7 @@ package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Article;
-import com.app.Model.domain.ArticleCategory;
+import com.app.Model.Enum.ArticleCategory;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -96,7 +96,7 @@ public List<Article>findAvailable() throws SQLException {
     public Article save(Article article) throws SQLException {
         String sql = """
             INSERT INTO public.articles(cliente_id, name_article, description,category, 
-                                        amount, price, created_at, updated_at)
+                                        amount, price)
             VALUES (?, ?, ?, ?:: article_category, ?,?)
             RETURNING id,created_at, updated_at
             """;
@@ -130,8 +130,7 @@ public List<Article>findAvailable() throws SQLException {
                 SET name_article = ?, 
                 amount = ?, 
                 category = ?::article_category,
-                price = ?, 
-                
+                price = ?,
                 WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();
@@ -151,8 +150,7 @@ public List<Article>findAvailable() throws SQLException {
                 UPDATE public.articles
                 SET name_article = ?,
                 description = ?,
-                category = ?::article_category,
-            
+                category = ?::article_category
                 WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();
@@ -179,15 +177,9 @@ public List<Article>findAvailable() throws SQLException {
     /**
      * Actualiza la cantidad de stock de un artículo.
      */
-    public boolean updateAmount(Connection conn, int id, int newAmount) throws SQLException {
-        String sql = """
-                UPDATE public.articles
-                SET amount =  ?, updated_at = NOW()
-                WHERE id = ?;
-                
-                """;
-        try (Connection con = ConnectionPool.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    public boolean updateAmount(Connection con, int id, int newAmount) throws SQLException {
+        String sql = "UPDATE public.articles SET amount =  ?, updated_at = NOW() WHERE id = ?";
+        try ( PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, newAmount);
             ps.setInt(2, id);
             return ps.executeUpdate() > 0;
@@ -201,8 +193,8 @@ public List<Article>findAvailable() throws SQLException {
     }
 
 
-    private Article mapRow(ResultSet rs) throws SQLException {
-        ArticleCategory category = ArticleCategory.values()[rs.getInt("category")];
+    private static Article mapRow(ResultSet rs) throws SQLException {
+        ArticleCategory category = ArticleCategory.valueOf(rs.getString("category"));
         Timestamp created = rs.getTimestamp("created_at");
         Timestamp updated = rs.getTimestamp("updated_at");
         return new Article(
