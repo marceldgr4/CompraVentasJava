@@ -1,8 +1,12 @@
 package com.app.Service;
 
+import Infrastructure.DataBase.DataBaseManeger;
 import Infrastructure.security.SessionManager;
+import com.app.Model.Dao.ArticleDao;
 import com.app.Model.Dao.PawnDao;
+import com.app.Model.domain.Article;
 import com.app.Model.domain.Pawn;
+import com.app.Model.domain.PawnStatus;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 
@@ -19,42 +23,26 @@ import java.util.Optional;
 public class PawnService {
 
     private final PawnDao pawnDao = new PawnDao();
+    private final ArticleDao articleDao = new ArticleDao();
 
-    // -------------------------------------------------------
+    /*-------------------------------------------------------
     // READ — listar empeños según rol del usuario
-    // -------------------------------------------------------
-
-    /**
      * Retorna todos los empeños.
      * Admin/Empleado ven todos; en caso de rol futuro restringido, filtra por profile.
      */
+    // -------------------------------------------------------
     public List<Pawn> getAll() throws ServiceException {
         try {
-            if (SessionManager.isAdmin() || SessionManager.isEmployee()) {
-                return pawnDao.findAll();
-            }
-            // Rol sin acceso global: solo sus propios empeños
-            return pawnDao.findByProfile(SessionManager.getProfileId());
-        } catch (SQLException e) {
-            throw new ServiceException("Error al cargar empeños: " + e.getMessage(), e);
+            return pawnDao.findAll();
+        }catch (SQLException ex) {
+            throw new ServiceException("Error la cargar articulo empeñado" + ex.getMessage());
         }
     }
 
-    /**
-     * Busca un empeño por ID, validando permisos de acceso.
-     *
-     * @throws SecurityException si un empleado intenta acceder a empeño ajeno
-     */
     public Optional<Pawn> getById(int id) throws ServiceException {
         try {
-            Optional<Pawn> pawnOpt = pawnDao.findById(id);
-            pawnOpt.ifPresent(pawn -> {
-                if (!SessionManager.isAdmin()
-                        && !pawn.getProfileId().equals(SessionManager.getProfileId())) {
-                    throw new SecurityException("No tiene permiso para acceder a este empeño.");
-                }
-            });
-            return pawnOpt;
+            return pawnDao.findById(id);
+
         } catch (SQLException e) {
             throw new ServiceException("Error al buscar empeño id=" + id + ": " + e.getMessage(), e);
         }
@@ -65,13 +53,7 @@ public class PawnService {
      */
     public List<Pawn> getActivePawns() throws ServiceException {
         try {
-            List<Pawn> all = pawnDao.findActive();
-            if (SessionManager.isAdmin() || SessionManager.isEmployee()) {
-                return all;
-            }
-            return all.stream()
-                    .filter(p -> p.getProfileId().equals(SessionManager.getProfileId()))
-                    .toList();
+           return pawnDao.findActive();
         } catch (SQLException e) {
             throw new ServiceException("Error al cargar empeños activos: " + e.getMessage(), e);
         }
@@ -82,112 +64,119 @@ public class PawnService {
      */
     public List<Pawn> getOverduePawns() throws ServiceException {
         try {
-            List<Pawn> all = pawnDao.findOverdue();
-            if (SessionManager.isAdmin() || SessionManager.isEmployee()) {
-                return all;
-            }
-            return all.stream()
-                    .filter(p -> p.getProfileId().equals(SessionManager.getProfileId()))
-                    .toList();
+            return pawnDao.findOverdue();
         } catch (SQLException e) {
             throw new ServiceException("Error al cargar empeños vencidos: " + e.getMessage(), e);
         }
     }
-
+public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
+        try{
+            return pawnDao.findByStatus(status);
+        }catch (SQLException e){
+            throw new ServiceException("Error al filtar articulos empañdo"+ e.getMessage(), e);
+        }
+}
     // -------------------------------------------------------
-    // CREATE
-    // -------------------------------------------------------
-
-    /**
-     * Crea un nuevo empeño con validación de reglas de negocio.
+    /* ── CREATE — transacción atómica con reducción de stock
+     * Registra un nuevo empeño.
+     * La reducción de stock es atómica: si falla el INSERT del empeño,
+     * el UPDATE del artículo también hace rollback y viceversa.
+     * Validación de peso para Joyería (RF-04.13).
      */
+    // -------------------------------------------------------
+
     public Pawn create(Pawn pawn) throws ServiceException {
         validatePawn(pawn);
-        if (pawn.getPawnDate() == null) {
-            pawn.setPawnDate(LocalDate.now());
-        }
         try {
-            return pawnDao.save(pawn);
-        } catch (SQLException e) {
-            throw new ServiceException("Error al crear el empeño: " + e.getMessage(), e);
-        }
-    }
+            Article article = ArticleDao.findById(pawn.getArticleId()).orElseThrow(()-> new ServiceException(
+                    "Articlos no encotrado ID:"+ pawn.getArticleId()
+            ));
+            if (article.getAmount()< pawn.getAmount()) {
+                throw new BusinessException("Stock insuficientes para le articulos selecionado."+ "cantidad Disponible"+ article.getAmount());
+            }
+            // Validación de peso para Joyería
+            if(article.requireWeigthForPawn() && (pawn.getWeightGramas()==null ||
+                    pawn.getWeightGramas().compareTo(BigDecimal.ZERO)<0)) {
+                throw new BusinessException(
+                        "el peso en gramos es obligatorio para el articulo de joyeria");
 
-    // -------------------------------------------------------
+            }
+            final  int newAmount = article.getAmount() - pawn.getAmount();
+            // Transacción atómica: INSERT pawn + UPDATE article.amount
+            DataBaseManeger.runInTransaction(con -> {
+                pawnDao.save(con, pawn);
+                articleDao.updateAmount(con,
+                        article.getId(),
+                        newAmount);
+            });
+
+        }catch (SQLException e){
+            throw new ServiceException("Error al realizar el registro de Empeño" + e.getMessage(), e);
+        }
+        return pawn;
+    }
+    /*-------------------------------------------------------
     // UPDATE
-    // -------------------------------------------------------
-
-    /**
-     * Actualiza un empeño existente con validación de permisos.
-     *
-     * @throws SecurityException si un empleado intenta modificar empeño ajeno
-     */
-    public Pawn update(Pawn pawn) throws ServiceException {
-        validatePawn(pawn);
-        try {
-            Optional<Pawn> existing = pawnDao.findById(pawn.getId());
-            if (existing.isPresent()
-                    && !SessionManager.isAdmin()
-                    && !existing.get().getProfileId().equals(SessionManager.getProfileId())) {
-                throw new SecurityException("No tiene permiso para modificar este empeño.");
-            }
-            boolean updated = pawnDao.update(pawn);
-            if (!updated) {
-                throw new ServiceException("No se pudo actualizar el empeño id=" + pawn.getId());
-            }
-            return pawn;
-        } catch (SQLException e) {
-            throw new ServiceException("Error al actualizar el empeño: " + e.getMessage(), e);
+    * Marca un empeño como Retirado (cliente devuelve el artículo).
+    * Disponible para Empleado (proepios) y Admin (todos) .
+    */
+    public void markAsReturned(int id ) throws ServiceException{
+        try{
+            Pawn pawn = pawnDao.findById(id).orElseThrow(()-> new ServiceException("Empeño no encontrado id" + id));
+        if(!SessionManager.isAdmin() && !pawn.getProfileId().equals(pawn.getProfileId())) {
+            throw new ServiceException("Solo puede marcar como devuelto sus propios empeños ");
+        }
+        if(pawn.getStatus()!= null && pawn(SessionManager.getProfileId())){
+            throw new BusinessException("El articulo empeñado ya esta en estado '" + pawn.getStatusLab()+"'y no se puede modificar.");
+        }
+        pawnDao.markAsReturned(id);
+        }catch (SQLException e){
+            throw new ServiceException("Error al marcar el articulo empeñado devuelto: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Marca un empeño como devuelto.
-     */
-    public void markAsReturned(int id) throws ServiceException {
-        try {
-            Pawn pawn = pawnDao.findById(id)
-                    .orElseThrow(() -> new ServiceException("Empeño no encontrado id=" + id));
-            if (pawn.isReturned()) {
-                throw new BusinessException("El empeño ya fue marcado como devuelto.");
-            }
-            boolean updated = pawnDao.markAsReturned(id);
-            if (!updated) {
-                throw new ServiceException("No se pudo marcar el empeño como devuelto.");
-            }
-        } catch (SQLException e) {
-            throw new ServiceException("Error al marcar empeño devuelto: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Marca un empeño como expirado. Solo el Admin puede ejecutar esta acción.
-     */
     public void markAsExpired(int id) throws ServiceException {
-        requireAdmin("marcar empeño como expirado");
-        try {
-            boolean updated = pawnDao.markAsExpired(id);
-            if (!updated) {
-                throw new ServiceException("No se pudo marcar el empeño como expirado id=" + id);
-            }
-        } catch (SQLException e) {
-            throw new ServiceException("Error al marcar empeño expirado: " + e.getMessage(), e);
+        requireAdmin("marcar articulo empeñado como vencido manualmente");
+        try{
+            pawnDao.markAsExpired(id);
+        }catch (SQLException e){
+            throw  new ServiceException("Error al Marcar articulo empañado vencido: " + e.getMessage());
         }
-    }
 
-    /**
-     * Procesa automáticamente todos los empeños vencidos marcándolos como expirados.
-     * Solo el Admin puede ejecutar esta acción.
-     *
-     * @return Número de empeños actualizados
+    }
+    /*
+     * Procesa automáticamente todos los empeños vencidos llamando a
+     * {@code fn_expire_overdue_pawns()} en la BD.
+     * se ejecuta automáticamente al iniciar la app desde un SwingWorker,
+     * independiente del rol del usuario. Solo la expiración MANUAL requiere Admin.
      */
+
     public int processOverduePawns() throws ServiceException {
-        requireAdmin("procesar empeños vencidos");
         try {
             return pawnDao.expireOverduePawns();
         } catch (SQLException e) {
             throw new ServiceException("Error al procesar empeños vencidos: " + e.getMessage(), e);
         }
+    }
+    /*
+     * Marca un empeño como Perdido.
+     * Se activa cuando {@code installments_missed > 4} (RF-04.12).
+     * Solo Admin puede ejecutarlo manualmente.
+     */
+    public void markAsPerdido( int id ) throws ServiceException{
+        requireAdmin("marcar empeño como perdido");
+        try {
+            Pawn pawn = pawnDao.findById(id).orElseThrow(() -> new ServiceException("Empeño no encontrado id =" + id));
+            if (pawn.getStatus() == PawnStatus.Activo || pawn.getStatus() == PawnStatus.Vencido) {
+                pawnDao.updateStatus(id, PawnStatus.Perdido);
+
+            } else {
+                throw new BusinessException("Solo se puede marcar como perdido el articulo empeñado activo o vencidios.");
+            }
+        }
+        catch(SQLException e){
+                throw new ServiceException("Error al marcar empeño perdido:" + e.getMessage(), e);
+            }
     }
 
     // -------------------------------------------------------
@@ -198,7 +187,7 @@ public class PawnService {
      * Elimina un empeño. Solo el Admin puede ejecutar esta acción.
      */
     public void delete(int id) throws ServiceException {
-        requireAdmin("eliminar empeño");
+        requireAdmin("eliminar articulo empeño");
         try {
             boolean deleted = pawnDao.delete(id);
             if (!deleted) {
@@ -232,12 +221,9 @@ public class PawnService {
         }
     }
 
-    /**
-     * Valida las reglas de negocio de un empeño.
-     *
-     * @throws BusinessException si alguna validación falla
-     */
+
     private void validatePawn(Pawn pawn) {
+        check(pawn.getProfileId()== null || pawn.getProfileId().isBlank(),"El ID del articulo empeñado es obligatorio");
         check(pawn.getArticleId() <= 0,   "Debe seleccionar un artículo válido.");
         check(pawn.getClienteId() <= 0,    "Debe seleccionar un cliente válido.");
         check(pawn.getAmount()    <= 0,    "La cantidad debe ser mayor a 0.");

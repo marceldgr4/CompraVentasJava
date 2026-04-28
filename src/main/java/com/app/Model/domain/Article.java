@@ -1,6 +1,7 @@
 package com.app.Model.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -12,57 +13,54 @@ public class Article {
     private int clienteId;
     private String nameArticle;
     private String description;
+
+    private ArticleCategory category;
+
     private int amount;
     private BigDecimal price;
-    private boolean sold;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     /**
      * Constructor completo para uso general.
      */
-    public Article(int id, int clienteId, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
-        this.id = id;
+    public Article( int clienteId, String nameArticle, String description,
+                    ArticleCategory category, int amount, BigDecimal price) {
+
         this.clienteId = clienteId;
         this.nameArticle = nameArticle;
         this.description = description;
         this.amount = amount;
+        this.category = category;
         this.price = price;
-        this.sold = sold;
-        this.updatedAt = updatedAt;
     }
 
     /**
      * Constructor usado al mapear desde la base de datos (con id).
      */
-    public Article(int id, String nameArticle, String description, int amount, BigDecimal price, boolean sold, LocalDateTime updatedAt) {
+    public Article(int id, String nameArticle, String description, ArticleCategory category,
+                   int amount, BigDecimal price, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.nameArticle = nameArticle;
         this.description = description;
+        this.category = category;
         this.amount = amount;
         this.price = price;
-        this.sold = sold;
-        this.updatedAt = updatedAt;
-    }
 
-    /**
-     * Constructor de creación (sin id ni timestamps).
-     */
-    public Article(String nameArticle, String description, int amount, BigDecimal price, boolean sold) {
-        this.nameArticle = nameArticle;
-        this.description = description;
-        this.amount = amount;
-        this.price = price;
-        this.sold = sold;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // ---- Getters / Setters ----------------------------------------
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
 
-    /** @deprecated Use {@link #getClienteId()} */
-    @Deprecated
-    public int getCliente_id() { return clienteId; }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getClienteId() { return clienteId; }
     public void setClienteId(int clienteId) { this.clienteId = clienteId; }
@@ -83,8 +81,21 @@ public class Article {
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
-    public boolean isSold() { return sold; }
-    public void setSold(boolean sold) { this.sold = sold; }
+    public ArticleCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(ArticleCategory category) {
+        this.category = category;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
@@ -96,12 +107,12 @@ public class Article {
         return amount > 0;
     }
 
-    /**
-     * Retorna {@code true} si el artículo está marcado para venta Y aún tiene stock.
-     * Nota: la lógica original tenía un error semántico (sold = ya fue vendido).
-     */
-    public boolean canSell() {
-        return !sold && amount > 0;
+    public String getStockStatus() {
+        return hasStock() ? "Disponible" : "Sin Stock";
+    }
+
+    public boolean requireWeigthForPawn(){
+        return category != null && category.requiresWeight();
     }
 
     @Override

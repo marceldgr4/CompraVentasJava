@@ -3,10 +3,13 @@ package com.app.Service;
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ArticleDao;
 import com.app.Model.domain.Article;
+import com.app.Model.domain.ArticleCategory;
+import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ArticleService {
@@ -24,16 +27,14 @@ public class ArticleService {
         }
     }
 
-    public List<Article> getSellable() throws ServiceException {
+   public List<Article> getAvilableForSaleOrPawn() throws ServiceException {
         try{
-            return articleDAO.findBySold(false)
-                    .stream()
-                    .filter(Article::hasStock)
-                    .collect(Collectors.toList());
+            return articleDAO.findAvailable();
+
         }catch (SQLException e){
-            throw new ServiceException("Error al cargar los artículos vendidos: " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario disponible: " + e.getMessage());
         }
-    }
+   }
 
     // -------------------------------------------------------
     // READ — buscar por nombre
@@ -45,7 +46,7 @@ public class ArticleService {
         try {
             return articleDAO.findByName(name.trim());
         } catch (SQLException e) {
-            throw new ServiceException("Error en la búsqueda: " + e.getMessage());
+            throw new ServiceException("Error en la búsqueda...: " + e.getMessage());
         }
     }
 
@@ -60,6 +61,13 @@ public class ArticleService {
                     .collect(Collectors.toList());
         } catch (SQLException e) {
             throw new ServiceException("Error al cargar el inventario del empleado: " + e.getMessage());
+        }
+    }
+    public Article getById(int id) throws ServiceException {
+        try{
+            return articleDAO.findById(id).orElseThrow(()-> new ServiceException("Articulo no encotrado con ID:"+id));
+        }catch (SQLException e){
+            throw new ServiceException("Error al buscar articulo:"+ e.getMessage(),e);
         }
     }
 
@@ -100,7 +108,45 @@ public class ArticleService {
     }
     // -------------------------------------------------------
     // UPDATE — editar nombre, precio y tipo (solo Admin)
+    /*
+     * Edita nombre, descripción y categoría. Disponible para Admin y Empleado (RF-03.5).
+     */
     // -------------------------------------------------------
+    public void editBasicaFields(int id, String nameArticle, String description, ArticleCategory category) throws ServiceException {
+        if(nameArticle == null || nameArticle.isBlank()) {
+            throw new BusinessException("El  nombre del articulo es obligatorio ");
+        }
+        if(category == null) {
+            throw new BusinessException("la categoria es obligatoria");
+        }
+        try{
+            boolean update = articleDAO.updateBasicFields(id,nameArticle.trim(),description,category);
+            if(!update) {
+                throw new ServiceException("Articulo no encontrado con ID:"+id);
+            }
+        } catch (SQLException e) {
+            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Edita el precio. Solo Admin puede hacer esto directamente).
+     * El Empleado debe usar el flujo de autorización temporal).
+     */
+    public void editPrice (int id, BigDecimal newPrice) throws ServiceException {
+        requireAdmin("editar precios del articulo");
+        if(newPrice == null || newPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ServiceException("La cantidad debe ser mayor que 0.");
+        }
+        try{
+            Optional<Article> article = articleDAO.findById(id);
+            article.get().setPrice(newPrice);
+            articleDAO.update(article.orElse(null));
+        }catch (SQLException e){
+            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage());
+        }
+    }
+
     public void edit(Article article) throws ServiceException {
         requireAdmin("editar artículo");
         validateArticle(article);
@@ -114,7 +160,7 @@ public class ArticleService {
         }
     }
         //---------
-        // UPDATE
+        // UPDATE == Agrega unidades al stock. Admin y Empleado (RF-03.6).
         //--------
     public void addStock(int articleId, int quantity) throws ServiceException {
         if (quantity <= 0) {
@@ -134,21 +180,19 @@ public class ArticleService {
     }
     public void removeStock(int articleId, int quantity) throws ServiceException {
         if (quantity <= 0) {
-            throw new ServiceException("La cantidad debe ser mayor que 0.");
+            throw new BusinessException("La cantidad debe ser mayor que 0.");
 
         }
         try {
-            Article article = articleDAO.findById(articleId).orElseThrow(() -> new ServiceException(
-                    "No se encontró el artículo con ID " + articleId));
-
-            if (article.getAmount() < quantity) {
-                throw new ServiceException("Sin stock suficiente. Disponible: " + article.getAmount() + " - Requerido: " + quantity);
-
+            Article article = getById(articleId);
+            if(article.getAmount() < quantity) {
+                throw new BusinessException("Stock insufucuente para el articulo:'" + article.getNameArticle()+
+                        "'. disponible: " + article.getAmount()+ "requerido: " + quantity);
             }
-            int newAmount = article.getAmount() - quantity;
-            articleDAO.updateAmount(articleId, newAmount);
-        } catch (SQLException e) {
-            throw new ServiceException("Error al retirar stock: " + e.getMessage());
+            articleDAO.updateAmount(articleId, article.getAmount() - quantity);
+        }
+        catch (SQLException e){
+            throw new ServiceException("Error al retirar stock: " + e.getMessage(),e);
         }
     }
 

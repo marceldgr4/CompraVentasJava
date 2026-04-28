@@ -12,7 +12,9 @@ public class Cliente {
     private String lastName;
     private String email;
     private String phone;
+    private ClienteStatus status;
     private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public Cliente() {}
 
@@ -20,20 +22,22 @@ public class Cliente {
      * Constructor completo (usado al mapear desde la base de datos).
      */
     public Cliente(int id, String firstName, String lastName,
-                   String email, String phone, Timestamp createdAt) {
+                   String email, String phone, ClienteStatus status, Timestamp createdAt, Timestamp updatedAt) {
         this.id        = id;
         this.firstName = firstName;
         this.lastName  = lastName;
         this.email     = email;
         this.phone     = phone;
+        this.status    = status != null ? status: ClienteStatus.Activo;
         this.createdAt = createdAt;
+        this.updatedAt = createdAt;
     }
 
     /**
      * Constructor de creación (sin id ni timestamp).
      */
     public Cliente(String firstName, String lastName, String email, String phone) {
-        this(0, firstName, lastName, email, phone, null);
+        this(0, firstName, lastName, email, phone, ClienteStatus.Activo,null, null);
     }
 
     // ---- Getters / Setters ----------------------------------------
@@ -56,8 +60,26 @@ public class Cliente {
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
-    // ---- Utilidades -----------------------------------------------
+    public ClienteStatus getStatus() {
+        return status;
+    }
 
+    public void setStatus(ClienteStatus status) {
+        this.status = status;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+// ---- Utilidades -----------------------------------------------
+
+    public boolean isActive() {
+        return status == ClienteStatus.Activo;
+    }
     /** Nombre completo concatenado (útil para tablas y combos). */
     public String getFullName() {
         return lastName + ", " + firstName;
