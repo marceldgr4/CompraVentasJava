@@ -245,15 +245,15 @@ public class PawnPanel extends JPanel {
         for (Pawn p : pawns) {
             tableModel.addRow(new Object[]{
                     p.getId(),
-                    p.getCliente_name() != null ? p.getCliente_name() : "N/A",
-                    p.getArticle_name() != null ? p.getArticle_name() : "N/A",
+                    p.getClienteName() != null ? p.getClienteName() : "N/A",
+                    p.getArticleName() != null ? p.getArticleName() : "N/A",
                     p.getAmount(),
                     "$" + p.getPrice(),
                     "$" + p.getTotal(),
-                    p.getPawn_date()   != null ? p.getPawn_date()  .format(FMT) : "N/A",
-                    p.getReturn_date() != null ? p.getReturn_date().format(FMT) : "N/A",
+                    p.getPawnDate()   != null ? p.getPawnDate()  .format(FMT) : "N/A",
+                    p.getReturnDate() != null ? p.getReturnDate().format(FMT) : "N/A",
                     p.getStatus(),
-                    p.getProfile_name() != null ? p.getProfile_name() : "N/A"
+                    p.getProfileName() != null ? p.getProfileName() : "N/A"
             });
         }
     }

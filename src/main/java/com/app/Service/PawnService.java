@@ -6,13 +6,12 @@ import com.app.Model.Dao.ArticleDao;
 import com.app.Model.Dao.PawnDao;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Pawn;
-import com.app.Model.domain.PawnStatus;
+import com.app.Model.Enum.PawnStatus;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,13 +119,24 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
     * Marca un empeño como Retirado (cliente devuelve el artículo).
     * Disponible para Empleado (proepios) y Admin (todos) .
     */
+    public void update(Pawn pawn) throws ServiceException {
+        requireAdmin("Editar articulo empeñado");
+        try{
+            pawnDao.updateStatus(pawn.getId(),pawn.getStatus());
+        }catch (SQLException e){
+            throw new ServiceException("Error al actuluza el articulo empeñado" + e.getMessage(), e);
+        }
+    }
+
+
     public void markAsReturned(int id ) throws ServiceException{
         try{
-            Pawn pawn = pawnDao.findById(id).orElseThrow(()-> new ServiceException("Empeño no encontrado id" + id));
+            Pawn pawn = pawnDao.findById(id).
+                    orElseThrow(()-> new ServiceException("Empeño no encontrado id" + id));
         if(!SessionManager.isAdmin() && !pawn.getProfileId().equals(pawn.getProfileId())) {
             throw new ServiceException("Solo puede marcar como devuelto sus propios empeños ");
         }
-        if(pawn.getStatus()!= null && pawn(SessionManager.getProfileId())){
+        if(pawn.getStatus()!= null && pawn.getStatus().isTerminal()) {
             throw new BusinessException("El articulo empeñado ya esta en estado '" + pawn.getStatusLab()+"'y no se puede modificar.");
         }
         pawnDao.markAsReturned(id);

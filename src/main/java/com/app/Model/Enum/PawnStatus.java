@@ -1,15 +1,14 @@
-package com.app.Model.domain;
+package com.app.Model.Enum;
 
 public enum PawnStatus {
     Activo,
     Vencido,
-    Inactivo,
     Finalizado,
     Retirado,
     Perdido,
     Vendido;
 
-    public boolean acceptsPawnStatus() {
+    public boolean acceptsPayment() {
         return  this == Activo || this == Vencido;
     }
 

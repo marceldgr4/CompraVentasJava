@@ -1,7 +1,8 @@
 package com.app.Model.domain;
 
+import com.app.Model.Enum.ArticleCategory;
+
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
