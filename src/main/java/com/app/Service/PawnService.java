@@ -94,8 +94,8 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
                 throw new BusinessException("Stock insuficientes para le articulos selecionado."+ "cantidad Disponible"+ article.getAmount());
             }
             // Validación de peso para Joyería
-            if(article.requireWeigthForPawn() && (pawn.getWeightGramas()==null ||
-                    pawn.getWeightGramas().compareTo(BigDecimal.ZERO)<0)) {
+            if(article.requireWeigthForPawn() && (pawn.getWeightGrams()==null ||
+                    pawn.getWeightGrams().compareTo(BigDecimal.ZERO)<0)) {
                 throw new BusinessException(
                         "el peso en gramos es obligatorio para el articulo de joyeria");
 
@@ -133,11 +133,11 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
         try{
             Pawn pawn = pawnDao.findById(id).
                     orElseThrow(()-> new ServiceException("Empeño no encontrado id" + id));
-        if(!SessionManager.isAdmin() && !pawn.getProfileId().equals(pawn.getProfileId())) {
+        if(!SessionManager.isAdmin() && !pawn.getProfileId().equals(SessionManager.getProfileId())) {
             throw new ServiceException("Solo puede marcar como devuelto sus propios empeños ");
         }
         if(pawn.getStatus()!= null && pawn.getStatus().isTerminal()) {
-            throw new BusinessException("El articulo empeñado ya esta en estado '" + pawn.getStatusLab()+"'y no se puede modificar.");
+            throw new BusinessException("El articulo empeñado ya esta en estado '" + pawn.getStatusLabel()+"' y no se puede modificar.");
         }
         pawnDao.markAsReturned(id);
         }catch (SQLException e){
@@ -235,7 +235,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
     private void validatePawn(Pawn pawn) {
         check(pawn.getProfileId()== null || pawn.getProfileId().isBlank(),"El ID del articulo empeñado es obligatorio");
         check(pawn.getArticleId() <= 0,   "Debe seleccionar un artículo válido.");
-        check(pawn.getClienteId() <= 0,    "Debe seleccionar un cliente válido.");
+        check(pawn.getClientId() <= 0,    "Debe seleccionar un cliente válido.");
         check(pawn.getAmount()    <= 0,    "La cantidad debe ser mayor a 0.");
         check(pawn.getPrice() == null || pawn.getPrice().compareTo(BigDecimal.ZERO) <= 0,
                 "El precio debe ser mayor a 0.");

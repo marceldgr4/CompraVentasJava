@@ -1,9 +1,8 @@
 package com.app.Model.Enum;
 
 public enum ArticleCategory {
-    Electronico,
-    Joyeria,
-    Otros;
+
+    Electrodomesticos, Joyeria, Herramientas, Tecnologia, Otro;
 
     public boolean requiresWeight(){
         return this  == Joyeria;

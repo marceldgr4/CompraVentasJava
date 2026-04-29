@@ -130,7 +130,7 @@ public List<Article>findAvailable() throws SQLException {
                 SET name_article = ?, 
                 amount = ?, 
                 category = ?::article_category,
-                price = ?,
+                price = ?
                 WHERE id = ?
         """;
         try (Connection con = ConnectionPool.getConnection();
@@ -198,14 +198,10 @@ public List<Article>findAvailable() throws SQLException {
         Timestamp created = rs.getTimestamp("created_at");
         Timestamp updated = rs.getTimestamp("updated_at");
         return new Article(
-                rs.getInt("id"),
                 rs.getString("name_article"),
                 rs.getString("description"),
-                category,
                 rs.getInt("amount"),
-                rs.getBigDecimal("price"),
-                created != null ? created.toLocalDateTime(): null,
-                updated != null ? updated.toLocalDateTime(): null
-            );
+                rs.getBigDecimal("price")
+        );
     }
 }

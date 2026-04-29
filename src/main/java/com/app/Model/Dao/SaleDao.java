@@ -91,7 +91,7 @@ public class SaleDao {
         String sql = """
                 SELECT *
                 FROM public.sales
-                WHERE cliente_id = ?;
+                WHERE cliente_id = ?
                 order by sale_date desc
         """;
         return findByParam(sql, ps -> ps.setInt(1,clienteId));
@@ -162,7 +162,7 @@ public class SaleDao {
         String sql = """
                 SELECT *
                 FROM public.sales_details
-                WHERE sale_id = ?;
+                WHERE sale_id = ?
         """;
         List<SalesDetail> salesDetailList = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {

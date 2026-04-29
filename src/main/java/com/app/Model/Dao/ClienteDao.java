@@ -68,7 +68,7 @@ public class ClienteDao {
               FROM public.clientes
               WHERE (LOWER(last_name || ' ' || first_name) LIKE LOWER(?)
                  OR  LOWER(email) LIKE LOWER(?))
-              ""\" + (filter != null ? "AND status = ?::cliente_status " : "") + ""\"
+              """ + (filter != null ? "AND status = ?::cliente_status " : "") + """
               ORDER BY last_name ASC, first_name ASC
         """;
         List<Cliente> list = new ArrayList<>();
@@ -138,7 +138,7 @@ public class ClienteDao {
     public boolean softDelete(int id) throws SQLException {
         String sql = """
                     UPDATE public.clientes
-                    SET status ='Eliminado' WHERE id = ?::cliente_status
+                    SET status ='Eliminado'::cliente_status
                     WHERE id=?
         """;
         try (Connection con = ConnectionPool.getConnection();

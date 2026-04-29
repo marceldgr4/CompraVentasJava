@@ -39,8 +39,8 @@ public class Article {
     /**
      * Constructor usado al mapear desde la base de datos (con id).
      */
-    public Article(int id, String nameArticle, String description, ArticleCategory category,
-                   int amount, BigDecimal price, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Article(String nameArticle, String description,
+                   int amount, BigDecimal price) {
         this.id = id;
         this.nameArticle = nameArticle;
         this.description = description;

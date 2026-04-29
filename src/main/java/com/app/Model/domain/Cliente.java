@@ -18,7 +18,7 @@ public class Cliente {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    public Cliente() {}
+    public Cliente(String trim, String trimmed, String s, String string, Object o) {}
 
     /**
      * Constructor completo (usado al mapear desde la base de datos).

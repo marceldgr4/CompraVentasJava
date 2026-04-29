@@ -118,7 +118,7 @@ public class PawnDialog extends JDialog {
         lblWeight = new JLabel("Peso (gramos) *:");
         spnWeightGrams = new  JSpinner(new SpinnerNumberModel(1, 1, 9999.0, 1));
 
-        weingthRow = new JLabel((Icon) new GridLayout(1,2,8,0));
+        JPanel weingthRow = new JPanel(new GridLayout(1,2,8,0));
         weingthRow.setOpaque(false);
         weingthRow.add(lblWeight);
         weingthRow.add(spnWeightGrams);
@@ -190,13 +190,13 @@ public class PawnDialog extends JDialog {
     private void fillFields(Pawn p) {
         spnAmount.setValue(p.getAmount());
         spnPrice.setValue(p.getPrice() != null ? p.getPrice().doubleValue() : 0.00);
-        spnInstallments.setValue(Math.max(1,p.getInstallMentCount()));
+        spnInstallments.setValue(Math.max(1, p.getInstallmentCount()));
         if(p.getPawnDate() !=null && p.getReturnDate() != null){
             long days = ChronoUnit.DAYS.between(LocalDate.now(), p.getReturnDate());
             spnReturnDays.setValue((int) Math.max(1,days));
         }
-        if (p.getWeightGramas() != null){
-            spnWeightGrams.setValue(p.getWeightGramas().doubleValue());
+        if (p.getWeightGrams() != null) {
+            spnWeightGrams.setValue(p.getWeightGrams().doubleValue());
         }
     }
 
@@ -250,11 +250,11 @@ public class PawnDialog extends JDialog {
         if (existingPawn != null) {
             // Edit existing
             existingPawn.setArticleId(article !=null ?  article.getId():0);
-            existingPawn.setClienteId(cliente != null ? cliente.getId():0);
+            existingPawn.setClientId(cliente != null ? cliente.getId() : 0);
             existingPawn.setAmount(amount);
             existingPawn.setPrice(price);
             existingPawn.setReturnDate(returnDate);
-            existingPawn.setWeightGramas(weight);
+            existingPawn.setWeightGrams(weight);
             return existingPawn;
         }
         return  new Pawn(

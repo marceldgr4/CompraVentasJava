@@ -13,15 +13,15 @@ public class Pawn {
     private int id;
     private String profileId;
     private int articleId;
-    private int clienteId;
+    private int clientId;
     private int amount;
     private BigDecimal price;
-    //---nuevos elemetos ---
-    private BigDecimal weightGramas;// Obligatorio cuando category = Joyeria
-    private int installMentCount;// Número de cuotas pactadas (>= 1)
-    private int installmentsPaid; // Cuotas pagadas hasta ahora
-    private int installmentsMissed;// Cuotas consecutivas sin pagar
-    //--------------------------
+    // ---nuevos elementos ---
+    private BigDecimal weightGrams;     // Obligatorio cuando category = Joyeria
+    private int installmentCount;       // Número de cuotas pactadas (>= 1)
+    private int installmentsPaid;       // Cuotas pagadas hasta ahora
+    private int installmentsMissed;     // Cuotas consecutivas sin pagar
+    // --------------------------
 
     private LocalDate pawnDate;
     private LocalDate returnDate;
@@ -34,20 +34,21 @@ public class Pawn {
     // Campos adicionales cargados mediante JOIN
     private String profileName;
     private String articleName;
-    private String clienteName;
+    private String clientName;
 
 
-    public Pawn(String profileId, int articleId, int clienteId, int amount,
-                BigDecimal price, BigDecimal weightGramas, int installMentCount, LocalDate pawnDate, LocalDate returnDate, String notes) {
+    public Pawn(String profileId, int articleId, int clientId, int amount,
+                BigDecimal price, BigDecimal weightGrams, int installmentCount,
+                LocalDate pawnDate, LocalDate returnDate, String notes) {
 
         this.profileId = profileId;
         this.articleId = articleId;
-        this.clienteId = clienteId;
+        this.clientId = clientId;
         this.amount = amount;
         this.price = price;
 
-        this.weightGramas = weightGramas;
-        this.installMentCount = installMentCount;
+        this.weightGrams = weightGrams;
+        this.installmentCount = installmentCount;
         this.installmentsPaid = 0;
         this.installmentsMissed = 0;
 
@@ -62,14 +63,14 @@ public class Pawn {
      */
     public Pawn(String profileId,
                 int articleId,
-                int clienteId,
+                int clientId,
                 int amount,
                 BigDecimal price,
-                int installMentCount,
+                int installmentCount,
                 LocalDate pawnDate,
                 LocalDate returnDate) {
-        this(profileId, articleId, clienteId, amount, price,
-                null, installMentCount,
+        this(profileId, articleId, clientId, amount, price,
+                null, installmentCount,
                 pawnDate, returnDate, null);
     }
 
@@ -77,13 +78,12 @@ public class Pawn {
     /**
      * Constructor completo mapeado desde la base de datos.
      */
-
-    public Pawn(int id, String profileId, int articleId, int clienteId,
+    public Pawn(int id, String profileId, int articleId, int clientId,
                 int amount, BigDecimal price, BigDecimal weightGrams,
                 int installmentCount, int installmentsPaid, int installmentsMissed,
                 LocalDate pawnDate, LocalDate returnDate,
                 PawnStatus status, String notes, LocalDateTime updatedAt) {
-        this(profileId, articleId, clienteId, amount, price, weightGrams,
+        this(profileId, articleId, clientId, amount, price, weightGrams,
                 installmentCount, pawnDate, returnDate, notes);
         this.id = id;
         this.installmentsPaid = installmentsPaid;
@@ -118,12 +118,12 @@ public class Pawn {
         this.articleId = articleId;
     }
 
-    public int getClienteId() {
-        return clienteId;
+    public int getClientId() {
+        return clientId;
     }
 
-    public void setClienteId(int clienteId) {
-        this.clienteId = clienteId;
+    public void setClientId(int clientId) {
+        this.clientId = clientId;
     }
 
     public int getAmount() {
@@ -142,20 +142,20 @@ public class Pawn {
         this.price = price;
     }
 
-    public BigDecimal getWeightGramas() {
-        return weightGramas;
+    public BigDecimal getWeightGrams() {
+        return weightGrams;
     }
 
-    public void setWeightGramas(BigDecimal weightGramas) {
-        this.weightGramas = weightGramas;
+    public void setWeightGrams(BigDecimal weightGrams) {
+        this.weightGrams = weightGrams;
     }
 
-    public int getInstallMentCount() {
-        return installMentCount;
+    public int getInstallmentCount() {
+        return installmentCount;
     }
 
-    public void setInstallMentCount(int installMentCount) {
-        this.installMentCount = installMentCount;
+    public void setInstallmentCount(int installmentCount) {
+        this.installmentCount = installmentCount;
     }
 
     public int getInstallmentsPaid() {
@@ -230,34 +230,35 @@ public class Pawn {
         this.articleName = articleName;
     }
 
-    public String getClienteName() {
-        return clienteName;
+    public String getClientName() {
+        return clientName;
     }
 
-    public void setClienteName(String clienteName) {
-        this.clienteName = clienteName;
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
 
     // ---- Lógica de negocio ----------------------------------------
 
-   public int getRemainingInstallments() {
-    return Math.max(0, installMentCount - installmentsPaid);
+    public int getRemainingInstallments() {
+        return Math.max(0, installmentCount - installmentsPaid);
     }
 
-public BigDecimal getTotal(){
-    if(price == null) return BigDecimal.ZERO;
-    return price.multiply(BigDecimal.valueOf(amount));
+    public BigDecimal getTotal() {
+        if (price == null) return BigDecimal.ZERO;
+        return price.multiply(BigDecimal.valueOf(amount));
     }
 
-public  boolean isActive(){
-    return status == PawnStatus.Activo;
+    public boolean isActive() {
+        return status == PawnStatus.Activo;
     }
 
-public boolean acceptsPayment(){
-    return status != null && status.acceptsPayment();
+    public boolean acceptsPayment() {
+        return status != null && status.acceptsPayment();
     }
-public String getStatusLab(){
-    return status != null ? status.name(): "desconocidos";
+
+    public String getStatusLabel() {
+        return status != null ? status.name() : "desconocido";
     }
 }
