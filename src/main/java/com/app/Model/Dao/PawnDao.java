@@ -98,12 +98,12 @@ public class PawnDao {
                 PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, pawn.getProfileId());
             ps.setInt(2, pawn.getArticleId());
-            ps.setInt(3, pawn.getClienteId());
+            ps.setInt(3, pawn.getClientId());
             ps.setInt(4, pawn.getAmount());
             ps.setBigDecimal(5, pawn.getPrice());
 
-            ps.setBigDecimal(6,pawn.getWeightGramas());
-            ps.setInt(7, pawn.getInstallMentCount());
+            ps.setBigDecimal(6, pawn.getWeightGrams());
+            ps.setInt(7, pawn.getInstallmentCount());
 
             ps.setDate(8, Date.valueOf(pawn.getPawnDate()));
             ps.setDate(9, Date.valueOf(pawn.getReturnDate()));
@@ -139,11 +139,11 @@ public class PawnDao {
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, pawn.getProfileId());
             ps.setInt(2, pawn.getArticleId());
-            ps.setInt(3, pawn.getClienteId());
+            ps.setInt(3, pawn.getClientId());
             ps.setInt(4, pawn.getAmount());
             ps.setBigDecimal(5, pawn.getPrice());
-            ps.setBigDecimal(6, pawn.getWeightGramas());
-            ps.setInt(7, pawn.getInstallMentCount());
+            ps.setBigDecimal(6, pawn.getWeightGrams());
+            ps.setInt(7, pawn.getInstallmentCount());
             ps.setDate(8, Date.valueOf(pawn.getPawnDate()));
             ps.setDate(9, Date.valueOf(pawn.getReturnDate()));
             ps.setString(10, PawnStatus.Activo.name());
@@ -255,7 +255,7 @@ public class PawnDao {
         try {
             pawn.setProfileName(rs.getString("profile_name"));
             pawn.setArticleName(rs.getString("article_name"));
-            pawn.setClienteName(rs.getString("cliente_name"));
+            pawn.setClientName(rs.getString("cliente_name"));
         } catch (SQLException ignored) {
             // Columnas no presentes en esta query
         }

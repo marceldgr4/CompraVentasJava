@@ -23,7 +23,7 @@ public class ArticleDialog extends JDialog {
     private StyledField          txtDescription;
     private StyledField          txtAmount;
     private StyledField          txtPrice;
-    private JCheckBox            chkSold;
+   // private JCheckBox            chkSold;
     private boolean              confirmed = false;
 
     public ArticleDialog(JFrame parent, Article article) {
@@ -135,14 +135,14 @@ public class ArticleDialog extends JDialog {
         body.add(txtPrice, gc);
         row++;
 
-        // Checkbox
+        /*/ Checkbox
         chkSold = new JCheckBox("¿Disponible para venta?");
         chkSold.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         chkSold.setForeground(TEXT_DARK);
         chkSold.setOpaque(false);
         gc.gridx = 0; gc.gridy = row; gc.gridwidth = 2; gc.insets = new Insets(0,0,0,0);
         body.add(chkSold, gc);
-
+*/
         return body;
     }
 
@@ -208,7 +208,7 @@ public class ArticleDialog extends JDialog {
         txtDescription.setText(a.getDescription() != null ? a.getDescription() : "");
         txtAmount     .setText(String.valueOf(a.getAmount()));
         txtPrice      .setText(a.getPrice() != null ? a.getPrice().toPlainString() : "");
-        chkSold       .setSelected(a.isSold());
+
         if (a.getClienteId() > 0) {
             for (int i = 0; i < cmbCliente.getItemCount(); i++) {
                 if (cmbCliente.getItemAt(i).getId() == a.getClienteId()) {
@@ -243,7 +243,7 @@ public class ArticleDialog extends JDialog {
         Article a = new Article(
                 txtName.getText().trim(), txtDescription.getText().trim(),
                 Integer.parseInt(txtAmount.getText().trim()),
-                new BigDecimal(txtPrice.getText().trim()), chkSold.isSelected());
+                new BigDecimal(txtPrice.getText().trim()));
         a.setClienteId(c != null ? c.getId() : 0);
         return a;
     }

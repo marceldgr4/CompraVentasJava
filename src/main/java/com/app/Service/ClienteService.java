@@ -98,7 +98,7 @@ public class ClienteService {
     // -------------------------------------------------------
 
     public void softDelete(int id) throws ServiceException {
-        requireAdmin("eliminar cliente");
+        //requireAdmin("eliminar cliente");
         try {
             findById(id);
             boolean updated = clienteDao.softDelete(id);

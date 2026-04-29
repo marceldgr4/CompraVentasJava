@@ -107,11 +107,11 @@ public class ClienteDialog extends JDialog {
 
     public Cliente getCliente() {
         return new Cliente(
-                0,
                 txtFirstName.getText().trim(),
                 txtLastName.getText().trim(),
                 txtEmail.getText().trim(),
                 txtPhone.getText().trim(),
+
                 null
         );
     }

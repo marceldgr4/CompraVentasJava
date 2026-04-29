@@ -81,6 +81,7 @@ public class SaleService {
                 throw new BusinessException("Stock insuficientes");
             throw new ServiceException("Error: no se pudo guardar la venta: "+ msg,e);
         }
+
     }
 
     public Sale save(Sale sale) throws SQLException{

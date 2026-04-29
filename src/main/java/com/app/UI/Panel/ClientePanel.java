@@ -173,12 +173,15 @@ public class ClientePanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) return null;
         return new Cliente(
-                (int)    tableModel.getValueAt(row, 0),
-                (String) tableModel.getValueAt(row, 1),
-                (String) tableModel.getValueAt(row, 2),
-                (String) tableModel.getValueAt(row, 3),
-                (String) tableModel.getValueAt(row, 4),
-                null);
+                (int)    tableModel.getValueAt(row, 0),  // id
+                (String) tableModel.getValueAt(row, 1),  // firstName
+                (String) tableModel.getValueAt(row, 2),  // lastName
+                (String) tableModel.getValueAt(row, 3),  // email
+                (String) tableModel.getValueAt(row, 4),  // phone
+                null,   // status
+                null,   // createdAt
+                null    // updatedAt
+        );
     }
 
     private void updateTable(List<Cliente> clientes) {

@@ -245,7 +245,7 @@ public class PawnPanel extends JPanel {
         for (Pawn p : pawns) {
             tableModel.addRow(new Object[]{
                     p.getId(),
-                    p.getClienteName() != null ? p.getClienteName() : "N/A",
+                    p.getClientName() != null ? p.getClientName() : "N/A",
                     p.getArticleName() != null ? p.getArticleName() : "N/A",
                     p.getAmount(),
                     "$" + p.getPrice(),
