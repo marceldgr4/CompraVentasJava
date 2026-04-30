@@ -65,7 +65,7 @@ public class ClienteService {
             return clienteDao.save(cliente);
         } catch (SQLException e) {
             String msg = e.getMessage();
-            if (msg != null && msg.contains("unique") || msg != null && msg.contains("Duplicate entry")) {
+            if (isUniqueViolation(e)){
                 throw new ServiceException("ya existe un cliente con el mismo Correo.");
             }
             throw new ServiceException("Error al crear el cliente: " + msg, e);
@@ -122,16 +122,17 @@ public class ClienteService {
             throw new ServiceException("No se puede marcar el Cliente con ID:."+ id);
         }
     }catch (SQLException e) {
-        String msg = e.getMessage();
-        if (msg != null && (msg.contains("Foreing Key") || msg.contains("violates"))) {
-            throw new ServiceException("Error al eliminar el cliente tiene operacion regsitados ");
+        if(isFKViolation(e)){
+          throw new ServiceException("Error al eliminar el cliente tiene operacion regsitados ");
         }
-        throw new ServiceException("Error al eliminar el cliente: " + msg, e);
+        throw new ServiceException("Error al eliminar el cliente: " + e.getMessage(), e);
         }
     }
-    @Deprecated
-    public void delete(int id) throws ServiceException {
-        hardDelete(id);
+    private boolean isFKViolation(SQLException e) {
+        return "23503".equals(e.getSQLState());
+    }
+    private boolean isUniqueViolation(SQLException e) {
+        return "23505".equals(e.getSQLState());
     }
 
     // -------------------------------------------------------
@@ -160,5 +161,9 @@ public class ClienteService {
         if (value == null || value.isBlank()) {
             errors.add(errorMsg);
         }
+    }
+
+    public void delete(int id) {
+
     }
 }

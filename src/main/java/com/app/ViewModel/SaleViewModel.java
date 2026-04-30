@@ -37,12 +37,12 @@ public class SaleViewModel extends BaseViewModel {
         notifyObservers(EVENT_SALES_LOADED,new ArrayList<>(sales));
     }
     public void loadByDateRange(LocalDate from, LocalDate to) throws ServiceException {
-        sales = saleService.finByDateRange(from,to);
+        sales = saleService.findByDateRange(from,to);
         notifyObservers(EVENT_SALES_LOADED,new ArrayList<>(sales));
     }
     public void loadByCliente(int clienteId) throws ServiceException {
         sales = saleService.findByCliente(clienteId);
-        notifyObservers(EVENT_SALE_CREATED, new ArrayList<>(sales));
+        notifyObservers(EVENT_SALES_LOADED, new ArrayList<>(sales));
     }
     // -------------------------------------------------------
     // CARRITO — gestión del carrito temporal

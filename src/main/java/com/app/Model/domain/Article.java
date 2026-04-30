@@ -25,8 +25,8 @@ public class Article {
     /**
      * Constructor completo para uso general.
      */
-    public Article( int clienteId, String nameArticle, String description,
-                    ArticleCategory category, int amount, BigDecimal price) {
+    public Article( String nameArticle, String description,
+                    int amount, BigDecimal price) {
 
         this.clienteId = clienteId;
         this.nameArticle = nameArticle;
@@ -36,21 +36,7 @@ public class Article {
         this.price = price;
     }
 
-    /**
-     * Constructor usado al mapear desde la base de datos (con id).
-     */
-    public Article(String nameArticle, String description,
-                   int amount, BigDecimal price) {
-        this.id = id;
-        this.nameArticle = nameArticle;
-        this.description = description;
-        this.category = category;
-        this.amount = amount;
-        this.price = price;
 
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
 
     // ---- Getters / Setters ----------------------------------------
 
