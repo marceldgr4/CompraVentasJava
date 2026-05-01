@@ -36,14 +36,14 @@ public class PawnDao {
     //----READ-----
 
     public List<Pawn> findAll() throws SQLException {
-        String sql = "SELECT" + SELECT_COLS + FROM_JOINS + " ORDER BY p.pawn_date DESC ,p.id DESC";
+        String sql = "SELECT " + SELECT_COLS + FROM_JOINS + " ORDER BY p.pawn_date DESC ,p.id DESC";
 
         return executeList(sql, ps -> {
         });
     }
 
     public Optional<Pawn> findById(int id) throws SQLException {
-        String sql = "SELECT" + SELECT_COLS + FROM_JOINS + " WHERE p.id = ?";
+        String sql = "SELECT " + SELECT_COLS + FROM_JOINS + " WHERE p.id = ?";
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -65,7 +65,7 @@ public class PawnDao {
                 return executeList(sql, ps-> ps.setString(1, profileId));
     }
     public List<Pawn> findByStatus(PawnStatus status) throws SQLException {
-        String sql = "SELECT" + SELECT_COLS+ FROM_JOINS+
+        String sql = "SELECT " + SELECT_COLS+ FROM_JOINS+
                 "WHERE p.status = ?::pawn_status "
                 + "ORDER BY p.pawn_date DESC ";
         return executeList(sql, ps-> ps.setString(1,status.name()));

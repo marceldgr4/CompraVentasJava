@@ -18,7 +18,7 @@ public class SaleDao {
             String sql =
                     """
                     INSERT INTO public.sales(profile_id, cliente_id,sale_date)
-                    VALUES (?::uuid,?,?);
+                    VALUES (?::uuid,?,?)
                     RETURNING id
                     """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -33,7 +33,7 @@ public class SaleDao {
             }
             String sqlDetail = """
                     INSERT INTO public.sales_details(sale_id,article_id,amount,unit_price)
-                    VALUES (?,?,?,?);
+                    VALUES (?,?,?,?)
                     RETURNING id
                     """;
             for(SalesDetail detail: sale.getDetails()){
@@ -100,10 +100,10 @@ public class SaleDao {
         String sql = """
                 SELECT *
                 FROM public.sales
-                WHERE profile_id = ?::uuid;
-                order by sale_date desc
+                WHERE profile_id = ?::uuid
+                ORDER BY sale_date DESC
         """;
-        return findByParam(sql, ps -> ps.setString(1,profileId));
+        return findByParam(sql, ps -> ps.setString(1, profileId));
         }
 
 
@@ -111,8 +111,8 @@ public class SaleDao {
         String sql = """
                 SELECT *
                 FROM public.sales
-                WHERE sale_date :: date BETWEEN ? AND ?;
-                order by sale date desc;
+                WHERE sale_date::date BETWEEN ? AND ?
+                ORDER BY sale_date DESC
         """;
 
         List<Sale> saleList = new ArrayList<>();

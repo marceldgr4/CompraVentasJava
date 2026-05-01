@@ -23,7 +23,7 @@ public class ArticleService {
             return articleDao.findAll();
 
         } catch (SQLException e) {
-            throw new ServiceException("Error al cargar el inventario: " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario: " + e.getMessage(),e);
         }
     }
 
@@ -32,7 +32,7 @@ public class ArticleService {
             return articleDao.findAvailable();
 
         }catch (SQLException e){
-            throw new ServiceException("Error al cargar el inventario disponible: " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario disponible: " + e.getMessage(),e);
         }
    }
 
@@ -46,21 +46,21 @@ public class ArticleService {
         try {
             return articleDao.findByName(name.trim());
         } catch (SQLException e) {
-            throw new ServiceException("Error en la búsqueda...: " + e.getMessage());
+            throw new ServiceException("Error en la búsqueda...: " + e.getMessage(),e);
         }
     }
 
     // -------------------------------------------------------
     // READ — todos con stock disponible (para panel de empleado)
     // -------------------------------------------------------
-    public List<Article> getAvailableForPawn() throws ServiceException {
+    public List<Article> getAvailableForSaleOrPawn() throws ServiceException {
         try {
             return articleDao.findAll()
                     .stream()
                     .filter(Article::hasStock)
                     .collect(Collectors.toList());
         } catch (SQLException e) {
-            throw new ServiceException("Error al cargar el inventario del empleado: " + e.getMessage());
+            throw new ServiceException("Error al cargar el inventario del empleado: " + e.getMessage(),e);
         }
     }
     public Article getById(int id) throws ServiceException {
@@ -80,7 +80,7 @@ public class ArticleService {
         try {
             return articleDao.save(article);
         } catch (SQLException e) {
-            throw new ServiceException("Error al crear el artículo: " + e.getMessage());
+            throw new ServiceException("Error al crear el artículo: " + e.getMessage(),e);
         }
     }
 
@@ -124,7 +124,7 @@ public class ArticleService {
                 throw new ServiceException("Articulo no encontrado con ID:"+id);
             }
         } catch (SQLException e) {
-            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage());
+            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage(),e);
         }
     }
 
@@ -135,14 +135,16 @@ public class ArticleService {
     public void editPrice (int id, BigDecimal newPrice) throws ServiceException {
         requireAdmin("editar precios del articulo");
         if(newPrice == null || newPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ServiceException("La cantidad debe ser mayor que 0.");
+            throw new BusinessException("La precio debe ser mayor que $0.");
         }
         try{
-            Optional<Article> article = articleDao.findById(id);
-            article.get().setPrice(newPrice);
-            articleDao.update(article.orElse(null));
+            articleDao.findById(id).orElseThrow(()-> new ServiceException("Articulo no encontrado con ID:"+id));
+            boolean update = articleDao.updatePrice(id,newPrice);
+            if(!update) {
+                throw new ServiceException("No se pudo actulziar el precio del Articulo no encontrado con ID:"+id);
+            }
         }catch (SQLException e){
-            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage());
+            throw new ServiceException("Error al actualizar el articulo: " + e.getMessage(),e);
         }
     }
 
@@ -155,7 +157,7 @@ public class ArticleService {
                 throw new ServiceException("Error: no se encontró el artículo con ID " + article.getId());
             }
         } catch (SQLException e){
-            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage());
+            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage(),e);
         }
     }
         //---------
@@ -173,7 +175,7 @@ public class ArticleService {
             int newAmount = article.getAmount() + quantity;
             articleDao.updateAmount(articleId, newAmount);
         } catch (SQLException e){
-            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage());
+            throw new ServiceException("Error al actualizar el artículo: " + e.getMessage(),e);
         }
 
     }
@@ -199,8 +201,7 @@ public class ArticleService {
         requireAdmin("eliminar artículo");
         try{
             articleDao.findById(articleId).orElseThrow(()-> new ServiceException(
-                    "No se encontró el artículo con ID " + articleId
-            ));
+                    "No se encontró el artículo con ID " + articleId));
 
             boolean deleted = articleDao.delete(articleId);
             if (!deleted) {
@@ -208,7 +209,7 @@ public class ArticleService {
             }
 
         }catch (SQLException e){
-            throw new ServiceException("Error al eliminar el artículo: " + e.getMessage());
+            throw new ServiceException("Error al eliminar el artículo: " + e.getMessage(),e);
         }
     }
 }

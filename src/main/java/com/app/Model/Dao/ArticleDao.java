@@ -1,6 +1,5 @@
 package com.app.Model.Dao;
 
-
 import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Article;
 import com.app.Model.Enum.ArticleCategory;
@@ -14,58 +13,71 @@ public class ArticleDao {
 
     public List<Article> findAll() throws SQLException {
         String sql = """
-                SELECT id, cliente_id, name_article, description, category, amount, price,created_at,updated_at
+                SELECT id, cliente_id, name_article, description, category, amount, price, created_at, updated_at
                 FROM public.articles
-                ORDER BY name_article ASC 
+                ORDER BY name_article ASC
                 """;
         List<Article> list = new ArrayList<>();
-        try
-                (Connection con = ConnectionPool.getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
         }
         return list;
-
     }
 
-    // -------------------------------------------------------
-    // READ — buscar por id
-    // -------------------------------------------------------
-    public static Optional<Article> findById(int id) throws SQLException {
+    // findById ahora es de instancia (no estático) — ver L-02 en audit
+    public Optional<Article> findById(int id) throws SQLException {
         String sql = """
-                SELECT id,cliente_id, name_article, description,category, amount, price,created_at,updated_at
+                SELECT id, cliente_id, name_article, description, category, amount, price, created_at, updated_at
                 FROM public.articles
-                WHERE id = ?;
-        """;
+                WHERE id = ?
+                """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapRow(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
             }
         }
         return Optional.empty();
     }
 
-    // -------------------------------------------------------
-    // READ — buscar por nombre (búsqueda parcial)
-    // -------------------------------------------------------
     public List<Article> findByName(String name) throws SQLException {
         String sql = """
-                SELECT id,cliente_id, name_article, description,category, amount, price,created_at,updated_at
+                SELECT id, cliente_id, name_article, description, category, amount, price, created_at, updated_at
                 FROM public.articles
-                WHERE LOWER(name_article) LIKE lower(?)
+                WHERE LOWER(name_article) LIKE LOWER(?)
                 ORDER BY name_article ASC
-        """;
+                """;
         List<Article> list = new ArrayList<>();
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, "%" + name.toLowerCase() + "%");
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Article> findAvailable() throws SQLException {
+        String sql = """
+                SELECT id, cliente_id, name_article, description, category, amount, price, created_at, updated_at
+                FROM public.articles
+                WHERE amount > 0
+                ORDER BY name_article ASC
+                """;
+        List<Article> list = new ArrayList<>();
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -73,33 +85,12 @@ public class ArticleDao {
         return list;
     }
 
-public List<Article>findAvailable() throws SQLException {
-        String sql = """
-                SELECT *
-                FROM public.articles
-                WHERE amount > 0
-                ORDER BY name_article ASC;
-                """;
-        List<Article> list = new ArrayList<>();
-        try (Connection con = ConnectionPool.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()){
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-            return  list;
-        }
-}
-    // -------------------------------------------------------
-    // CREATE — guardar artículo nuevo
-    // -------------------------------------------------------
     public Article save(Article article) throws SQLException {
         String sql = """
-            INSERT INTO public.articles(cliente_id, name_article, description,category, 
-                                        amount, price)
-            VALUES (?, ?, ?, ?:: article_category, ?,?)
-            RETURNING id,created_at, updated_at
-            """;
+                INSERT INTO public.articles(cliente_id, name_article, description, category, amount, price)
+                VALUES (?, ?, ?, ?::article_category, ?, ?)
+                RETURNING id, created_at, updated_at
+                """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, article.getClienteId());
@@ -108,31 +99,29 @@ public List<Article>findAvailable() throws SQLException {
             ps.setString(4, article.getCategory().name());
             ps.setInt(5, article.getAmount());
             ps.setBigDecimal(6, article.getPrice());
-
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                article.setId(rs.getInt("id"));
-                Timestamp updated_at = rs.getTimestamp("updated_at");
-                Timestamp created_at = rs.getTimestamp("created_at");
-               if(created_at !=null) article.setCreatedAt(created_at.toLocalDateTime());
-               if(updated_at !=null) article.setUpdatedAt(updated_at.toLocalDateTime());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    article.setId(rs.getInt("id"));
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    Timestamp updatedAt = rs.getTimestamp("updated_at");
+                    if (createdAt != null) article.setCreatedAt(createdAt.toLocalDateTime());
+                    if (updatedAt != null) article.setUpdatedAt(updatedAt.toLocalDateTime());
+                }
             }
         }
         return article;
     }
 
-    // -------------------------------------------------------
-    // UPDATE — actualizar artículo completo (solo Admin)
-    // -------------------------------------------------------
     public boolean update(Article article) throws SQLException {
         String sql = """
                 UPDATE public.articles
-                SET name_article = ?, 
-                amount = ?, 
-                category = ?::article_category,
-                price = ?
+                SET name_article = ?,
+                    amount       = ?,
+                    category     = ?::article_category,
+                    price        = ?,
+                    updated_at   = NOW()
                 WHERE id = ?
-        """;
+                """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, article.getNameArticle());
@@ -149,24 +138,33 @@ public List<Article>findAvailable() throws SQLException {
         String sql = """
                 UPDATE public.articles
                 SET name_article = ?,
-                description = ?,
-                category = ?::article_category
+                    description  = ?,
+                    category     = ?::article_category,
+                    updated_at   = NOW()
                 WHERE id = ?
-        """;
+                """;
         try (Connection con = ConnectionPool.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)){
+             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, nameArticle);
             ps.setString(2, description);
             ps.setString(3, category.name());
-            ps.setInt(4,id);
+            ps.setInt(4, id);
             return ps.executeUpdate() > 0;
         }
+    }
 
+    public boolean updatePrice(int id, java.math.BigDecimal newPrice) throws SQLException {
+        String sql = "UPDATE public.articles SET price = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setBigDecimal(1, newPrice);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        }
     }
 
     public boolean delete(int id) throws SQLException {
-        String sql = " DELETE FROM public.articles WHERE id = ?";
-
+        String sql = "DELETE FROM public.articles WHERE id = ?";
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -174,34 +172,34 @@ public List<Article>findAvailable() throws SQLException {
         }
     }
 
-    /**
-     * Actualiza la cantidad de stock de un artículo.
-     */
     public boolean updateAmount(Connection con, int id, int newAmount) throws SQLException {
-        String sql = "UPDATE public.articles SET amount =  ?, updated_at = NOW() WHERE id = ?";
-        try ( PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "UPDATE public.articles SET amount = ?, updated_at = NOW() WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, newAmount);
             ps.setInt(2, id);
             return ps.executeUpdate() > 0;
-
         }
     }
+
     public boolean updateAmount(int id, int newAmount) throws SQLException {
-        try (Connection con = ConnectionPool.getConnection()){
-            return  updateAmount(con, id, newAmount);
+        try (Connection con = ConnectionPool.getConnection()) {
+            return updateAmount(con, id, newAmount);
         }
     }
-
 
     private static Article mapRow(ResultSet rs) throws SQLException {
         ArticleCategory category = ArticleCategory.valueOf(rs.getString("category"));
-        Timestamp created = rs.getTimestamp("created_at");
-        Timestamp updated = rs.getTimestamp("updated_at");
-        return new Article(
+        Article article = new Article(
                 rs.getString("name_article"),
                 rs.getString("description"),
                 rs.getInt("amount"),
                 rs.getBigDecimal("price")
         );
+        article.setId(rs.getInt("id"));
+        Timestamp created = rs.getTimestamp("created_at");
+        Timestamp updated = rs.getTimestamp("updated_at");
+        if (created != null) article.setCreatedAt(created.toLocalDateTime());
+        if (updated != null) article.setUpdatedAt(updated.toLocalDateTime());
+        return article;
     }
 }

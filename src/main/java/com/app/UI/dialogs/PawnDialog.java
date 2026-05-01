@@ -1,5 +1,6 @@
 package com.app.UI.dialogs;
 
+import Infrastructure.security.SessionManager;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
 import com.app.Model.domain.Pawn;
@@ -258,7 +259,7 @@ public class PawnDialog extends JDialog {
             return existingPawn;
         }
         return  new Pawn(
-                profileId,
+                SessionManager.getProfileId(),
                 article != null ? article.getId(): 0,
                 cliente != null ? cliente.getId(): 0,
                 amount, price,weight,installments,

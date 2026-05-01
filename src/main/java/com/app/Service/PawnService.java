@@ -87,7 +87,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
     public Pawn create(Pawn pawn) throws ServiceException {
         validatePawn(pawn);
         try {
-            Article article = ArticleDao.findById(pawn.getArticleId()).orElseThrow(()-> new ServiceException(
+            Article article = articleDao.findById(pawn.getArticleId()).orElseThrow(()-> new ServiceException(
                     "Articlos no encotrado ID:"+ pawn.getArticleId()
             ));
             if (article.getAmount()< pawn.getAmount()) {
@@ -233,7 +233,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
 
 
     private void validatePawn(Pawn pawn) {
-        check(pawn.getProfileId()== null || pawn.getProfileId().isBlank(),"El ID del articulo empeñado es obligatorio");
+        check(pawn.getProfileId()== null || pawn.getProfileId().isBlank(),"El ID del perfil del empleado es obligatorio");
         check(pawn.getArticleId() <= 0,   "Debe seleccionar un artículo válido.");
         check(pawn.getClientId() <= 0,    "Debe seleccionar un cliente válido.");
         check(pawn.getAmount()    <= 0,    "La cantidad debe ser mayor a 0.");

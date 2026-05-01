@@ -16,135 +16,153 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class SaleService {
+
     private final SaleDao saleDao = new SaleDao();
-    private final ArticleService articleService = new ArticleService();
+
+    // ── READ ─────────────────────────────────────────────────────────────────
 
     public List<Sale> getAllSales() throws ServiceException {
-        try{
+        try {
             return saleDao.findAll();
+        } catch (SQLException e) {
+            throw new ServiceException("Error al cargar ventas: " + e.getMessage(), e);
+        }
+    }
 
-        }catch(SQLException e){
-            throw new ServiceException("Error al cargar todas las ventas: "+e.getMessage(),e);
+    public Sale findById(int id) throws ServiceException {
+        try {
+            return saleDao.findById(id)
+                    .orElseThrow(() -> new ServiceException("Venta " + id + " no encontrada."));
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar venta: " + e.getMessage(), e);
         }
     }
-    public Sale findById(int id) throws ServiceException{
-        try{
-            return saleDao.findById(id).orElseThrow(()-> new ServiceException("Venta "+id+" no encontrada"));
-        }catch (SQLException e){
-            throw new ServiceException("Venta "+id+" no encontrada",e);
-        }
-    }
-    public List<Sale> findByCliente(int clienteId) throws ServiceException{
-        try{
+
+    public List<Sale> findByCliente(int clienteId) throws ServiceException {
+        try {
             return saleDao.findClientes(clienteId);
-        }catch (SQLException e){
-            throw new ServiceException("Error: cliente de la venta no encontrado: " + e.getMessage(),e);
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar ventas del cliente: " + e.getMessage(), e);
         }
     }
-    public List<Sale> findByProfile(String profile) throws ServiceException{
-        try{
-            return saleDao.findByProfile(profile);
-        }catch (SQLException e){
-            throw new ServiceException("Error: perfil de la venta no encontrado: " + e.getMessage(),e);
+
+    public List<Sale> findByProfile(String profileId) throws ServiceException {
+        try {
+            return saleDao.findByProfile(profileId);
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar ventas del empleado: " + e.getMessage(), e);
         }
     }
-       public List<Sale> finByDateRange(LocalDate from, LocalDate to) throws ServiceException{
-        if(from == null||to == null|| from.isAfter(to)){
-            throw new BusinessException("Error en el rango de fechas de "+from+" a "+to);
+
+    public List<Sale> findByDateRange(LocalDate from, LocalDate to) throws ServiceException {
+        if (from == null || to == null || from.isAfter(to)) {
+            throw new BusinessException("El rango de fechas es inválido: de " + from + " a " + to + ".");
         }
-        try{
-            return saleDao.findByDateRange(from,to);
-        }catch (SQLException e){
-            throw new ServiceException("Error al buscar ventas por fecha: "+e.getMessage(),e);
+        try {
+            return saleDao.findByDateRange(from, to);
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar ventas por fecha: " + e.getMessage(), e);
         }
     }
-    // -------------------------------------------------------
-    // CREATE — transaccional con validación de stock
-    // -------------------------------------------------------
-    public Sale create(Sale sale) throws ServiceException{
+
+    // ── CREATE — RF-05.2/RF-05.3: operación 100% atómica via stored procedure ─
+
+    /**
+     * Registra una venta de forma atómica usando la función {@code register_sale()} de PostgreSQL.
+     * Si cualquier artículo no tiene stock suficiente, la transacción hace rollback automático.
+     * No existe riesgo de stock reducido sin venta registrada (fix L-01 del audit).
+     */
+    public Sale create(Sale sale) throws ServiceException {
         validateSale(sale);
-        if(sale.getProfileId() == null || sale.getProfileId().isEmpty()){
+
+        if (sale.getProfileId() == null || sale.getProfileId().isEmpty()) {
             sale.setProfileId(SessionManager.getProfileId());
         }
-        if (sale.getSaleDate()==null){
+        if (sale.getSaleDate() == null) {
             sale.setSaleDate(LocalDate.now().atStartOfDay());
         }
 
-        for(SalesDetail detail : sale.getDetails()){
-            articleService.removeStock(detail.getArticleId(),detail.getAmount());
+        try {
+            return saveViaStoredProcedure(sale);
+        } catch (SQLException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("stock") || msg.contains("insufficient")) {
+                throw new BusinessException("Stock insuficiente para uno o más artículos.");
+            }
+            throw new ServiceException("Error al guardar la venta: " + msg, e);
         }
-        try{
-            return saleDao.save(sale);
-        }catch (SQLException e){
-            String msg = e.getMessage();
-            if(msg != null && msg.contains("No existe el producto con el id"))
-                throw new BusinessException("Stock insuficientes");
-            throw new ServiceException("Error: no se pudo guardar la venta: "+ msg,e);
-        }
-
     }
 
-    public Sale save(Sale sale) throws SQLException{
+    /**
+     * Construye el JSON de items y llama a {@code public.register_sale(?::uuid, ?, ?::jsonb)}.
+     * Fix L-02: corregido el typo `?::uuid.` → `?::uuid,` en la query SQL.
+     */
+    private Sale saveViaStoredProcedure(Sale sale) throws SQLException {
         StringBuilder items = new StringBuilder("[");
-        for(int i =0; i < sale.getDetails().size(); i++){
-            SalesDetail d = sale.getDetails().get(i);
-            if(i> 0) items.append(", ");
+        List<SalesDetail> details = sale.getDetails();
+        for (int i = 0; i < details.size(); i++) {
+            SalesDetail d = details.get(i);
+            if (i > 0) items.append(",");
             items.append(String.format(
                     "{\"article_id\":%d,\"amount\":%d,\"unit_price\":%s}",
                     d.getArticleId(), d.getAmount(), d.getUnitPrice().toPlainString()));
         }
         items.append("]");
 
-        String sql ="SELECT public.register_sale(?::uuid. ?, ?:: jsonb)";
-        try(Connection con = ConnectionPool.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)){
+        // Fix L-02: era `?::uuid.` (punto) — ahora es `?::uuid,` (coma)
+        String sql = "SELECT public.register_sale(?::uuid, ?, ?::jsonb)";
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, sale.getProfileId());
-            ps.setInt(2,sale.getClienteId());
-            ps.setString(3,items.toString());
-            try(ResultSet rs = ps.executeQuery()){
-                if(rs.next()) sale.setId(rs.getInt(1));
+            ps.setInt(2, sale.getClienteId());
+            ps.setString(3, items.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    sale.setId(rs.getInt(1));
+                }
             }
         }
         return sale;
     }
 
-    // -------------------------------------------------------
-    // DELETE — solo Admin
-    // -------------------------------------------------------
+    // ── DELETE — solo Admin ───────────────────────────────────────────────────
 
-    public void delete(int id) throws ServiceException{
+    public void delete(int id) throws ServiceException {
         requireAdmin("eliminar venta");
-        try{
-            boolean deletec = saleDao.delete(id);
-            if(!deletec){
-                throw new ServiceException("Venta "+id+" no encontrada");
+        try {
+            boolean deleted = saleDao.delete(id);
+            if (!deleted) {
+                throw new ServiceException("Venta " + id + " no encontrada.");
             }
-        }
-        catch (SQLException e){
-            throw new ServiceException("Error al eliminar la venta "+id+": "+e.getMessage(), e);
+        } catch (SQLException e) {
+            throw new ServiceException("Error al eliminar la venta " + id + ": " + e.getMessage(), e);
         }
     }
-    private void requireAdmin(String action) throws ServiceException{
-        if(!SessionManager.isAdmin()){
-            throw new ServiceException("No es administrador. Solo el administrador tiene permiso para "+ action);
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void requireAdmin(String action) throws ServiceException {
+        if (!SessionManager.isAdmin()) {
+            throw new ServiceException("Solo el administrador puede: " + action + ".");
         }
     }
-    private void validateSale(Sale sale) throws ServiceException{
-        if(sale.getSaleDate()==null ||sale.getDetails().isEmpty() ){
-            throw new BusinessException("La venta debe tener al menus un articulo");
+
+    private void validateSale(Sale sale) {
+        if (sale.getDetails() == null || sale.getDetails().isEmpty()) {
+            throw new BusinessException("La venta debe tener al menos un artículo.");
         }
-        if(sale.getClienteId()<=0){
-            throw new BusinessException("La venta debe tener un Cliente valido");
+        if (sale.getClienteId() <= 0) {
+            throw new BusinessException("La venta debe tener un cliente válido.");
         }
-        for (SalesDetail detail : sale.getDetails()){
-            if(detail.getArticleId()<=0){
-                throw new BusinessException("La detalle  debe tener un Article valido");
+        for (SalesDetail detail : sale.getDetails()) {
+            if (detail.getArticleId() <= 0) {
+                throw new BusinessException("Cada detalle debe referenciar un artículo válido.");
             }
-            if(detail.getAmount()<=0){
-                throw new BusinessException("La cantinda de cada articulo debe ser mayor 0,");
+            if (detail.getAmount() <= 0) {
+                throw new BusinessException("La cantidad de cada artículo debe ser mayor a 0.");
             }
-            if(detail.getUnitPrice() == null || detail.getUnitPrice().signum()<=0 ){
-                throw new BusinessException("el precio de cada articulo debe ser mayor a $ 0");
+            if (detail.getUnitPrice() == null || detail.getUnitPrice().signum() <= 0) {
+                throw new BusinessException("El precio de cada artículo debe ser mayor a $0.");
             }
         }
     }
