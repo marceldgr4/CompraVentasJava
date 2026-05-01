@@ -1,0 +1,407 @@
+
+-- DDL COMPRAVENTA v4.0 — VERSIÓN DEFINITIVA (CORREGIDA)
+-- Stack: Supabase (PostgreSQL 15)
+-- Fecha: Mayo 2026 — Revisión Senior
+-- ============================================================
+
+-- 0. LIMPIEZA TOTAL (Idempotencia)
+DROP VIEW IF EXISTS public.v_dashboard CASCADE;
+DROP FUNCTION IF EXISTS public.fn_expire_overdue_pawns() CASCADE;
+DROP FUNCTION IF EXISTS public.register_sale(UUID, INTEGER, JSONB) CASCADE;
+DROP FUNCTION IF EXISTS public.fn_mark_pawn_lost(INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.set_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS public.update_pawn_status_on_payment() CASCADE;
+DROP FUNCTION IF EXISTS public.validate_pawn_jewelry_weight() CASCADE;
+DROP FUNCTION IF EXISTS public.next_invoice_number() CASCADE;
+
+DROP TABLE IF EXISTS public.invoice_sequence CASCADE;
+DROP TABLE IF EXISTS public.audit_log CASCADE;
+DROP TABLE IF EXISTS public.sales_details CASCADE;
+DROP TABLE IF EXISTS public.sales CASCADE;
+DROP TABLE IF EXISTS public.pawn_payments CASCADE;
+DROP TABLE IF EXISTS public.pawns CASCADE;
+DROP TABLE IF EXISTS public.articles CASCADE;
+DROP TABLE IF EXISTS public.profile CASCADE;
+DROP TABLE IF EXISTS public.clientes CASCADE;
+
+DROP TYPE IF EXISTS public.role_user CASCADE;
+DROP TYPE IF EXISTS public.article_category CASCADE;
+DROP TYPE IF EXISTS public.cliente_status CASCADE;
+DROP TYPE IF EXISTS public.pawn_status CASCADE;
+
+-- 1. EXTENSIONES
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. TIPOS ENUMERADOS
+-- CORREGIDO: Alineado con ArticleCategory.java (sin tildes, coincide con código Java en producción)
+CREATE TYPE public.role_user AS ENUM ('Admin', 'Empleado');
+CREATE TYPE public.article_category AS ENUM ('Electrodomesticos', 'Joyeria', 'Herramientas', 'Tecnologia', 'Otro');
+CREATE TYPE public.cliente_status AS ENUM ('Activo', 'Eliminado');
+CREATE TYPE public.pawn_status AS ENUM ('Activo', 'Vencido', 'Finalizado', 'Perdido', 'Retirado', 'Vendido');
+
+-- 3. TABLAS MAESTRAS
+CREATE TABLE public.profile (
+    id         UUID          PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email      VARCHAR(255)  NOT NULL DEFAULT '',
+    full_name  VARCHAR(255)  NOT NULL,
+    rol        public.role_user NOT NULL DEFAULT 'Empleado',
+    active     BOOLEAN       NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE public.clientes (
+    id         SERIAL               PRIMARY KEY,
+    first_name VARCHAR(255)         NOT NULL,
+    last_name  VARCHAR(255)         NOT NULL,
+    email      VARCHAR(255)         NOT NULL UNIQUE,
+    phone      VARCHAR(50)          NOT NULL CONSTRAINT chk_phone_format CHECK (phone ~ '^[+]?[0-9]{7,15}$'),
+    status     public.cliente_status NOT NULL DEFAULT 'Activo',
+    created_at TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ          NOT NULL DEFAULT NOW()
+);
+
+-- 4. INVENTARIO
+CREATE TABLE public.articles (
+    id           SERIAL                  PRIMARY KEY,
+    cliente_id   INTEGER                 NOT NULL REFERENCES public.clientes(id) ON DELETE RESTRICT,
+    name_article VARCHAR(255)            NOT NULL,
+    description  VARCHAR(500),
+    category     public.article_category NOT NULL DEFAULT 'Otro',
+    amount       INTEGER                 NOT NULL DEFAULT 0 CHECK (amount >= 0),
+    price        NUMERIC(12,2)           NOT NULL CHECK (price > 0),
+    created_at   TIMESTAMPTZ             NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ             NOT NULL DEFAULT NOW()
+);
+
+-- 5. OPERACIONES DE EMPEÑO
+CREATE TABLE public.pawns (
+    id                SERIAL              PRIMARY KEY,
+    profile_id        UUID                NOT NULL REFERENCES public.profile(id),
+    article_id        INTEGER             NOT NULL REFERENCES public.articles(id),
+    cliente_id        INTEGER             NOT NULL REFERENCES public.clientes(id),
+    amount            INTEGER             NOT NULL CHECK (amount > 0),
+    price             NUMERIC(12,2)       NOT NULL CHECK (price > 0),
+    weight_grams      NUMERIC(8,2),
+    installment_count INTEGER             NOT NULL DEFAULT 1 CHECK (installment_count >= 1),
+    installments_paid INTEGER             NOT NULL DEFAULT 0 CHECK (installments_paid >= 0),
+    installments_missed INTEGER           NOT NULL DEFAULT 0 CHECK (installments_missed >= 0),
+    pawn_date         DATE                NOT NULL DEFAULT CURRENT_DATE,
+    return_date       DATE                NOT NULL,
+    status            public.pawn_status  NOT NULL DEFAULT 'Activo',
+    notes             TEXT,
+    updated_at        TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_return_after_pawn  CHECK (return_date > pawn_date),
+    CONSTRAINT chk_paid_lte_total     CHECK (installments_paid <= installment_count),
+    CONSTRAINT chk_missed_lte_total   CHECK (installments_missed <= installment_count)
+);
+
+-- CORREGIDO: Columnas alineadas con PawnPaymentDao.java
+-- - profile_id → created_by_profile_id (coincide con Java)
+-- - amount_paid → amount (coincide con Java)
+-- - CHECK >= 0 porque cuotas impagadas (is_missed=true) tienen amount=0
+-- - Agregado: is_missed BOOLEAN para soportar HU-17
+CREATE TABLE public.pawn_payments (
+    id                    SERIAL        PRIMARY KEY,
+    pawn_id               INTEGER       NOT NULL REFERENCES public.pawns(id) ON DELETE CASCADE,
+    amount                NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
+    payment_date          DATE          NOT NULL DEFAULT CURRENT_DATE,
+    notes                 VARCHAR(500),
+    created_by_profile_id UUID          NOT NULL REFERENCES public.profile(id),
+    is_missed             BOOLEAN       NOT NULL DEFAULT FALSE,
+    created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+-- 6. VENTAS
+CREATE TABLE public.sales (
+    id         SERIAL       PRIMARY KEY,
+    profile_id UUID         NOT NULL REFERENCES public.profile(id),
+    cliente_id INTEGER      NOT NULL REFERENCES public.clientes(id),
+    sale_date  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    notes      VARCHAR(500)
+);
+
+CREATE TABLE public.sales_details (
+    id         SERIAL        PRIMARY KEY,
+    sale_id    INTEGER       NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
+    article_id INTEGER       NOT NULL REFERENCES public.articles(id),
+    amount     INTEGER       NOT NULL CHECK (amount > 0),
+    unit_price NUMERIC(12,2) NOT NULL CHECK (unit_price > 0),
+    CONSTRAINT uq_sale_article UNIQUE (sale_id, article_id)
+);
+
+-- 7. AUDITORÍA Y SECUENCIAS
+CREATE TABLE public.audit_log (
+    id          BIGSERIAL   PRIMARY KEY,
+    table_name  VARCHAR(50) NOT NULL,
+    operation   VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT','UPDATE','DELETE')),
+    record_id   INTEGER     NOT NULL,
+    profile_id  UUID        REFERENCES public.profile(id),
+    old_data    JSONB,
+    new_data    JSONB,
+    changed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE public.invoice_sequence (
+    seq_date    DATE    PRIMARY KEY,
+    last_number INTEGER NOT NULL DEFAULT 0
+);
+
+-- ============================================================
+-- 8. LÓGICA AUTOMATIZADA (TRIGGERS)
+-- ============================================================
+
+-- 8.1 Timestamp automático (updated_at)
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    NEW.updated_at := NOW();
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_profile_upd BEFORE UPDATE ON public.profile FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_cliente_upd BEFORE UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_article_upd BEFORE UPDATE ON public.articles FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_pawn_upd    BEFORE UPDATE ON public.pawns FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- 8.2 Registro automático de perfiles desde Supabase Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    INSERT INTO public.profile (id, email, full_name, rol)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', 'Nuevo Usuario'),
+        COALESCE((NEW.raw_user_meta_data->>'rol')::public.role_user, 'Empleado')
+    );
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 8.3 NUEVO: Validar peso obligatorio para Joyería en empeños (RF-04.13)
+CREATE OR REPLACE FUNCTION public.validate_pawn_jewelry_weight()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_category public.article_category;
+BEGIN
+    SELECT category INTO v_category FROM public.articles WHERE id = NEW.article_id;
+
+    IF v_category = 'Joyeria' AND (NEW.weight_grams IS NULL OR NEW.weight_grams <= 0) THEN
+        RAISE EXCEPTION 'El peso en gramos es obligatorio para artículos de Joyería.'
+            USING ERRCODE = 'CV002';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_validate_pawn_weight
+    BEFORE INSERT ON public.pawns
+    FOR EACH ROW
+    EXECUTE FUNCTION public.validate_pawn_jewelry_weight();
+
+-- 8.4 NUEVO: Actualizar estado del empeño al registrar pago/cuota impagada (RF-04.10, RF-04.11, RF-04.12)
+CREATE OR REPLACE FUNCTION public.update_pawn_status_on_payment()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_pawn RECORD;
+BEGIN
+    -- Bloqueo pesimista para evitar race conditions
+    SELECT installment_count, installments_paid, installments_missed, status
+    INTO v_pawn
+    FROM public.pawns WHERE id = NEW.pawn_id FOR UPDATE;
+
+    IF NEW.is_missed THEN
+        -- Cuota impagada: incrementar missed (RF-04.12 / HU-17)
+        UPDATE public.pawns
+        SET installments_missed = installments_missed + 1
+        WHERE id = NEW.pawn_id;
+
+        -- Si supera 4 cuotas impagadas consecutivas → PERDIDO
+        IF (v_pawn.installments_missed + 1) > 4 THEN
+            UPDATE public.pawns SET status = 'Perdido' WHERE id = NEW.pawn_id;
+            INSERT INTO public.audit_log (table_name, operation, record_id, new_data)
+            VALUES ('pawns', 'UPDATE', NEW.pawn_id,
+                    jsonb_build_object('auto_status', 'Perdido', 'reason', 'installments_missed > 4'));
+        END IF;
+    ELSE
+        -- Pago real: incrementar paid, resetear missed a 0 (RF-04.10 / HU-16)
+        UPDATE public.pawns
+        SET installments_paid   = installments_paid + 1,
+            installments_missed = 0
+        WHERE id = NEW.pawn_id;
+
+        -- Si paid alcanza count → FINALIZADO (RF-04.11)
+        IF (v_pawn.installments_paid + 1) >= v_pawn.installment_count THEN
+            UPDATE public.pawns SET status = 'Finalizado' WHERE id = NEW.pawn_id;
+            INSERT INTO public.audit_log (table_name, operation, record_id, new_data)
+            VALUES ('pawns', 'UPDATE', NEW.pawn_id,
+                    jsonb_build_object('auto_status', 'Finalizado', 'reason', 'installments_paid = installment_count'));
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_pawn_payment_status
+    AFTER INSERT ON public.pawn_payments
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_pawn_status_on_payment();
+
+-- ============================================================
+-- 9. PROCEDIMIENTOS ALMACENADOS
+-- ============================================================
+
+-- 9.1 Venta Atómica con Bloqueo de Stock
+CREATE OR REPLACE FUNCTION public.register_sale(p_profile_id UUID, p_cliente_id INTEGER, p_items JSONB)
+RETURNS INTEGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_sale_id INTEGER;
+    v_item    JSONB;
+    v_stock   INTEGER;
+BEGIN
+    IF jsonb_array_length(p_items) = 0 THEN RAISE EXCEPTION 'No se puede registrar una venta sin artículos.'; END IF;
+
+    INSERT INTO public.sales (profile_id, cliente_id) VALUES (p_profile_id, p_cliente_id) RETURNING id INTO v_sale_id;
+
+    FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+        -- Bloqueo de fila para evitar condiciones de carrera (Race Conditions)
+        SELECT amount INTO v_stock FROM public.articles WHERE id = (v_item->>'article_id')::INTEGER FOR UPDATE;
+        
+        IF v_stock < (v_item->>'amount')::INTEGER THEN
+            RAISE EXCEPTION 'Stock insuficiente para el artículo ID %', (v_item->>'article_id') USING ERRCODE = 'CV001';
+        END IF;
+
+        INSERT INTO public.sales_details (sale_id, article_id, amount, unit_price)
+        VALUES (v_sale_id, (v_item->>'article_id')::INTEGER, (v_item->>'amount')::INTEGER, (v_item->>'unit_price')::NUMERIC);
+
+        UPDATE public.articles SET amount = amount - (v_item->>'amount')::INTEGER WHERE id = (v_item->>'article_id')::INTEGER;
+    END LOOP;
+
+    RETURN v_sale_id;
+END;
+$$;
+
+-- 9.2 Expiración Masiva de Empeños
+CREATE OR REPLACE FUNCTION public.fn_expire_overdue_pawns()
+RETURNS INTEGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    UPDATE public.pawns
+    SET    status     = 'Vencido',
+           updated_at = NOW()
+    WHERE  status      = 'Activo'
+    AND    return_date < CURRENT_DATE;
+
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+
+    IF v_count > 0 THEN
+        INSERT INTO public.audit_log (table_name, operation, record_id, new_data)
+        VALUES ('pawns', 'UPDATE', -1, jsonb_build_object('batch_expire_count', v_count, 'executed_at', NOW()));
+    END IF;
+
+    RETURN v_count;
+END;
+$$;
+
+-- 9.3 NUEVO: Marcar empeño como Perdido manualmente (RF-04.12)
+CREATE OR REPLACE FUNCTION public.fn_mark_pawn_lost(p_pawn_id INTEGER)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE public.pawns
+    SET status = 'Perdido'
+    WHERE id = p_pawn_id
+      AND status IN ('Activo', 'Vencido');
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'El empeño % no está en estado válido para marcar como perdido.', p_pawn_id;
+    END IF;
+
+    INSERT INTO public.audit_log (table_name, operation, record_id, new_data)
+    VALUES ('pawns', 'UPDATE', p_pawn_id,
+            jsonb_build_object('manual_status', 'Perdido', 'executed_at', NOW()));
+END;
+$$;
+
+-- 9.4 NUEVO: Generación thread-safe de número de factura (RF-08.2)
+CREATE OR REPLACE FUNCTION public.next_invoice_number()
+RETURNS TEXT LANGUAGE plpgsql AS $$
+DECLARE
+    v_today DATE := CURRENT_DATE;
+    v_num   INTEGER;
+BEGIN
+    INSERT INTO public.invoice_sequence (seq_date, last_number)
+    VALUES (v_today, 1)
+    ON CONFLICT (seq_date) DO UPDATE SET last_number = invoice_sequence.last_number + 1
+    RETURNING last_number INTO v_num;
+
+    RETURN 'FACT-' || TO_CHAR(v_today, 'YYYYMMDD') || '-' || LPAD(v_num::TEXT, 4, '0');
+END;
+$$;
+
+-- ============================================================
+-- 10. VISTAS E ÍNDICES
+-- ============================================================
+
+-- CORREGIDO: Nombres de columna alineados con DashBoardDao.java
+-- CORREGIDO: Agregado total_active_value (SUM de empeños activos)
+CREATE OR REPLACE VIEW public.v_dashboard AS
+SELECT
+    (SELECT COUNT(*) FROM public.pawns WHERE status = 'Activo')                                AS active_pawns,
+    (SELECT COUNT(*) FROM public.pawns WHERE status = 'Vencido')                               AS overdue_pawns,
+    (SELECT COUNT(*) FROM public.articles WHERE amount > 0)                                    AS total_article,
+    (SELECT COUNT(*) FROM public.clientes WHERE status = 'Activo')                             AS total_clientes,
+    COALESCE((SELECT SUM(price * amount) FROM public.pawns WHERE status = 'Activo'), 0)        AS total_active_value;
+
+-- Índices originales
+CREATE INDEX idx_art_search ON public.articles USING gin(name_article gin_trgm_ops);
+CREATE INDEX idx_cli_search ON public.clientes USING gin(last_name gin_trgm_ops, first_name gin_trgm_ops);
+CREATE INDEX idx_pawn_status ON public.pawns (status);
+
+-- NUEVO: Índices documentados en v4.md §5.3 que faltaban en el DDL
+CREATE INDEX IF NOT EXISTS idx_clientes_status    ON public.clientes (status);
+CREATE INDEX IF NOT EXISTS idx_articles_category  ON public.articles (category);
+CREATE INDEX IF NOT EXISTS idx_articles_available ON public.articles (id) WHERE amount > 0;
+CREATE INDEX IF NOT EXISTS idx_pawns_return       ON public.pawns (return_date);
+CREATE INDEX IF NOT EXISTS idx_pawns_activos      ON public.pawns (status) WHERE status = 'Activo';
+CREATE INDEX IF NOT EXISTS idx_sales_profile_date ON public.sales (profile_id, sale_date DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_changed_at   ON public.audit_log (changed_at DESC);
+
+-- ============================================================
+-- 11. SEGURIDAD (RLS)
+-- ============================================================
+ALTER TABLE public.pawns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
+
+-- Políticas originales: Admin control total sobre empeños
+CREATE POLICY pawns_admin_all ON public.pawns FOR ALL TO authenticated 
+    USING ((SELECT rol FROM public.profile WHERE id = auth.uid()) = 'Admin');
+
+CREATE POLICY pawns_emp_select ON public.pawns FOR SELECT TO authenticated USING (TRUE);
+
+CREATE POLICY pawns_emp_insert ON public.pawns FOR INSERT TO authenticated 
+    WITH CHECK (profile_id = auth.uid());
+
+-- NUEVO: Política de UPDATE para Empleado — solo sus propios empeños (v4.md §5.5)
+CREATE POLICY pawns_emp_update ON public.pawns FOR UPDATE TO authenticated
+    WITH CHECK (profile_id = auth.uid());
+
+-- NUEVO: Políticas para profile (v4.md §5.5)
+CREATE POLICY profile_admin_all ON public.profile FOR ALL TO authenticated
+    USING ((SELECT rol FROM public.profile WHERE id = auth.uid()) = 'Admin');
+
+CREATE POLICY profile_own_select ON public.profile FOR SELECT TO authenticated
+    USING (id = auth.uid());
+
+-- NUEVO: Política para audit_log — solo Admin puede leer (v4.md §5.5)
+CREATE POLICY audit_admin_only ON public.audit_log FOR SELECT TO authenticated
+    USING ((SELECT rol FROM public.profile WHERE id = auth.uid()) = 'Admin');

@@ -190,10 +190,12 @@ public class ArticleDao {
     private static Article mapRow(ResultSet rs) throws SQLException {
         ArticleCategory category = ArticleCategory.valueOf(rs.getString("category"));
         Article article = new Article(
+                rs.getInt("cliente_id"),
                 rs.getString("name_article"),
                 rs.getString("description"),
                 rs.getInt("amount"),
-                rs.getBigDecimal("price")
+                rs.getBigDecimal("price"),
+                category
         );
         article.setId(rs.getInt("id"));
         Timestamp created = rs.getTimestamp("created_at");
