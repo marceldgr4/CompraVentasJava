@@ -162,8 +162,4 @@ public class ClienteService {
             errors.add(errorMsg);
         }
     }
-
-    public void delete(int id) {
-
-    }
 }

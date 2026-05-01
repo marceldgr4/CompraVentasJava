@@ -242,7 +242,7 @@ public class ClientePanel extends JPanel {
     private class DeleteTask extends SwingWorker<Void, Void> {
         private final int id;
         DeleteTask(int id) { this.id = id; }
-        @Override protected Void doInBackground() throws Exception { clienteService.delete(id); return null; }
+        @Override protected Void doInBackground() throws Exception { clienteService.softDelete(id); return null; }
         @Override protected void done() {
             try { get(); loadData(); JOptionPane.showMessageDialog(ClientePanel.this, "Cliente eliminado.", "OK", JOptionPane.INFORMATION_MESSAGE); }
             catch (ExecutionException ex) { JOptionPane.showMessageDialog(ClientePanel.this, "Error: " + ex.getCause().getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }

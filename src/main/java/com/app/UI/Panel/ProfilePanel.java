@@ -1,7 +1,8 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
-import com.app.Model.domain.Pawn; // Placeholder if needed
+import com.app.Model.domain.Profile;
+import com.app.Service.ProfileService;
 import com.app.Service.AuthService;
 import com.app.UI.Components.ButtonFactory;
 import javax.swing.*;
@@ -74,17 +75,22 @@ public class ProfilePanel extends JPanel {
     }
 
     private void loadProfiles() {
-        // En un sistema real, aquí llamaríamos a un ProfileService.
-        // Por ahora, mostraremos un placeholder informativo.
-        tableModel.addRow(new Object[]{
-            "f47ac10b...", 
-            SessionManager.getInstance().getFullName(), 
-            "ADMIN", 
-            "ACTIVO", 
-            "Hoy 10:20 AM"
-        });
-        
-        lblStatus.setText("Nota: La integración con Supabase Management para perfiles masivos se habilitará en la Fase 2.");
+        tableModel.setRowCount(0);
+        try {
+            java.util.List<Profile> profiles = new ProfileService().findAll();
+            for (Profile p : profiles) {
+                 tableModel.addRow(new Object[]{
+                    p.getId(), 
+                    p.getFullName(), 
+                    p.getRol() != null ? p.getRol().name() : "N/A", 
+                    p.isActive() ? "ACTIVO" : "INACTIVO", 
+                    "N/A"
+                 });
+            }
+            lblStatus.setText("Total: " + profiles.size() + " perfiles encontrados.");
+        } catch (Exception e) {
+            lblStatus.setText("Error al cargar perfiles: " + e.getMessage());
+        }
     }
 
     private void showCreateProfileDialog() {
