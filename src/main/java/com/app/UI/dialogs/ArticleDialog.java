@@ -3,6 +3,7 @@ package com.app.UI.dialogs;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
 import com.app.Service.ClienteService;
+import com.app.Model.Enum.ArticleCategory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -23,6 +24,7 @@ public class ArticleDialog extends JDialog {
     private StyledField          txtDescription;
     private StyledField          txtAmount;
     private StyledField          txtPrice;
+    private StyledCombo<ArticleCategory> cmbCategory;
    // private JCheckBox            chkSold;
     private boolean              confirmed = false;
 
@@ -112,6 +114,16 @@ public class ArticleDialog extends JDialog {
         txtName = new StyledField("");
         gc.gridy = row; gc.insets = new Insets(0,0,14,0);
         body.add(txtName, gc); row++;
+
+        // Categoría
+        gc.insets = new Insets(0,0,4,0);
+        gc.gridy = row; body.add(fieldLabel("Categoría *"), gc); row++;
+        cmbCategory = new StyledCombo<>();
+        for (ArticleCategory cat : ArticleCategory.values()) {
+            cmbCategory.addItem(cat);
+        }
+        gc.gridy = row; gc.insets = new Insets(0,0,14,0);
+        body.add(cmbCategory, gc); row++;
 
         // Descripcion
         gc.insets = new Insets(0,0,4,0);
@@ -208,6 +220,9 @@ public class ArticleDialog extends JDialog {
         txtDescription.setText(a.getDescription() != null ? a.getDescription() : "");
         txtAmount     .setText(String.valueOf(a.getAmount()));
         txtPrice      .setText(a.getPrice() != null ? a.getPrice().toPlainString() : "");
+        if (a.getCategory() != null) {
+            cmbCategory.setSelectedItem(a.getCategory());
+        }
 
         if (a.getClienteId() > 0) {
             for (int i = 0; i < cmbCliente.getItemCount(); i++) {
@@ -240,11 +255,17 @@ public class ArticleDialog extends JDialog {
 
     public Article getArticle() {
         Cliente c = (Cliente) cmbCliente.getSelectedItem();
+        ArticleCategory cat = (ArticleCategory) cmbCategory.getSelectedItem();
+        int cId = (c != null) ? c.getId() : 0;
+        
         Article a = new Article(
-                txtName.getText().trim(), txtDescription.getText().trim(),
+                cId,
+                txtName.getText().trim(), 
+                txtDescription.getText().trim(),
                 Integer.parseInt(txtAmount.getText().trim()),
-                new BigDecimal(txtPrice.getText().trim()));
-        a.setClienteId(c != null ? c.getId() : 0);
+                new BigDecimal(txtPrice.getText().trim()),
+                cat
+        );
         return a;
     }
 

@@ -25,15 +25,15 @@ public class Article {
     /**
      * Constructor completo para uso general.
      */
-    public Article( String nameArticle, String description,
-                    int amount, BigDecimal price) {
+    public Article( int clienteId, String nameArticle, String description,
+                    int amount, BigDecimal price, ArticleCategory category) {
 
         this.clienteId = clienteId;
         this.nameArticle = nameArticle;
         this.description = description;
         this.amount = amount;
-        this.category = category;
         this.price = price;
+        this.category = category;
     }
 
 

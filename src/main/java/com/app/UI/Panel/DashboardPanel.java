@@ -1,11 +1,12 @@
 package com.app.UI.Panel;
 
+import Infrastructure.logging.LoggerFactory;
 import Infrastructure.security.SessionManager;
+import com.app.Model.Dao.DashBoardDao;
+import com.app.Model.domain.DashBoardDto;
 import com.app.UI.Components.KpiCard;
-import com.app.Service.ArticleService;
-import com.app.Service.ClienteService;
-import com.app.Service.PawnService;
 import com.app.Utils.CurrencyUtils;
+import org.slf4j.Logger;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CompletableFuture;
 
 public class DashboardPanel extends JPanel {
+    private static final Logger log = LoggerFactory.getLogger(DashboardPanel.class);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     // KPI cards
@@ -28,9 +30,7 @@ public class DashboardPanel extends JPanel {
     private DefaultTableModel recentTableModel;
     private JLabel lblLastUpdate;
 
-    private final PawnService pawnService = new PawnService();
-    private final ArticleService articleService = new ArticleService();
-    private final ClienteService clienteService = new ClienteService();
+    private final DashBoardDao dashBoardDao = new DashBoardDao();
 
     public DashboardPanel() {
         initComponents();
@@ -144,25 +144,25 @@ public class DashboardPanel extends JPanel {
     private void loadStats() {
         CompletableFuture.runAsync(() -> {
             try {
-                // Fetch stats from services
-                int activePawns = pawnService.getActivePawns().size();
-                int overduePawns = pawnService.getOverduePawns().size();
-                int articles = articleService.getAll().size();
-                int clientes = clienteService.getAll().size();
-                String totalValue = CurrencyUtils.format(pawnService.getTotalActiveValues());
+                // Fetch stats efficiently from single database view
+                DashBoardDto metrics = dashBoardDao.getDashboardMetric();
 
                 // Update UI on EDT
                 SwingUtilities.invokeLater(() -> {
-                    cardActivePawn.setValue(String.valueOf(activePawns));
-                    cardOverdue.setValue(String.valueOf(overduePawns));
-                    cardArticle.setValue(String.valueOf(articles));
-                    cardClientes.setValue(String.valueOf(clientes));
-                    cardTotalValue.setValue(totalValue);
+                    cardActivePawn.setValue(String.valueOf(metrics.getActivePawns()));
+                    cardOverdue.setValue(String.valueOf(metrics.getOverduePawns()));
+                    cardArticle.setValue(String.valueOf(metrics.getTotalArticle()));
+                    cardClientes.setValue(String.valueOf(metrics.getTotalClientes()));
+                    cardTotalValue.setValue(CurrencyUtils.format(metrics.getTotalActiveValue()));
                     
                     lblLastUpdate.setText("Actualizado: " + LocalDateTime.now().format(DATE_FORMAT));
                 });
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error al cargar métricas del dashboard", e);
+                SwingUtilities.invokeLater(() -> {
+                    lblLastUpdate.setText("Error al actualizar");
+                    lblLastUpdate.setForeground(Color.RED);
+                });
             }
         });
     }

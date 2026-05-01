@@ -1,21 +1,27 @@
+import Infrastructure.logging.LoggerFactory;
+import com.app.Config.AppConfig;
+import org.slf4j.Logger;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class TestDb {
-    public static void main(String[] args) {
-        String url = "jdbc:postgresql://aws-1-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0";
-        String user = "postgres.vnalpnittampdhjajkbm";
-        String pass = "CompraVentas2";
+    private static final Logger log = LoggerFactory.getLogger(TestDb.class);
 
-        System.out.println("Probando conexión a: " + url + " con usuario " + user);
+    public static void main(String[] args) {
+        // Obtenemos las credenciales ocultas desde el archivo .env
+        String url = AppConfig.get("DB_URL");
+        String user = AppConfig.get("DB_USERNAME");
+        String pass = AppConfig.get("DB_PASSWORD");
+
+        log.info("Probando conexión a: {} con usuario {}", url, user);
         try (Connection con = DriverManager.getConnection(url, user, pass)) {
-            System.out.println("¡ÉXITO! Conexión establecida en el puerto 6543.");
+            log.info("¡ÉXITO! Conexión establecida correctamente.");
             boolean isValid = con.isValid(5);
-            System.out.println("Conexión válida: " + isValid);
+            log.info("Conexión válida: {}", isValid);
         } catch (SQLException e) {
-            System.err.println("¡FALLÓ! Detalles del error:");
-            e.printStackTrace();
+            log.error("¡FALLÓ! Detalles del error al conectar a la base de datos", e);
         }
     }
 }
