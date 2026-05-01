@@ -6,13 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-/**
- * Administrador de base de datos que provee métodos de conveniencia
- * para gestionar conexiones y ejecutar operaciones transaccionales.
- *
- * <p>Para operaciones simples use directamente {@link ConnectionPool#getConnection()}.
- * Use esta clase cuando necesite control manual de transacciones.
- */
+
 public final class DataBaseManeger {
 
     private static final Logger log = LoggerFactory.getLogger(DataBaseManeger.class);

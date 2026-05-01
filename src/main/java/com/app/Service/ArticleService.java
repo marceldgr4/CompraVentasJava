@@ -53,7 +53,7 @@ public class ArticleService {
     // -------------------------------------------------------
     // READ — todos con stock disponible (para panel de empleado)
     // -------------------------------------------------------
-    public List<Article> getAvailableForPawn() throws ServiceException {
+    public List<Article> getAvailableForSaleOrPawn() throws ServiceException {
         try {
             return articleDao.findAll()
                     .stream()

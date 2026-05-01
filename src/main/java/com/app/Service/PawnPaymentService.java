@@ -32,7 +32,7 @@ public class PawnPaymentService {
             throw  new ServiceException("Error al registar el pago: " +e.getMessage(),e);
         }
     }
-    public PawnPayment registerMissedInstallment(int pawnId, BigDecimal amount, String notes) throws ServiceException {
+    public PawnPayment registerMissedInstallment(int pawnId, String notes) throws ServiceException {
        requireAdmin("registar coutas vencidas");
         try{
             Pawn pawn = pawnDao.findById(pawnId).orElseThrow(()-> new ServiceException("El articulo empeñado con Id:'"+pawnId+ "'No encotrado"));
