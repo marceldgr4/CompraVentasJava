@@ -152,15 +152,13 @@ public class PawnPaymentDialog extends JDialog {
         footer.setBackground(Color.WHITE);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(225, 232, 245)));
 
-        JButton btnCancel = new JButton("Cancelar");
+        JButton btnCancel = com.app.UI.Components.ButtonFactory.createNeutralButton("Cancelar");
         btnCancel.addActionListener(e -> dispose());
 
         String confirmText = mode == Mode.PAYMENT ? "Registrar Pago" : "Registrar Impagada";
-        btnConfirm = new JButton(confirmText);
-        btnConfirm.setBackground(mode == Mode.PAYMENT ? BLUE_ACCENT : new Color(230, 81, 0));
-        btnConfirm.setForeground(Color.WHITE);
-        btnConfirm.setBorderPainted(false);
-        btnConfirm.setFocusPainted(false);
+        btnConfirm = mode == Mode.PAYMENT 
+                ? com.app.UI.Components.ButtonFactory.createPrimaryButton(confirmText)
+                : com.app.UI.Components.ButtonFactory.createDangerButton(confirmText);
         btnConfirm.addActionListener(e -> doConfirm());
 
         footer.add(btnCancel);

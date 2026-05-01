@@ -31,7 +31,7 @@ public class PawnDialog extends JDialog {
     private JSpinner spnInstallments;
     private JSpinner spnWeightGrams;
     private JLabel lblWeight;
-    private JLabel weingthRow;
+    private JPanel weingthRow;
 
     private JButton btnSave;
     private JButton btnCancel;
@@ -119,7 +119,7 @@ public class PawnDialog extends JDialog {
         lblWeight = new JLabel("Peso (gramos) *:");
         spnWeightGrams = new  JSpinner(new SpinnerNumberModel(1, 1, 9999.0, 1));
 
-        JPanel weingthRow = new JPanel(new GridLayout(1,2,8,0));
+        weingthRow = new JPanel(new GridLayout(1,2,8,0));
         weingthRow.setOpaque(false);
         weingthRow.add(lblWeight);
         weingthRow.add(spnWeightGrams);
@@ -134,17 +134,10 @@ public class PawnDialog extends JDialog {
         gc.gridy = row;   gc.gridwidth = 2;
         //gc.weightx = 1;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        btnCancel = new JButton("Cancelar");
-
-        btnCancel.setFont(fieldFont);
+        btnCancel = com.app.UI.Components.ButtonFactory.createNeutralButton("Cancelar");
         btnCancel.addActionListener(e -> dispose());
 
-        btnSave = new JButton("Guardar");
-        btnSave.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnSave.setBackground(new Color(30, 136, 229));
-        btnSave.setForeground(Color.WHITE);
-        btnSave.setBorderPainted(false);
-        btnSave.setFocusPainted(false);
+        btnSave = com.app.UI.Components.ButtonFactory.createPrimaryButton("Guardar");
         btnSave.addActionListener(e -> doSave());
 
         btnPanel.add(btnCancel);

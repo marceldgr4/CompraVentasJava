@@ -263,7 +263,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new DashboardPanel(), "Dashboard");
         contentPanel.add(new ArticlePanel(),   "Articles");
         contentPanel.add(new PawnPanel(),      "Pawns");
-        contentPanel.add(buildPlaceholder("Módulo de Ventas — Próximamente 💰"), "Sales");
+        contentPanel.add(new SalePanel(),      "Sales");
         contentPanel.add(new ClientePanel(),   "Clients");
 
         if (SessionManager.isAdmin()) {

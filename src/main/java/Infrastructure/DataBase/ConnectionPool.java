@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+// Archivo tocado para forzar recompilación del IDE
 public class ConnectionPool {
     private  static final HikariDataSource dataSource;
 

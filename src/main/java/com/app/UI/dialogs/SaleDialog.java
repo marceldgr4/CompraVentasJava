@@ -166,12 +166,7 @@ public class SaleDialog extends JDialog {
         lblArticlePrice.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblArticlePrice.setForeground(new Color(80, 120, 180));
 
-        btnAdd = new JButton("+ Agregar");
-        btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnAdd.setBackground(BLUE_ACCENT);
-        btnAdd.setForeground(Color.WHITE);
-        btnAdd.setBorderPainted(false);
-        btnAdd.setFocusPainted(false);
+        btnAdd = com.app.UI.Components.ButtonFactory.createPrimaryButton("+ Agregar");
         btnAdd.addActionListener(e -> addToCart());
 
         panel.add(lblArt);

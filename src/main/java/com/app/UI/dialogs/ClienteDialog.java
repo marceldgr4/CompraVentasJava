@@ -68,13 +68,9 @@ public class ClienteDialog extends JDialog {
         // Buttons
         gc.gridy = 4; gc.gridwidth = 2;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        btnCancel = new JButton("Cancelar");
+        btnCancel = com.app.UI.Components.ButtonFactory.createNeutralButton("Cancelar");
         btnCancel.addActionListener(e -> dispose());
-        btnSave = new JButton("Guardar");
-        btnSave.setBackground(new Color(30, 136, 229));
-        btnSave.setForeground(Color.WHITE);
-        btnSave.setBorderPainted(false);
-        btnSave.setFocusPainted(false);
+        btnSave = com.app.UI.Components.ButtonFactory.createPrimaryButton("Guardar");
         btnSave.addActionListener(e -> doSave());
         btnPanel.add(btnCancel);
         btnPanel.add(btnSave);
