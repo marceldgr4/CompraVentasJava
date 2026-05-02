@@ -79,7 +79,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.app.UI.Frame.MainFrame</mainClass>
+              <mainClass>com.app.App</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -91,7 +91,7 @@
         <configuration>
           <source>21</source>
           <target>21</target>
-            <compilerArgs>--enable-preview</compilerArgs>
+
         </configuration>
       </plugin>
       <!-- Soporte JUnit 5 en Maven -->

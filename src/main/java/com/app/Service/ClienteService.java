@@ -151,6 +151,15 @@ public class ClienteService {
         checkField(cliente.getLastName(),  "El apellido es obligatorio.", errors);
         checkField(cliente.getEmail(),     "El correo es obligatorio.", errors);
         checkField(cliente.getPhone(),     "El teléfono es obligatorio.", errors);
+
+        // ✅ Validar formato de teléfono (alineado con DB constraint)
+        if (cliente.getPhone() != null && !cliente.getPhone().isBlank()) {
+            String cleanPhone = cliente.getPhone().trim().replaceAll("[^0-9+]", "");
+            if (!cleanPhone.matches("^[+]?[0-9]{7,15}$")) {
+                errors.add("El teléfono debe tener entre 7 y 15 dígitos.");
+            }
+        }
+
         if (!errors.isEmpty()) {
             throw new BusinessException(String.join(" ", errors));
         }
