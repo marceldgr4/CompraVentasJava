@@ -37,7 +37,7 @@ public class Cliente {
      * Constructor de creación (sin id ni timestamp).
      */
     public Cliente(String firstName, String lastName, String email, String phone) {
-        this(0, firstName, lastName, email, phone, ClienteStatus.Activo,null, null);
+        this(0, firstName, lastName, email, phone, ClienteStatus.Activo, null, null);
     }
 
     // ---- Getters / Setters ----------------------------------------

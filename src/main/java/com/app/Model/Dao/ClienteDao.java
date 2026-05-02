@@ -90,16 +90,20 @@ public class ClienteDao {
     // -------------------------------------------------------
     public Cliente save(Cliente cliente) throws SQLException {
         String sql = """
-                INSERT INTO public.clientes(first_name, last_name, email, phone,status)
-                VALUES (?, ?, ?, ?,?::cliente_status)
-                RETURNING id, created_at,updated_at
-                """;
+            INSERT INTO public.clientes(first_name, last_name, email, phone, status)
+            VALUES (?, ?, ?, ?, ?::cliente_status)
+            RETURNING id, created_at, updated_at
+            """;
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, cliente.getFirstName());
             ps.setString(2, cliente.getLastName());
             ps.setString(3, cliente.getEmail());
-            ps.setString(4, cliente.getPhone());
+            // ✅ Limpiar teléfono: solo dígitos y + al inicio
+            ps.setString(4, sanitizePhone(cliente.getPhone()));
+            ps.setString(5, cliente.getStatus() != null
+                    ? cliente.getStatus().name()
+                    : ClienteStatus.Activo.name());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     cliente.setId(rs.getInt("id"));
@@ -110,6 +114,12 @@ public class ClienteDao {
             }
         }
         return cliente;
+    }
+
+    private String sanitizePhone(String phone) {
+        if (phone == null) return "";
+        // ✅ Mantener solo dígitos y el signo + al inicio
+        return phone.trim().replaceAll("[^0-9+]", "");
     }
 
     // -------------------------------------------------------

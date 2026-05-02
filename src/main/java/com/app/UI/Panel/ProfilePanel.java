@@ -3,8 +3,8 @@ package com.app.UI.Panel;
 import Infrastructure.security.SessionManager;
 import com.app.Model.domain.Profile;
 import com.app.Service.ProfileService;
-import com.app.Service.AuthService;
 import com.app.UI.Components.ButtonFactory;
+import com.app.UI.dialogs.EmployeeRegisterDialog;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -94,9 +94,12 @@ public class ProfilePanel extends JPanel {
     }
 
     private void showCreateProfileDialog() {
-        JOptionPane.showMessageDialog(this, 
-            "Para registrar un nuevo empleado, use la función de Registro de Supabase Auth.", 
-            "Gestión de Usuarios", 
-            JOptionPane.INFORMATION_MESSAGE);
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        EmployeeRegisterDialog dialog = new EmployeeRegisterDialog(parentWindow);
+        dialog.setVisible(true);
+        
+        if (dialog.isSuccessful()) {
+            loadProfiles();
+        }
     }
 }
