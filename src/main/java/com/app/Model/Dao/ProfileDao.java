@@ -14,7 +14,7 @@ import java.util.List;
 public class ProfileDao {
 
     public Profile findById(String id) throws SQLException{
-        String sql= "SELECT id, full_name,rol, active " +
+        String sql= "SELECT id, email, full_name,rol, active " +
                 "FROM public.profile " +
                 "WHERE id = ?::uuid";
 
@@ -30,7 +30,7 @@ public class ProfileDao {
         }
     }
     public List<Profile> findAll() throws SQLException{
-        String sql= "SELECT id, full_name,rol, active FROM public.profile ORDER BY full_name ASC";
+        String sql= "SELECT id, email, full_name,rol, active FROM public.profile ORDER BY full_name ASC";
         List<Profile> list = new ArrayList<>();
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
@@ -51,9 +51,28 @@ public class ProfileDao {
             return ps.executeUpdate()> 0;
         }
     }
+    public Profile save(Profile profile) throws SQLException {
+        String sql = "INSERT INTO public.profile (id, email, full_name, rol, active) VALUES (?::uuid, ?, ?, ?::role_user, ?) RETURNING created_at, updated_at";
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, profile.getId());
+            ps.setString(2, profile.getEmail());
+            ps.setString(3, profile.getFullName());
+            ps.setString(4, profile.getRol().name());
+            ps.setBoolean(5, profile.isActive());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // Update any metadata if needed
+                }
+            }
+        }
+        return profile;
+    }
+
     private Profile mapRow(ResultSet rs) throws SQLException{
         return new Profile(
                 rs.getString("id"),
+                rs.getString("email"),
                 rs.getString("full_name"),
                 RolUser.valueOf(rs.getString("rol")),
                 rs.getBoolean("active")

@@ -15,6 +15,7 @@ public class Sale {
     private int id;
     private String profileId;   // UUID del empleado
     private int clienteId;
+    private String clienteNombreAnon; // Para ventas anónimas (v6)
     private LocalDateTime saleDate;
     private List<SalesDetail> details;
 
@@ -50,6 +51,9 @@ public class Sale {
 
     public int getClienteId() { return clienteId; }
     public void setClienteId(int clienteId) { this.clienteId = clienteId; }
+
+    public String getClienteNombreAnon() { return clienteNombreAnon; }
+    public void setClienteNombreAnon(String clienteNombreAnon) { this.clienteNombreAnon = clienteNombreAnon; }
 
     public LocalDateTime getSaleDate() { return saleDate; }
     public void setSaleDate(LocalDateTime saleDate) { this.saleDate = saleDate; }

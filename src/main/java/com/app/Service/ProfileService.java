@@ -40,4 +40,11 @@ public class ProfileService {
         }
     }
 
+    public void create(Profile profile) throws ServiceException {
+        try {
+            profileDAO.save(profile);
+        } catch (SQLException e) {
+            throw new ServiceException("Error al crear el perfil: " + e.getMessage());
+        }
+    }
 }

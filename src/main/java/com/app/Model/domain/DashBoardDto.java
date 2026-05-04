@@ -8,16 +8,31 @@ public class DashBoardDto {
     private int totalArticle;
     private  int totalClientes;
     private BigDecimal totalActiveValue;
+    private int incompleteProfile; // cliente rapida
+    private  int purchaseToday;// compras del dia
 
     public  DashBoardDto(){}
 
-    public DashBoardDto(int activePawns, int overduePawns, int totalArticle,
-                        int totalClientes, BigDecimal totalActiveValue) {
+    public DashBoardDto(int activePawns,
+                        int overduePawns,
+                        int totalArticlesStock,
+                        int totalClientesActivos,
+                        BigDecimal totalActiveValue,
+                        int incompleteProfile,
+                        int purchaseToday) {
+
         this.activePawns = activePawns;
         this.overduePawns = overduePawns;
-        this.totalArticle = totalArticle;
-        this.totalClientes = totalClientes;
+        this.totalArticle = totalArticlesStock;
+        this.totalClientes = totalClientesActivos;
         this.totalActiveValue = totalActiveValue;
+        this.incompleteProfile = incompleteProfile;
+        this.purchaseToday = purchaseToday;
+    }
+    public DashBoardDto(int activePawns, int overduePawns, int totalArticlesStock,
+                        int totalClientesActivos, BigDecimal totalActiveValue) {
+        this(activePawns, overduePawns, totalArticlesStock, totalClientesActivos,
+                totalActiveValue, 0, 0);
     }
 
     public int getActivePawns() {
@@ -58,6 +73,22 @@ public class DashBoardDto {
 
     public void setTotalActiveValue(BigDecimal totalActiveValue) {
         this.totalActiveValue = totalActiveValue;
+    }
+
+    public int getIncompleteProfile() {
+        return incompleteProfile;
+    }
+
+    public void setIncompleteProfile(int incompleteProfile) {
+        this.incompleteProfile = incompleteProfile;
+    }
+
+    public int getPurchaseToday() {
+        return purchaseToday;
+    }
+
+    public void setPurchaseToday(int purchaseToday) {
+        this.purchaseToday = purchaseToday;
     }
 
     public boolean hasOverdueAlert(){

@@ -104,7 +104,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
             // Transacción atómica: INSERT pawn + UPDATE article.amount
             DataBaseManeger.runInTransaction(con -> {
                 pawnDao.save(con, pawn);
-                articleDao.updateAmount(con,
+                articleDao.updateAmountTransactional(con,
                         article.getId(),
                         newAmount);
             });
