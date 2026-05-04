@@ -17,14 +17,16 @@ public class SaleDao {
         DataBaseManeger.runInTransaction(connection -> {
             String sql =
                     """
-                    INSERT INTO public.sales(profile_id, cliente_id,sale_date)
-                    VALUES (?::uuid,?,?)
+                    INSERT INTO public.sales(profile_id, cliente_id, cliente_nombre_anon, sale_date)
+                    VALUES (?::uuid, ?, ?, ?)
                     RETURNING id
                     """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, sale.getProfileId());
-                ps.setInt(2,sale.getClienteId());
-                ps.setTimestamp(3, Timestamp.valueOf(sale.getSaleDate()));
+                if (sale.getClienteId() > 0) ps.setInt(2, sale.getClienteId());
+                else ps.setNull(2, Types.INTEGER);
+                ps.setString(3, sale.getClienteNombreAnon());
+                ps.setTimestamp(4, Timestamp.valueOf(sale.getSaleDate()));
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         sale.setId(rs.getInt("id"));
@@ -38,12 +40,12 @@ public class SaleDao {
                     """;
             for(SalesDetail detail: sale.getDetails()){
                 detail.setSaleId(sale.getId());
-                try(PreparedStatement ps = connection.prepareStatement(sqlDetail)) {
-                    ps.setInt(1, detail.getSaleId());
-                    ps.setInt(2, detail.getArticleId());
-                    ps.setInt(3, detail.getAmount());
-                    ps.setBigDecimal(4, detail.getUnitPrice());
-                    try (ResultSet rs = ps.executeQuery()) {
+                try(PreparedStatement psDetail = connection.prepareStatement(sqlDetail)) {
+                    psDetail.setInt(1, detail.getSaleId());
+                    psDetail.setInt(2, detail.getArticleId());
+                    psDetail.setInt(3, detail.getAmount());
+                    psDetail.setBigDecimal(4, detail.getUnitPrice());
+                    try (ResultSet rs = psDetail.executeQuery()) {
                         if (rs.next()) {
                             detail.setId(rs.getInt("id"));
                         }
@@ -183,12 +185,14 @@ public class SaleDao {
     }
     private Sale mapRow(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("sale_date");
-        return new Sale(
+        Sale sale = new Sale(
                 rs.getInt("id"),
                 rs.getString("profile_id"),
                 rs.getInt("cliente_id"),
-                ts !=null ? ts.toLocalDateTime(): null
+                ts != null ? ts.toLocalDateTime() : null
         );
+        sale.setClienteNombreAnon(rs.getString("cliente_nombre_anon"));
+        return sale;
     }
 
 

@@ -3,15 +3,17 @@ package com.app.Model.domain;
 import com.app.Model.Enum.RolUser;
 
 public class Profile {
-    private  String id;
+    private String id;
+    private String email;
     private String fullName;
     private RolUser rol;
-    private  boolean active;
+    private boolean active;
 
-    public Profile(){}
+    public Profile(String profileId, String fullName, RolUser rol, boolean active){}
 
-    public Profile(String id, String fullName, RolUser rol, boolean active){
+    public Profile(String id, String email, String fullName, RolUser rol, boolean active){
         this.id = id;
+        this.email = email;
         this.fullName = fullName;
         this.rol = rol;
         this.active = active;
@@ -23,6 +25,14 @@ public class Profile {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getFullName() {

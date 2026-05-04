@@ -64,7 +64,7 @@ public class DashboardPanel extends JPanel {
         JButton btnRefresh = new JButton("Actualizar");
         btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnRefresh.setBackground(new Color(25, 118, 210));
-        btnRefresh.setForeground(Color.WHITE);
+        btnRefresh.setForeground(Color.BLACK);
         btnRefresh.setFocusPainted(false);
         btnRefresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnRefresh.addActionListener(e -> loadStats());

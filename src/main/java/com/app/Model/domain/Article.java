@@ -1,6 +1,8 @@
 package com.app.Model.domain;
 
 import com.app.Model.Enum.ArticleCategory;
+import com.app.Model.Enum.ItemState;
+import com.app.Model.Enum.SourceType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,6 +24,11 @@ public class Article {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    //Nuevos
+    private SourceType sourceType;
+    private ItemState itemState;
+    private BigDecimal purchasePrice; // Costo de adquisicion solo apra el admin
+
     /**
      * Constructor completo para uso general.
      */
@@ -34,8 +41,20 @@ public class Article {
         this.amount = amount;
         this.price = price;
         this.category = category;
+        //-------//
+        this.sourceType = SourceType.OTRO;
+        this.itemState = ItemState.Bueno;
     }
 
+    // Constructor extendido para el módulo de Compras (HU-28)
+    public Article(int clienteId, String nameArticle, String description,
+                   int amount, BigDecimal price, ArticleCategory category,
+                   SourceType sourceType, ItemState itemState, BigDecimal purchasePrice) {
+        this(clienteId, nameArticle, description, amount, price, category);
+        this.sourceType = sourceType != null ? sourceType : SourceType.OTRO;
+        this.itemState = itemState != null ? itemState : ItemState.Bueno;
+        this.purchasePrice = purchasePrice;
+    }
 
 
     // ---- Getters / Setters ----------------------------------------
@@ -86,6 +105,30 @@ public class Article {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public SourceType getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(SourceType sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public ItemState getItemState() {
+        return itemState;
+    }
+
+    public void setItemState(ItemState itemState) {
+        this.itemState = itemState;
+    }
+
+    public BigDecimal getPurchasePrice() {
+        return purchasePrice;
+    }
+
+    public void setPurchasePrice(BigDecimal purchasePrice) {
+        this.purchasePrice = purchasePrice;
+    }
 
     // ---- Lógica de negocio ----------------------------------------
 

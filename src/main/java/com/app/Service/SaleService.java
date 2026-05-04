@@ -110,12 +110,14 @@ public class SaleService {
         items.append("]");
 
         // Fix L-02: era `?::uuid.` (punto) — ahora es `?::uuid,` (coma)
-        String sql = "SELECT public.register_sale(?::uuid, ?, ?::jsonb)";
+        // v6: added p_cliente_nombre_anon
+        String sql = "SELECT public.register_sale(?::uuid, ?, ?, ?::jsonb)";
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, sale.getProfileId());
             ps.setInt(2, sale.getClienteId());
-            ps.setString(3, items.toString());
+            ps.setString(3, sale.getClienteNombreAnon());
+            ps.setString(4, items.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     sale.setId(rs.getInt(1));
@@ -151,8 +153,8 @@ public class SaleService {
         if (sale.getDetails() == null || sale.getDetails().isEmpty()) {
             throw new BusinessException("La venta debe tener al menos un artículo.");
         }
-        if (sale.getClienteId() <= 0) {
-            throw new BusinessException("La venta debe tener un cliente válido.");
+        if (sale.getClienteId() <= 0 && (sale.getClienteNombreAnon() == null || sale.getClienteNombreAnon().isBlank())) {
+            throw new BusinessException("La venta debe tener un cliente válido o un nombre de cliente anónimo.");
         }
         for (SalesDetail detail : sale.getDetails()) {
             if (detail.getArticleId() <= 0) {

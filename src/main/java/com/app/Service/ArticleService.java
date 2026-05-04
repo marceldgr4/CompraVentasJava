@@ -2,6 +2,8 @@ package com.app.Service;
 
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ArticleDao;
+import com.app.Model.Enum.ItemState;
+import com.app.Model.Enum.SourceType;
 import com.app.Model.domain.Article;
 import com.app.Model.Enum.ArticleCategory;
 import com.app.Service.exceptions.BusinessException;
@@ -111,7 +113,7 @@ public class ArticleService {
      * Edita nombre, descripción y categoría. Disponible para Admin y Empleado (RF-03.5).
      */
     // -------------------------------------------------------
-    public void editBasicaFields(int id, String nameArticle, String description, ArticleCategory category) throws ServiceException {
+    public void editBasicaFields(int id, String nameArticle, String description, ArticleCategory category, SourceType sourceType, ItemState itemState) throws ServiceException {
         if(nameArticle == null || nameArticle.isBlank()) {
             throw new BusinessException("El  nombre del articulo es obligatorio ");
         }
@@ -119,7 +121,7 @@ public class ArticleService {
             throw new BusinessException("la categoria es obligatoria");
         }
         try{
-            boolean update = articleDao.updateBasicFields(id,nameArticle.trim(),description,category);
+            boolean update = articleDao.updateBasicFields(id,nameArticle.trim(),description,category,sourceType,itemState);
             if(!update) {
                 throw new ServiceException("Articulo no encontrado con ID:"+id);
             }

@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import com.app.Model.Enum.RolUser;
 
 public class AuthService {
     private static final String BASE_URL = AppConfig.get("SUPABASE_URL");
@@ -57,7 +58,20 @@ public class AuthService {
 
             //Load profile from database to obtain full name and role
             ProfileService profileService = new ProfileService();
-            Profile profile = profileService.findById(userId);
+            Profile profile;
+            try {
+                profile = profileService.findById(userId);
+            } catch (ServiceException e) {
+                if (e.getMessage().contains("No se encontró el perfil")) {
+                    // Auto-repair: Create profile if missing
+                    String fullName = authResponse.getUser().getEmail().split("@")[0]; // Fallback name
+                    profile = new Profile(userId, authResponse.getUser().getEmail(), fullName, RolUser.Empleado, true);
+                    profileService.create(profile);
+                } else {
+                    throw e;
+                }
+            }
+
             if (!profile.isActive()) {
                 throw new AuthException("Usuario deshabilitado. Llame al administrador");
             }

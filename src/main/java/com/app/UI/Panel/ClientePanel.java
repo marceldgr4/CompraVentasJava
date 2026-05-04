@@ -92,7 +92,7 @@ public class ClientePanel extends JPanel {
     }
 
     private JScrollPane buildTable() {
-        String[] cols = {"ID", "Nombre", "Apellido", "Correo", "Teléfono"};
+        String[] cols = {"ID", "CC", "Nombre", "Apellido", "Correo", "Teléfono", "Dirección","Ciudad"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -174,13 +174,17 @@ public class ClientePanel extends JPanel {
         if (row < 0) return null;
         return new Cliente(
                 (int)    tableModel.getValueAt(row, 0),  // id
-                (String) tableModel.getValueAt(row, 1),  // firstName
-                (String) tableModel.getValueAt(row, 2),  // lastName
-                (String) tableModel.getValueAt(row, 3),  // email
-                (String) tableModel.getValueAt(row, 4),  // phone
-                null,   // status
-                null,   // createdAt
-                null    // updatedAt
+                (String) tableModel.getValueAt(row, 1),  // CC (cedula)
+                (String) tableModel.getValueAt(row, 2),  // firstName
+                (String) tableModel.getValueAt(row, 3),  // lastName
+                (String) tableModel.getValueAt(row, 4),  // email
+                (String) tableModel.getValueAt(row, 5),  // phone
+                (String) tableModel.getValueAt(row, 6),  // address
+                (String) tableModel.getValueAt(row, 7),  // city
+                null, // status
+                null, // registrationType
+                null, // createdAt
+                null  // updatedAt
         );
     }
 
@@ -188,8 +192,14 @@ public class ClientePanel extends JPanel {
         tableModel.setRowCount(0);
         for (Cliente c : clientes) {
             tableModel.addRow(new Object[]{
-                    c.getId(), c.getFirstName(), c.getLastName(),
-                    c.getEmail(), c.getPhone()
+                    c.getId(),
+                    c.getCedula(),
+                    c.getFirstName(),
+                    c.getLastName(),
+                    c.getEmail(),
+                    c.getPhone(),
+                    c.getAddress(),
+                    c.getCity()
             });
         }
         lblStatus.setText("Total: " + clientes.size() + " clientes encontrados.");
