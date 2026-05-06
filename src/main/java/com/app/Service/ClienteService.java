@@ -2,6 +2,7 @@ package com.app.Service;
 
 import Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ClienteDao;
+import com.app.Model.Enum.RegistrationType;
 import com.app.Model.domain.Cliente;
 import com.app.Model.Enum.ClienteStatus;
 import com.app.Service.exceptions.BusinessException;
@@ -10,7 +11,7 @@ import com.app.Service.exceptions.ServiceException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Optional;
 
 
 /**
@@ -54,22 +55,64 @@ public class ClienteService {
             throw new ServiceException("Error en búsqueda de clientes: " + e.getMessage(), e);
         }
     }
+    /**
+     * Busca un cliente por teléfono exacto (para detectar duplicados en registro rápido).
+     */
+    public Optional<Cliente> findByPhone(String phone) throws ServiceException {
+        if (phone == null || phone.isBlank()) return Optional.empty();
+        try {
+            return clienteDao.findByPhone(phone.trim());
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar por teléfono: " + e.getMessage(), e);
+        }
+    }
+    public Optional<Cliente> findByCedula(String cedula) throws ServiceException {
+        if (cedula == null || cedula.isBlank()) return Optional.empty();
+        try {
+            return clienteDao.findByCedula(cedula.trim());
+        } catch (SQLException e) {
+            throw new ServiceException("Error al buscar por cedula: " + e.getMessage(), e);
+
+        }
+    }
 
     // -------------------------------------------------------
     // CREATE
     // -------------------------------------------------------
 
     public Cliente create(Cliente cliente) throws ServiceException {
-        validate(cliente);
-        try {
-            return clienteDao.save(cliente);
-        } catch (SQLException e) {
-            String msg = e.getMessage();
-            if (isUniqueViolation(e)){
-                throw new ServiceException("ya existe un cliente con el mismo Correo.");
-            }
-            throw new ServiceException("Error al crear el cliente: " + msg, e);
+        validateCompleto(cliente);
+        return persist(cliente);
+    }
+    public Cliente createRapido(String firstName, String cedula, String phone) throws ServiceException {
+        if(firstName == null || firstName.isBlank()){
+            throw new BusinessException("El nombre completo es Obligatorio para el regsitro rapida");
         }
+        if (cedula != null && !cedula.isBlank()) {
+            Optional<Cliente> existing = findByCedula(cedula.trim());
+            if (existing.isPresent()) {
+                throw new BusinessException(
+                        "Ya existe un cliente con la cédula " + cedula +
+                                " (ID: " + existing.get().getId() + "). Usa 'Seleccionar existente'.");
+            }
+        }
+
+        if (phone != null && !phone.isBlank()) {
+            Optional<Cliente> existing = findByPhone(phone.trim());
+            if (existing.isPresent()) {
+                throw new BusinessException(
+                        "Ya existe un cliente con el teléfono " + phone +
+                                " (ID: " + existing.get().getId() + "). Usa 'Seleccionar existente'.");
+            }
+        }
+
+        Cliente rapido = Cliente.createRapido(
+                cedula    != null ? cedula.trim()    : null,
+                firstName.trim(),
+                null,
+                phone     != null ? phone.trim()     : null
+        );
+        return persist(rapido);
     }
 
 
@@ -79,12 +122,19 @@ public class ClienteService {
 
     public void update(Cliente cliente) throws ServiceException {
         requireAdmin("editar cliente");
-        validate(cliente);
+        // Si se agregan apellido + email a un cliente RAPIDO, se promueve a COMPLETO
+        if (cliente.getRegistrationType() == RegistrationType.RAPIDO
+                && cliente.getLastName() != null && !cliente.getLastName().isBlank()
+                && cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            cliente.setRegistrationType(RegistrationType.COMPLETO);
+        }
+        // Para COMPLETO, validar campos completos
+        if (cliente.getRegistrationType() == RegistrationType.COMPLETO) {
+            validateCompleto(cliente);
+        }
         try {
             boolean updated = clienteDao.update(cliente);
-            if (!updated) {
-                throw new ServiceException("Cliente no encontrado con id: " + cliente.getId());
-            }
+            if (!updated) throw new ServiceException("Cliente no encontrado con id: " + cliente.getId());
         } catch (SQLException e) {
             throw new ServiceException("Error al actualizar el cliente: " + e.getMessage(), e);
         }
@@ -138,6 +188,21 @@ public class ClienteService {
     // -------------------------------------------------------
     // Helpers privados
     // -------------------------------------------------------
+    private Cliente persist(Cliente cliente) throws ServiceException {
+        try {
+            return clienteDao.save(cliente);
+        } catch (SQLException e) {
+            if ("23505".equals(e.getSQLState())) {
+                String msg = e.getMessage().contains("phone")
+                        ? "Ya existe un cliente con ese teléfono."
+                        : e.getMessage().contains("email")
+                          ? "Ya existe un cliente con ese correo."
+                          : "Ya existe un cliente con esos datos.";
+                throw new ServiceException(msg);
+            }
+            throw new ServiceException("Error al guardar el cliente: " + e.getMessage(), e);
+        }
+    }
 
     private void requireAdmin(String action) throws ServiceException {
         if (!SessionManager.isAdmin()) {
@@ -145,14 +210,19 @@ public class ClienteService {
         }
     }
 
-    private void validate(Cliente cliente)  {
+    private void validateCompleto(Cliente cliente)  {
         List<String> errors = new ArrayList<>();
+        checkField(cliente.getCedula(),"La cedula es obligatoria",errors);
         checkField(cliente.getFirstName(), "El nombre es obligatorio.", errors);
         checkField(cliente.getLastName(),  "El apellido es obligatorio.", errors);
         checkField(cliente.getEmail(),     "El correo es obligatorio.", errors);
         checkField(cliente.getPhone(),     "El teléfono es obligatorio.", errors);
 
-        // ✅ Validar formato de teléfono (alineado con DB constraint)
+
+
+
+
+        //  Validar formato de teléfono (alineado con DB constraint)
         if (cliente.getPhone() != null && !cliente.getPhone().isBlank()) {
             String cleanPhone = cliente.getPhone().trim().replaceAll("[^0-9+]", "");
             if (!cleanPhone.matches("^[+]?[0-9]{7,15}$")) {
