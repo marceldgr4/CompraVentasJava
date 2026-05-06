@@ -47,6 +47,19 @@ public class ClienteDao {
         }
         return Optional.empty();
     }
+    public Optional<Cliente> findByCedula(String cedula) throws SQLException {
+        String sql = "SELECT " + SELECT_COLS + " FROM public.clientes" +
+                " WHERE cedula = ? AND status = 'Activo'::cliente_status LIMIT";
+        try (Connection con = ConnectionPool.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, cedula.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(mapRow(rs));
+            }
+        }
+        return Optional.empty();
+
+    }
 
     public List<Cliente> findByTerm(String term, ClienteStatus statusFilter) throws SQLException {
         String pattern = "%" + term + "%";
