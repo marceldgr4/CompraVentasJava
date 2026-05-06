@@ -7,7 +7,7 @@ import com.app.Model.domain.SalesDetail;
 import com.app.Service.ArticleService;
 import com.app.Service.ClienteService;
 import com.app.Service.SaleService;
-import com.app.Service.exceptions.ServiceException;
+import com.app.UI.Components.ButtonFactory;
 import com.app.Utils.CurrencyUtils;
 
 import javax.swing.*;
@@ -19,8 +19,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Diálogo completo para registrar una venta.
- * HU-19: Selección de cliente, carrito multi-artículo, reducción atómica de stock.
+ * Diálogo para registrar una venta (HU-19 / HU-27).
  */
 public class SaleDialog extends JDialog {
 
@@ -28,24 +27,30 @@ public class SaleDialog extends JDialog {
     private static final Color BLUE_ACCENT = new Color(30, 136, 229);
     private static final Color FIELD_BG    = new Color(245, 247, 252);
     private static final Color TEXT_DARK   = new Color(15, 25, 50);
-    private static final Color SUCCESS     = new Color(56, 142, 60);
-    private static final Color DANGER      = new Color(211, 47, 47);
+    private static final Color SUCCESS_CLR = new Color(56, 142, 60);
+    private static final Color DANGER_CLR  = new Color(211, 47, 47);
 
-    private JComboBox<Cliente>  cmbCliente;
-    private JComboBox<Article>  cmbArticle;
-    private JSpinner            spnQuantity;
-    private JLabel              lblArticlePrice;
+    // Modo cliente
+    private JRadioButton rbSinCliente;
+    private JRadioButton rbClienteExistente;
+    private JRadioButton rbNombreLibre;
+    private JComboBox<Cliente> cmbCliente;
+    private JTextField txtNombreLibre;
 
-    private DefaultTableModel   cartModel;
-    private JTable              cartTable;
-    private JLabel              lblTotal;
+    // Artículo
+    private JComboBox<Article> cmbArticle;
+    private JSpinner           spnQuantity;
+    private JLabel             lblArticlePrice;
 
-    private JButton             btnAdd;
-    private JButton             btnRemove;
-    private JButton             btnConfirm;
+    // Carrito
+    private DefaultTableModel cartModel;
+    private JTable            cartTable;
+    private JLabel            lblTotal;
 
-    private Sale                confirmedSale;
-    private boolean             confirmed = false;
+    private JButton btnConfirm;
+
+    private Sale    confirmedSale;
+    private boolean confirmed = false;
 
     private final ArticleService articleService = new ArticleService();
     private final ClienteService clienteService = new ClienteService();
@@ -54,13 +59,13 @@ public class SaleDialog extends JDialog {
     public SaleDialog(JFrame parent) {
         super(parent, true);
         setUndecorated(true);
-        setSize(720, 580);
+        setSize(740, 600);
         setLocationRelativeTo(parent);
         setContentPane(buildRoot());
         loadData();
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
+    // ── Build UI ──────────────────────────────────────────────────────────────
 
     private JPanel buildRoot() {
         JPanel root = new JPanel(new BorderLayout()) {
@@ -90,83 +95,132 @@ public class SaleDialog extends JDialog {
             }
         };
         header.setOpaque(false);
-        header.setPreferredSize(new Dimension(0, 60));
+        header.setPreferredSize(new Dimension(0, 58));
         header.setBorder(new EmptyBorder(0, 20, 0, 20));
 
         JLabel lblTitle = new JLabel("💰  Nueva Venta");
-        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
+        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 15));
         lblTitle.setForeground(Color.WHITE);
 
-        JButton btnClose = makeCloseButton();
+        JButton btnClose = closeBtn();
         header.add(lblTitle, BorderLayout.WEST);
-        header.add(btnClose,  BorderLayout.EAST);
+        header.add(btnClose, BorderLayout.EAST);
         return header;
     }
 
     private JPanel buildBody() {
-        JPanel body = new JPanel(new BorderLayout(0, 12));
+        JPanel body = new JPanel(new BorderLayout(0, 10));
         body.setBackground(Color.WHITE);
-        body.setBorder(new EmptyBorder(16, 20, 8, 20));
-
-        body.add(buildClientePanel(),  BorderLayout.NORTH);
-        body.add(buildCartSection(),   BorderLayout.CENTER);
+        body.setBorder(new EmptyBorder(14, 20, 8, 20));
+        body.add(buildClienteSection(), BorderLayout.NORTH);
+        body.add(buildCartSection(),    BorderLayout.CENTER);
         return body;
     }
 
-    private JPanel buildClientePanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    // ── Sección cliente con 3 modos ───────────────────────────────────────────
+
+    private JPanel buildClienteSection() {
+        JPanel panel = new JPanel(new BorderLayout(0, 6));
         panel.setOpaque(false);
 
-        JLabel lbl = new JLabel("Cliente: *");
+        JLabel lbl = new JLabel("Cliente");
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lbl.setForeground(TEXT_DARK);
 
+        // Radio buttons
+        rbSinCliente      = new JRadioButton("Sin cliente (anónima)");
+        rbClienteExistente= new JRadioButton("Cliente registrado");
+        rbNombreLibre     = new JRadioButton("Nombre libre");
+        rbSinCliente.setSelected(true);
+        rbSinCliente.setOpaque(false);
+        rbClienteExistente.setOpaque(false);
+        rbNombreLibre.setOpaque(false);
+        ButtonGroup grp = new ButtonGroup();
+        grp.add(rbSinCliente);
+        grp.add(rbClienteExistente);
+        grp.add(rbNombreLibre);
+
+        JPanel radioRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        radioRow.setOpaque(false);
+        radioRow.add(rbSinCliente);
+        radioRow.add(rbClienteExistente);
+        radioRow.add(rbNombreLibre);
+
+        // Input según modo
         cmbCliente = new JComboBox<>();
         cmbCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cmbCliente.setPreferredSize(new Dimension(300, 36));
+        cmbCliente.setPreferredSize(new Dimension(320, 34));
+        cmbCliente.setVisible(false);
 
-        panel.add(lbl);
-        panel.add(cmbCliente);
+        txtNombreLibre = new JTextField();
+        txtNombreLibre.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtNombreLibre.putClientProperty("JTextField.placeholderText", "Nombre del comprador...");
+        txtNombreLibre.setPreferredSize(new Dimension(320, 34));
+        txtNombreLibre.setVisible(false);
+
+        JPanel inputRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        inputRow.setOpaque(false);
+        inputRow.add(cmbCliente);
+        inputRow.add(txtNombreLibre);
+
+        // Toggle
+        rbSinCliente.addActionListener(e -> {
+            cmbCliente.setVisible(false);
+            txtNombreLibre.setVisible(false);
+        });
+        rbClienteExistente.addActionListener(e -> {
+            cmbCliente.setVisible(true);
+            txtNombreLibre.setVisible(false);
+        });
+        rbNombreLibre.addActionListener(e -> {
+            cmbCliente.setVisible(false);
+            txtNombreLibre.setVisible(true);
+        });
+
+        panel.add(lbl,      BorderLayout.NORTH);
+        panel.add(radioRow, BorderLayout.CENTER);
+        panel.add(inputRow, BorderLayout.SOUTH);
         return panel;
     }
+
+    // ── Carrito ───────────────────────────────────────────────────────────────
 
     private JPanel buildCartSection() {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setOpaque(false);
-
-        panel.add(buildAddArticleRow(), BorderLayout.NORTH);
-        panel.add(buildCartTable(),     BorderLayout.CENTER);
-        panel.add(buildTotalRow(),      BorderLayout.SOUTH);
+        panel.add(buildAddRow(),   BorderLayout.NORTH);
+        panel.add(buildCartTable(),BorderLayout.CENTER);
+        panel.add(buildTotalRow(), BorderLayout.SOUTH);
         return panel;
     }
 
-    private JPanel buildAddArticleRow() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    private JPanel buildAddRow() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setBackground(new Color(240, 245, 255));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(210, 220, 240)),
-                new EmptyBorder(8, 10, 8, 10)));
+                new EmptyBorder(4, 8, 4, 8)));
 
-        // Artículo
         JLabel lblArt = new JLabel("Artículo:");
         lblArt.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
         cmbArticle = new JComboBox<>();
         cmbArticle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cmbArticle.setPreferredSize(new Dimension(220, 32));
         cmbArticle.addActionListener(e -> updatePriceLabel());
 
-        // Cantidad
         JLabel lblQty = new JLabel("Cant:");
         lblQty.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
         spnQuantity = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
         spnQuantity.setPreferredSize(new Dimension(65, 32));
 
-        // Precio actual
         lblArticlePrice = new JLabel("Precio: -");
         lblArticlePrice.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblArticlePrice.setForeground(new Color(80, 120, 180));
+        lblArticlePrice.setForeground(new Color(60, 100, 180));
 
-        btnAdd = com.app.UI.Components.ButtonFactory.createPrimaryButton("+ Agregar");
+        // BUG FIX: botón usando ButtonFactory para color correcto
+        JButton btnAdd = ButtonFactory.createPrimaryButton("+ Agregar");
         btnAdd.addActionListener(e -> addToCart());
 
         panel.add(lblArt);
@@ -179,7 +233,7 @@ public class SaleDialog extends JDialog {
     }
 
     private JScrollPane buildCartTable() {
-        String[] cols = {"#", "Artículo", "Cantidad", "Precio Unit.", "Subtotal"};
+        String[] cols = {"ID", "Artículo", "Cant.", "Precio Unit.", "Subtotal"};
         cartModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -189,7 +243,7 @@ public class SaleDialog extends JDialog {
         cartTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cartTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         cartTable.setFillsViewportHeight(true);
-        cartTable.getColumnModel().getColumn(0).setMaxWidth(40);
+        cartTable.getColumnModel().getColumn(0).setMaxWidth(45);
 
         JScrollPane sp = new JScrollPane(cartTable);
         sp.setPreferredSize(new Dimension(0, 200));
@@ -201,18 +255,13 @@ public class SaleDialog extends JDialog {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        btnRemove = new JButton("✕ Quitar seleccionado");
-        btnRemove.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        btnRemove.setForeground(DANGER);
-        btnRemove.setBorderPainted(false);
-        btnRemove.setContentAreaFilled(false);
-        btnRemove.setFocusPainted(false);
-        btnRemove.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JButton btnRemove = ButtonFactory.createDangerButton("✕ Quitar");
         btnRemove.addActionListener(e -> removeFromCart());
 
         lblTotal = new JLabel("Total: $0");
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTotal.setForeground(SUCCESS);
+        lblTotal.setForeground(SUCCESS_CLR);
 
         panel.add(btnRemove, BorderLayout.WEST);
         panel.add(lblTotal,  BorderLayout.EAST);
@@ -224,11 +273,14 @@ public class SaleDialog extends JDialog {
         footer.setBackground(Color.WHITE);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(225, 232, 245)));
 
-        JButton btnCancel = buildFooterBtn("Cancelar", false);
-        btnCancel.addActionListener(e -> dispose());
-
-        btnConfirm = buildFooterBtn("Confirmar Venta", true);
+        // BUG FIX: ambos botones con ButtonFactory
+        JButton btnCancel  = ButtonFactory.createNeutralButton("Cancelar");
+        btnConfirm = ButtonFactory.createSuccessButton("Confirmar Venta");
+        btnCancel .addActionListener(e -> dispose());
         btnConfirm.addActionListener(e -> doConfirm());
+
+        // Tamaño mínimo para que el texto del botón no quede cortado
+        btnConfirm.setPreferredSize(new Dimension(150, 38));
 
         footer.add(btnCancel);
         footer.add(btnConfirm);
@@ -239,8 +291,8 @@ public class SaleDialog extends JDialog {
 
     private void loadData() {
         new SwingWorker<Void, Void>() {
-            List<Cliente>  clientes;
-            List<Article>  articles;
+            List<Cliente> clientes;
+            List<Article> articles;
             @Override protected Void doInBackground() throws Exception {
                 clientes = clienteService.getAll();
                 articles = articleService.getAvailableForSaleOrPawn();
@@ -266,53 +318,40 @@ public class SaleDialog extends JDialog {
     private void addToCart() {
         Article selected = (Article) cmbArticle.getSelectedItem();
         if (selected == null) { showError("Selecciona un artículo."); return; }
-
         int qty = (int) spnQuantity.getValue();
-        int alreadyInCart = getCartQuantityForArticle(selected.getId());
-        int totalRequested = alreadyInCart + qty;
-
-        if (totalRequested > selected.getAmount()) {
-            showError("Stock insuficiente. Disponible: " + selected.getAmount() +
-                    ", en carrito: " + alreadyInCart + ".");
+        int inCart = getCartQtyFor(selected.getId());
+        if (inCart + qty > selected.getAmount()) {
+            showError("Stock insuficiente. Disponible: " + selected.getAmount() + ", en carrito: " + inCart);
             return;
         }
-
-        // Actualizar fila si ya existe, agregar si no
+        // Actualizar si ya existe
         for (int i = 0; i < cartModel.getRowCount(); i++) {
-            int rowArticleId = (int) cartModel.getValueAt(i, 0);
-            if (rowArticleId == selected.getId()) {
-                int newQty      = (int) cartModel.getValueAt(i, 2) + qty;
-                BigDecimal price = selected.getPrice();
-                cartModel.setValueAt(newQty, i, 2);
-                cartModel.setValueAt(CurrencyUtils.format(price.multiply(BigDecimal.valueOf(newQty))), i, 4);
+            if ((int) cartModel.getValueAt(i, 0) == selected.getId()) {
+                int nq = (int) cartModel.getValueAt(i, 2) + qty;
+                cartModel.setValueAt(nq, i, 2);
+                cartModel.setValueAt(CurrencyUtils.format(selected.getPrice().multiply(BigDecimal.valueOf(nq))), i, 4);
                 refreshTotal();
                 return;
             }
         }
-
-        BigDecimal subtotal = selected.getPrice().multiply(BigDecimal.valueOf(qty));
         cartModel.addRow(new Object[]{
-                selected.getId(),
-                selected.getNameArticle(),
-                qty,
+                selected.getId(), selected.getNameArticle(), qty,
                 CurrencyUtils.format(selected.getPrice()),
-                CurrencyUtils.format(subtotal)
+                CurrencyUtils.format(selected.getPrice().multiply(BigDecimal.valueOf(qty)))
         });
         refreshTotal();
     }
 
     private void removeFromCart() {
         int row = cartTable.getSelectedRow();
-        if (row < 0) { showError("Selecciona un artículo del carrito para quitar."); return; }
+        if (row < 0) { showError("Selecciona un artículo del carrito."); return; }
         cartModel.removeRow(row);
         refreshTotal();
     }
 
-    private int getCartQuantityForArticle(int articleId) {
+    private int getCartQtyFor(int articleId) {
         for (int i = 0; i < cartModel.getRowCount(); i++) {
-            if ((int) cartModel.getValueAt(i, 0) == articleId) {
-                return (int) cartModel.getValueAt(i, 2);
-            }
+            if ((int) cartModel.getValueAt(i, 0) == articleId) return (int) cartModel.getValueAt(i, 2);
         }
         return 0;
     }
@@ -320,29 +359,26 @@ public class SaleDialog extends JDialog {
     private void refreshTotal() {
         BigDecimal total = BigDecimal.ZERO;
         for (int i = 0; i < cartModel.getRowCount(); i++) {
-            // Reconstruir subtotal desde precio y cantidad
-            Article art = findArticleInCombo((int) cartModel.getValueAt(i, 0));
+            Article art = findInCombo((int) cartModel.getValueAt(i, 0));
             if (art != null) {
-                int qty = (int) cartModel.getValueAt(i, 2);
-                total = total.add(art.getPrice().multiply(BigDecimal.valueOf(qty)));
+                total = total.add(art.getPrice().multiply(BigDecimal.valueOf((int) cartModel.getValueAt(i, 2))));
             }
         }
         lblTotal.setText("Total: " + CurrencyUtils.format(total));
     }
 
-    private Article findArticleInCombo(int articleId) {
+    private Article findInCombo(int id) {
         for (int i = 0; i < cmbArticle.getItemCount(); i++) {
             Article a = cmbArticle.getItemAt(i);
-            if (a.getId() == articleId) return a;
+            if (a.getId() == id) return a;
         }
         return null;
     }
 
     private void updatePriceLabel() {
-        Article selected = (Article) cmbArticle.getSelectedItem();
-        if (selected != null) {
-            lblArticlePrice.setText("Precio: " + CurrencyUtils.format(selected.getPrice()) +
-                    " | Stock: " + selected.getAmount());
+        Article sel = (Article) cmbArticle.getSelectedItem();
+        if (sel != null) {
+            lblArticlePrice.setText("Precio: " + CurrencyUtils.format(sel.getPrice()) + " | Stock: " + sel.getAmount());
         } else {
             lblArticlePrice.setText("Precio: -");
         }
@@ -351,34 +387,40 @@ public class SaleDialog extends JDialog {
     // ── Confirmar ─────────────────────────────────────────────────────────────
 
     private void doConfirm() {
-        if (cmbCliente.getSelectedItem() == null) {
-            showError("Selecciona un cliente.");
-            return;
-        }
         if (cartModel.getRowCount() == 0) {
-            showError("El carrito está vacío. Agrega al menos un artículo.");
-            return;
+            showError("El carrito está vacío. Agrega al menos un artículo."); return;
         }
 
-        Cliente cliente = (Cliente) cmbCliente.getSelectedItem();
-        Sale sale = new Sale(null, cliente.getId(), java.time.LocalDateTime.now());
+        // Resolver cliente según modo
+        int clienteId = 0;
+        String nombreAnon = null;
+
+        if (rbClienteExistente.isSelected()) {
+            Cliente sel = (Cliente) cmbCliente.getSelectedItem();
+            if (sel == null) { showError("Selecciona un cliente de la lista."); return; }
+            clienteId = sel.getId();
+        } else if (rbNombreLibre.isSelected()) {
+            String nombre = txtNombreLibre.getText().trim();
+            if (nombre.isBlank()) { showError("Ingresa el nombre del comprador."); return; }
+            nombreAnon = nombre;
+        }
+
+
+        Sale sale = new Sale(null, clienteId, java.time.LocalDateTime.now());
+        sale.setClienteNombreAnon(nombreAnon);
 
         for (int i = 0; i < cartModel.getRowCount(); i++) {
-            int     articleId = (int) cartModel.getValueAt(i, 0);
-            int     qty       = (int) cartModel.getValueAt(i, 2);
-            Article art       = findArticleInCombo(articleId);
-            if (art != null) {
-                sale.addDetail(new SalesDetail(0, articleId, qty, art.getPrice()));
-            }
+            int articleId = (int) cartModel.getValueAt(i, 0);
+            int qty       = (int) cartModel.getValueAt(i, 2);
+            Article art   = findInCombo(articleId);
+            if (art != null) sale.addDetail(new SalesDetail(0, articleId, qty, art.getPrice()));
         }
 
         btnConfirm.setEnabled(false);
         btnConfirm.setText("Procesando...");
 
         new SwingWorker<Sale, Void>() {
-            @Override protected Sale doInBackground() throws Exception {
-                return saleService.create(sale);
-            }
+            @Override protected Sale doInBackground() throws Exception { return saleService.create(sale); }
             @Override protected void done() {
                 try {
                     confirmedSale = get();
@@ -397,43 +439,13 @@ public class SaleDialog extends JDialog {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private JButton buildFooterBtn(String text, boolean primary) {
-        Color bg = primary ? BLUE_ACCENT : new Color(240, 242, 248);
-        JButton btn = new JButton(text) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color fill = getModel().isPressed() ? bg.darker()
-                        : getModel().isRollover()   ? (primary ? bg.brighter() : new Color(225, 228, 242))
-                          : bg;
-                g2.setColor(fill);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                if (!primary) {
-                    g2.setColor(new Color(200, 208, 228));
-                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-                }
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setFont(new Font("Segoe UI", primary ? Font.BOLD : Font.PLAIN, 13));
-        btn.setForeground(primary ? Color.WHITE : new Color(80, 90, 120));
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(primary ? 160 : 100, 38));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
-    }
-
-    private JButton makeCloseButton() {
+    private JButton closeBtn() {
         JButton btn = new JButton("✕");
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(new Color(180, 200, 230));
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.addActionListener(e -> dispose());
         return btn;
     }
@@ -442,8 +454,6 @@ public class SaleDialog extends JDialog {
         JOptionPane.showMessageDialog(this, msg, "Validación", JOptionPane.WARNING_MESSAGE);
     }
 
-    // ── Accessors ─────────────────────────────────────────────────────────────
-
-    public boolean isConfirmed()  { return confirmed; }
+    public boolean isConfirmed()   { return confirmed; }
     public Sale getConfirmedSale() { return confirmedSale; }
 }
