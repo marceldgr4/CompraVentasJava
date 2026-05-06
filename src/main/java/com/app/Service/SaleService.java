@@ -8,10 +8,7 @@ import com.app.Model.domain.SalesDetail;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,7 +16,7 @@ public class SaleService {
 
     private final SaleDao saleDao = new SaleDao();
 
-    // ── READ ─────────────────────────────────────────────────────────────────
+    // ── READ ──────────────────────────────────────────────────────────────────
 
     public List<Sale> getAllSales() throws ServiceException {
         try {
@@ -65,12 +62,10 @@ public class SaleService {
         }
     }
 
-    // ── CREATE — RF-05.2/RF-05.3: operación 100% atómica via stored procedure ─
+    // ── CREATE ────────────────────────────────────────────────────────────────
 
     /**
-     * Registra una venta de forma atómica usando la función {@code register_sale()} de PostgreSQL.
-     * Si cualquier artículo no tiene stock suficiente, la transacción hace rollback automático.
-     * No existe riesgo de stock reducido sin venta registrada (fix L-01 del audit).
+     * Registra una venta de forma atómica usando {@code register_sale()}.
      */
     public Sale create(Sale sale) throws ServiceException {
         validateSale(sale);
@@ -86,17 +81,17 @@ public class SaleService {
             return saveViaStoredProcedure(sale);
         } catch (SQLException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "";
-            if (msg.contains("stock") || msg.contains("insufficient")) {
+            if (msg.contains("CV001") || msg.contains("Stock insuficiente") || msg.contains("stock")) {
                 throw new BusinessException("Stock insuficiente para uno o más artículos.");
+            }
+            if (msg.contains("CV002") || msg.contains("no existe")) {
+                throw new BusinessException("Uno de los artículos ya no existe en el sistema.");
             }
             throw new ServiceException("Error al guardar la venta: " + msg, e);
         }
     }
 
-    /**
-     * Construye el JSON de items y llama a {@code public.register_sale(?::uuid, ?, ?::jsonb)}.
-     * Fix L-02: corregido el typo `?::uuid.` → `?::uuid,` en la query SQL.
-     */
+
     private Sale saveViaStoredProcedure(Sale sale) throws SQLException {
         StringBuilder items = new StringBuilder("[");
         List<SalesDetail> details = sale.getDetails();
@@ -109,33 +104,35 @@ public class SaleService {
         }
         items.append("]");
 
-        // Fix L-02: era `?::uuid.` (punto) — ahora es `?::uuid,` (coma)
-        // v6: added p_cliente_nombre_anon
         String sql = "SELECT public.register_sale(?::uuid, ?, ?, ?::jsonb)";
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, sale.getProfileId());
-            ps.setInt(2, sale.getClienteId());
+
+
+            if (sale.getClienteId() > 0) {
+                ps.setInt(2, sale.getClienteId());
+            } else {
+                ps.setNull(2, Types.INTEGER);
+            }
+
             ps.setString(3, sale.getClienteNombreAnon());
             ps.setString(4, items.toString());
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    sale.setId(rs.getInt(1));
-                }
+                if (rs.next()) sale.setId(rs.getInt(1));
             }
         }
         return sale;
     }
 
-    // ── DELETE — solo Admin ───────────────────────────────────────────────────
+    // ── DELETE ────────────────────────────────────────────────────────────────
 
     public void delete(int id) throws ServiceException {
         requireAdmin("eliminar venta");
         try {
             boolean deleted = saleDao.delete(id);
-            if (!deleted) {
-                throw new ServiceException("Venta " + id + " no encontrada.");
-            }
+            if (!deleted) throw new ServiceException("Venta " + id + " no encontrada.");
         } catch (SQLException e) {
             throw new ServiceException("Error al eliminar la venta " + id + ": " + e.getMessage(), e);
         }
@@ -149,12 +146,10 @@ public class SaleService {
         }
     }
 
+
     private void validateSale(Sale sale) {
         if (sale.getDetails() == null || sale.getDetails().isEmpty()) {
             throw new BusinessException("La venta debe tener al menos un artículo.");
-        }
-        if (sale.getClienteId() <= 0 && (sale.getClienteNombreAnon() == null || sale.getClienteNombreAnon().isBlank())) {
-            throw new BusinessException("La venta debe tener un cliente válido o un nombre de cliente anónimo.");
         }
         for (SalesDetail detail : sale.getDetails()) {
             if (detail.getArticleId() <= 0) {
