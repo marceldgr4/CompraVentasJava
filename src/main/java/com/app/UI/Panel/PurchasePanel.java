@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.PurchaseController;
 import com.app.Model.domain.Purchase;
 import com.app.Service.PurchaseService;
 import com.app.UI.Components.ButtonFactory;
@@ -23,7 +24,7 @@ public class PurchasePanel extends JPanel {
     private DefaultTableModel tableModel;
     private JLabel lblStatus;
 
-    private final PurchaseService purchaseService = new PurchaseService();
+    private final PurchaseController purchaseController = new PurchaseController();
     private final boolean isAdmin = SessionManager.isAdmin();
 
     public PurchasePanel() {
@@ -94,24 +95,16 @@ public class PurchasePanel extends JPanel {
     }
     private void loadData() {
         lblStatus.setText("Cargando...");
-        tableModel.setRowCount(0);
-        new SwingWorker<List<Purchase>,Void>(){
-            @Override protected List<Purchase> doInBackground() throws Exception{
-                return purchaseService.getAll();
+        purchaseController.loadAll(
+            list -> {
+                populateTable(list);
+                lblStatus.setText(list.size() + " compra(s) encontrada(s)");
+            },
+            (msg, ex) -> {
+                lblStatus.setText("Error al cargar los datos: " + msg);
+                showError("Error: " + msg);
             }
-            @Override protected void done() {
-                try{
-                    List<Purchase> list = get();
-                    populateTable(list);
-                    lblStatus.setText(list.size()+ "compra(s) encontrado(s)");
-                }catch (ExecutionException ex){
-                    lblStatus.setText("Error al cargar los datos"+ ex.getMessage());
-
-                }catch (InterruptedException ex){
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }.execute();
+        );
     }
     private void openNewDialog() {
         PurchaseDialog dialog = new PurchaseDialog(

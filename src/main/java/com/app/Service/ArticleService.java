@@ -29,14 +29,14 @@ public class ArticleService {
         }
     }
 
-   public List<Article> getAvilableForSaleOrPawn() throws ServiceException {
+  /* public List<Article> getAvailableForSaleOrPawn() throws ServiceException {
         try{
             return articleDao.findAvailable();
 
         }catch (SQLException e){
             throw new ServiceException("Error al cargar el inventario disponible: " + e.getMessage(),e);
         }
-   }
+   }*/
 
     // -------------------------------------------------------
     // READ — buscar por nombre
@@ -113,7 +113,7 @@ public class ArticleService {
      * Edita nombre, descripción y categoría. Disponible para Admin y Empleado (RF-03.5).
      */
     // -------------------------------------------------------
-    public void editBasicaFields(int id, String nameArticle, String description, ArticleCategory category, SourceType sourceType, ItemState itemState) throws ServiceException {
+    public void editBasicFields(int id, String nameArticle, String description, ArticleCategory category, SourceType sourceType, ItemState itemState) throws ServiceException {
         if(nameArticle == null || nameArticle.isBlank()) {
             throw new BusinessException("El  nombre del articulo es obligatorio ");
         }

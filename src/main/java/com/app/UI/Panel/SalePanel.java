@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.SaleController;
 import com.app.Model.domain.Sale;
 import com.app.Service.SaleService;
 import com.app.UI.Components.ButtonFactory;
@@ -32,7 +33,7 @@ public class SalePanel extends JPanel {
     private JTextField txtClienteId;
     private JButton btnFilter;
 
-    private final SaleService saleService = new SaleService();
+    private final SaleController saleController = new SaleController();
 
     public SalePanel() {
         initComponents();
@@ -153,8 +154,13 @@ public class SalePanel extends JPanel {
 
     private void loadAll() {
         lblStatus.setText("Cargando...");
-        tableModel.setRowCount(0);
-        new LoadTask(null, null, -1).execute();
+        saleController.loadAll(
+            this::populateTable,
+            (msg, ex) -> {
+                lblStatus.setText("Error al cargar.");
+                showError("Error: " + msg);
+            }
+        );
     }
 
     private void applyFilter() {
@@ -177,9 +183,14 @@ public class SalePanel extends JPanel {
             return;
         }
 
-        tableModel.setRowCount(0);
         lblStatus.setText("Filtrando...");
-        new LoadTask(from, to, clienteId).execute();
+        saleController.filter(from, to, clienteId,
+            this::populateTable,
+            (msg, ex) -> {
+                lblStatus.setText("Error al filtrar.");
+                showError("Error: " + msg);
+            }
+        );
     }
 
     private void openNewSaleDialog() {
@@ -195,11 +206,11 @@ public class SalePanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) { showWarning("Selecciona una venta para eliminar."); return; }
         int id = (int) tableModel.getValueAt(row, 0);
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar la venta #" + id + "? Esta acción no se puede deshacer.",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (ok == JOptionPane.YES_OPTION) new DeleteTask(id).execute();
+        
+        saleController.delete(id, this,
+            this::loadAll,
+            (msg, ex) -> {} // Error already shown by controller
+        );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -222,46 +233,6 @@ public class SalePanel extends JPanel {
     private void showSuccess(String msg) { JOptionPane.showMessageDialog(this, msg, "Éxito",       JOptionPane.INFORMATION_MESSAGE); }
     private void showError  (String msg) { JOptionPane.showMessageDialog(this, msg, "Error",       JOptionPane.ERROR_MESSAGE); }
     private void showWarning(String msg) { JOptionPane.showMessageDialog(this, msg, "Advertencia", JOptionPane.WARNING_MESSAGE); }
-
-    // ── SwingWorker tasks ─────────────────────────────────────────────────────
-
-    private class LoadTask extends SwingWorker<List<Sale>, Void> {
-        private final LocalDate from;
-        private final LocalDate to;
-        private final int       clienteId;
-
-        LoadTask(LocalDate from, LocalDate to, int clienteId) {
-            this.from      = from;
-            this.to        = to;
-            this.clienteId = clienteId;
-        }
-
-        @Override protected List<Sale> doInBackground() throws Exception {
-            if (clienteId > 0)             return saleService.findByCliente(clienteId);
-            if (from != null && to != null) return saleService.findByDateRange(from, to);
-            return (List<Sale>) saleService.getAllSales();
-        }
-
-        @Override protected void done() {
-            try { populateTable(get()); }
-            catch (ExecutionException ex) {
-                lblStatus.setText("Error al cargar.");
-                showError("Error: " + ex.getCause().getMessage());
-            }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class DeleteTask extends SwingWorker<Void, Void> {
-        private final int id;
-        DeleteTask(int id) { this.id = id; }
-        @Override protected Void doInBackground() throws Exception { saleService.delete(id); return null; }
-        @Override protected void done() {
-            try { get(); loadAll(); showSuccess("Venta eliminada."); }
-            catch (ExecutionException ex) { showError("Error al eliminar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
 
     public void refresh() { loadAll(); }
 }

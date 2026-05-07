@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.ArticleController;
 import com.app.Model.domain.Article;
 import com.app.Service.ArticleService;
 import com.app.Service.exceptions.ServiceException;
@@ -31,7 +32,7 @@ public class ArticlePanel extends JPanel {
     private JButton            btnRefresh;
     private JLabel             lblStatus;
 
-    private final ArticleService articleService = new ArticleService();
+    private final ArticleController articleController = new ArticleController();
 
     public ArticlePanel() {
         initComponents();
@@ -149,16 +150,28 @@ public class ArticlePanel extends JPanel {
 
     private void loadTable() {
         lblStatus.setText("Cargando...");
-        tableModel.setRowCount(0);
-        new LoadTask().execute();
+        articleController.loadAll(this, 
+            list -> {
+                populateTable(list);
+                lblStatus.setText(list.size() + " artículo(s) cargado(s)");
+            },
+            (msg, ex) -> {
+                lblStatus.setText("Error al cargar datos");
+                showError("Error al cargar: " + msg);
+            }
+        );
     }
 
     private void doSearch() {
         String term = txtSearch.getText().trim();
-        if (term.isEmpty()) { loadTable(); return; }
-        tableModel.setRowCount(0);
         lblStatus.setText("Buscando...");
-        new SearchTask(term).execute();
+        articleController.searchArticles(term, this,
+            list -> {
+                populateTable(list);
+                lblStatus.setText(list.size() + " resultado(s)");
+            },
+            (msg, ex) -> showError("Error en la búsqueda: " + msg)
+        );
     }
 
     private void openNewDialog() {
@@ -166,7 +179,10 @@ public class ArticlePanel extends JPanel {
                 (JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {
-            new CreateTask(dlg.getArticle()).execute();
+            articleController.createArticle(dlg.getArticle(), this,
+                result -> loadTable(),
+                (msg, ex) -> showError("Error al crear: " + msg)
+            );
         }
     }
 
@@ -181,7 +197,10 @@ public class ArticlePanel extends JPanel {
         if (dlg.isConfirmed()) {
             Article updated = dlg.getArticle();
             updated.setId(selected.getId());
-            new EditTask(updated).execute();
+            articleController.editArticle(updated, this,
+                this::loadTable,
+                (msg, ex) -> showError("Error al actualizar: " + msg)
+            );
         }
     }
 
@@ -189,15 +208,10 @@ public class ArticlePanel extends JPanel {
         Article selected = getSelectedArticle();
         if (selected == null) { showWarning("Seleccione un artículo para eliminar."); return; }
 
-        int choice = JOptionPane.showConfirmDialog(
-                this,
-                "¿Eliminar \"" + selected.getNameArticle() + "\"?",
-                "Confirmar eliminación",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (choice == JOptionPane.YES_OPTION) {
-            new DeleteTask(selected.getId()).execute();
-        }
+        articleController.delete(selected.getId(), selected.getNameArticle(), this,
+            this::loadTable,
+            (msg, ex) -> showError("Error al eliminar: " + msg)
+        );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -206,10 +220,13 @@ public class ArticlePanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) return null;
         int id = (int) tableModel.getValueAt(row, 0);
+        
+        // Use service as a last resort for synchronous retrieval in selection 
+        // until we implement a better state management in controllers.
         try {
-            return articleService.getById(id);
-        }catch (ServiceException e){
-            showError("Error: "+e.getMessage());
+            return new ArticleService().getById(id);
+        } catch (ServiceException e) {
+            showError("Error: " + e.getMessage());
             return null;
         }
     }
@@ -237,87 +254,5 @@ public class ArticlePanel extends JPanel {
     }
     private void showSuccess(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    // ── SwingWorker tasks ─────────────────────────────────────────────────────
-
-    private class LoadTask extends SwingWorker<List<Article>, Void> {
-        @Override protected List<Article> doInBackground() throws Exception {
-            return articleService.getAll();
-        }
-        @Override protected void done() {
-            try {
-                List<Article> list = get();
-                populateTable(list);
-                lblStatus.setText(list.size() + " artículo(s) cargado(s)");
-            } catch (ExecutionException ex) {
-                lblStatus.setText("Error al cargar datos");
-                showError("Error al cargar: " + ex.getCause().getMessage());
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private class SearchTask extends SwingWorker<List<Article>, Void> {
-        private final String term;
-        SearchTask(String term) { this.term = term; }
-
-        @Override protected List<Article> doInBackground() throws Exception {
-            return articleService.search(term);
-        }
-        @Override protected void done() {
-            try {
-                List<Article> list = get();
-                populateTable(list);
-                lblStatus.setText(list.size() + " resultado(s)");
-            } catch (ExecutionException ex) {
-                showError("Error en la búsqueda: " + ex.getCause().getMessage());
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private class CreateTask extends SwingWorker<Void, Void> {
-        private final Article article;
-        CreateTask(Article a) { this.article = a; }
-
-        @Override protected Void doInBackground() throws Exception {
-            articleService.create(article); return null;
-        }
-        @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Artículo creado."); }
-            catch (ExecutionException ex) { showError("Error al crear: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class EditTask extends SwingWorker<Void, Void> {
-        private final Article article;
-        EditTask(Article a) { this.article = a; }
-
-        @Override protected Void doInBackground() throws Exception {
-            articleService.edit(article); return null;
-        }
-        @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Artículo actualizado."); }
-            catch (ExecutionException ex) { showError("Error al actualizar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class DeleteTask extends SwingWorker<Void, Void> {
-        private final int id;
-        DeleteTask(int id) { this.id = id; }
-
-        @Override protected Void doInBackground() throws Exception {
-            articleService.remove(id); return null;
-        }
-        @Override protected void done() {
-            try { get(); loadTable(); showSuccess("Artículo eliminado."); }
-            catch (ExecutionException ex) { showError("Error al eliminar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
     }
 }

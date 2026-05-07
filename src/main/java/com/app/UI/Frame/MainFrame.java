@@ -1,7 +1,7 @@
 package com.app.UI.Frame;
 
 import Infrastructure.security.SessionManager;
-import com.app.Service.AuthService;
+import com.app.Controllers.AuthController;
 import com.app.UI.Components.ButtonFactory;
 import com.app.UI.Panel.*;
 
@@ -53,7 +53,7 @@ public class MainFrame extends JFrame {
     private String           activePanel = "Dashboard";
 
     private final List<NavItem> navItems = new ArrayList<>();
-    private final AuthService   authService = new AuthService();
+    private final AuthController authController = new AuthController();
 
     public MainFrame() {
         setTitle("CompraVenta — Sistema de Gestión");
@@ -304,14 +304,10 @@ public class MainFrame extends JFrame {
     }
 
     private void doLogout() {
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Seguro que deseas cerrar sesión?",
-                "Cerrar Sesión", JOptionPane.YES_NO_OPTION);
-        if (ok == JOptionPane.YES_OPTION) {
-            authService.logout();
+        authController.logout(this, () -> {
             dispose();
             SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
-        }
+        });
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
