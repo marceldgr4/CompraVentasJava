@@ -69,6 +69,26 @@ public class ProfileDao {
         return profile;
     }
 
+    public boolean update(Profile profile) throws SQLException {
+        String sql= "UPDATE public.profile SET full_name = ?, rol = ?::role_user, updated_at = NOW() WHERE id = ?::uuid";
+        try(Connection con = ConnectionPool.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)){
+            ps.setString(1, profile.getFullName());
+            ps.setString(2, profile.getRol().name());
+            ps.setString(3, profile.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean delete(String id) throws SQLException {
+        String sql = "DELETE FROM public.profile WHERE id = ?::uuid";
+        try(Connection con = ConnectionPool.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)){
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private Profile mapRow(ResultSet rs) throws SQLException{
         return new Profile(
                 rs.getString("id"),

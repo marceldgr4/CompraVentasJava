@@ -202,6 +202,49 @@ public class ProfileController extends BaseController {
         );
     }
 
+    public void update(Profile profile, Component parent, Runnable onSuccess, OnError onError) {
+        if (!SessionManager.isAdmin()) {
+            showError(parent, "Solo el administrador puede editar perfiles.");
+            return;
+        }
+        log.info("Editando perfil para: {} ({})", profile.getFullName(), profile.getEmail());
+        runAsyncVoid(
+                () -> profileService.update(profile),
+                () -> {
+                    log.info("Perfil editado: {}", profile.getEmail());
+                    showSuccess(parent, "Perfil editado correctamente.");
+                    onSuccess.run();
+                },
+                (msg, ex) -> {
+                    log.error("Error al editar perfil {}: {}", profile.getEmail(), msg);
+                    onError.onError("No se pudo editar el perfil: " + msg, ex);
+                }
+        );
+    }
+
+    public void delete(String id, Component parent, Runnable onSuccess, OnError onError) {
+        if (!SessionManager.isAdmin()) {
+            showError(parent, "Solo el administrador puede eliminar perfiles.");
+            return;
+        }
+        boolean confirmed = showConfirmation(parent, "¿Está seguro de eliminar este empleado? Esta acción no se puede deshacer.", "Confirmar eliminación");
+        if (!confirmed) return;
+
+        log.info("Eliminando perfil ID: {}", id);
+        runAsyncVoid(
+                () -> profileService.delete(id),
+                () -> {
+                    log.info("Perfil eliminado ID: {}", id);
+                    showSuccess(parent, "Perfil eliminado correctamente.");
+                    onSuccess.run();
+                },
+                (msg, ex) -> {
+                    log.error("Error al eliminar perfil ID {}: {}", id, msg);
+                    onError.onError("No se pudo eliminar el perfil: " + msg, ex);
+                }
+        );
+    }
+
     // -------------------------------------------------------
     // Sesión actual (helpers para las vistas)
     // -------------------------------------------------------

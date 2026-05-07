@@ -40,9 +40,9 @@ public class MainFrame extends JFrame {
     private static final int SIDEBAR_W_COL  = 64;
 
     // ── Secciones ─────────────────────────────────────────────────────────────
-    private static final String[] PANEL_IDS   = {"Dashboard","Articles","Pawns","Sales","Clients","Profiles"};
-    private static final String[] NAV_ICONS   = {"🏠","📦","🤝","💰","👤","👥"};
-    private static final String[] NAV_LABELS  = {"Dashboard","Artículos","Empeños","Ventas","Clientes","Perfiles"};
+    private static final String[] PANEL_IDS   = {"Dashboard","Articles","Pawns","Sales","Purchases","Clients","Profiles"};
+    private static final String[] NAV_ICONS   = {"🏠","📦","🤝","💰","🛒","👤","👔"};
+    private static final String[] NAV_LABELS  = {"Dashboard","Artículos","Empeños","Ventas","Compras","Clientes","Empleados"};
 
     // ── Estado ────────────────────────────────────────────────────────────────
     private JPanel           sidebar;
@@ -264,6 +264,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new ArticlePanel(),   "Articles");
         contentPanel.add(new PawnPanel(),      "Pawns");
         contentPanel.add(new SalePanel(),      "Sales");
+        contentPanel.add(new PurchasePanel(),  "Purchases");
         contentPanel.add(new ClientePanel(),   "Clients");
 
         if (SessionManager.isAdmin()) {
