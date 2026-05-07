@@ -47,4 +47,26 @@ public class ProfileService {
             throw new ServiceException("Error al crear el perfil: " + e.getMessage());
         }
     }
+
+    public void update(Profile profile) throws ServiceException {
+        try {
+            boolean updated = profileDAO.update(profile);
+            if (!updated) {
+                throw new ServiceException("No se pudo actualizar el perfil. Posiblemente no existe.");
+            }
+        } catch (SQLException e) {
+            throw new ServiceException("Error al actualizar el perfil: " + e.getMessage());
+        }
+    }
+
+    public void delete(String id) throws ServiceException {
+        try {
+            boolean deleted = profileDAO.delete(id);
+            if (!deleted) {
+                throw new ServiceException("No se pudo eliminar el perfil.");
+            }
+        } catch (SQLException e) {
+            throw new ServiceException("Error al eliminar el perfil: " + e.getMessage());
+        }
+    }
 }

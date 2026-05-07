@@ -5,7 +5,9 @@ import com.app.Model.Enum.ItemState;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
 import com.app.Model.domain.Purchase;
+import com.app.Model.domain.Profile;
 import com.app.Service.ClienteService;
+import com.app.Service.ProfileService;
 import com.app.Service.PurchaseService;
 import com.app.Service.exceptions.ServiceException;
 import com.app.UI.Components.ButtonFactory;
@@ -32,7 +34,10 @@ public class PurchaseDialog extends JDialog {
     // Modo cliente
     private JRadioButton rbClienteExistente;
     private JRadioButton rbClienteNuevo;
+    private JRadioButton rbEmpleado;
+    private JRadioButton rbSinCliente;
     private JComboBox<Cliente> cmbCliente;
+    private JComboBox<Profile> cmbEmpleado;
     private JPanel pnlClienteRapido;
     private JTextField txtNombreRapido;
     private JTextField txtTelefonoRapido;
@@ -54,6 +59,7 @@ public class PurchaseDialog extends JDialog {
 
     private final PurchaseService purchaseService = new PurchaseService();
     private final ClienteService  clienteService  = new ClienteService();
+    private final ProfileService  profileService  = new ProfileService();
 
     public PurchaseDialog(JFrame parent) {
         super(parent, true);
@@ -73,6 +79,8 @@ public class PurchaseDialog extends JDialog {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                g2.setColor(new Color(210, 220, 235));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
                 g2.dispose();
             }
         };
@@ -123,25 +131,44 @@ public class PurchaseDialog extends JDialog {
         // Radio buttons
         rbClienteExistente = new JRadioButton("Cliente registrado");
         rbClienteNuevo     = new JRadioButton("Cliente nuevo");
+        rbEmpleado         = new JRadioButton("Empleado");
+        rbSinCliente       = new JRadioButton("Compra general (Sin cliente)");
         rbClienteExistente.setSelected(true);
         rbClienteExistente.setOpaque(false);
         rbClienteNuevo.setOpaque(false);
+        rbEmpleado.setOpaque(false);
+        rbSinCliente.setOpaque(false);
         ButtonGroup grp = new ButtonGroup();
         grp.add(rbClienteExistente);
         grp.add(rbClienteNuevo);
+        grp.add(rbEmpleado);
+        grp.add(rbSinCliente);
 
         JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         radioPanel.setOpaque(false);
         radioPanel.add(rbClienteExistente);
         radioPanel.add(rbClienteNuevo);
+        radioPanel.add(rbEmpleado);
+        radioPanel.add(rbSinCliente);
         gc.gridy = row; gc.insets = ins(0, 0, 6, 0);
         body.add(radioPanel, gc); row++;
 
-        // Combo cliente existente
+        // Combo cliente existente y empleado
+        JPanel comboPanel = new JPanel(new CardLayout());
+        comboPanel.setOpaque(false);
+        
         cmbCliente = new JComboBox<>();
         cmbCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        
+        cmbEmpleado = new JComboBox<>();
+        cmbEmpleado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        
+        comboPanel.add(cmbCliente, "CLIENTE");
+        comboPanel.add(cmbEmpleado, "EMPLEADO");
+        comboPanel.add(new JLabel("Se registrará como compra anónima."), "SIN_CLIENTE");
+        
         gc.gridy = row; gc.insets = ins(0, 0, 12, 0);
-        body.add(cmbCliente, gc); row++;
+        body.add(comboPanel, gc); row++;
 
         // Panel cliente rápido
         pnlClienteRapido = new JPanel(new GridLayout(1, 2, 8, 0));
@@ -154,14 +181,26 @@ public class PurchaseDialog extends JDialog {
         gc.gridy = row; gc.insets = ins(0, 0, 12, 0);
         body.add(pnlClienteRapido, gc); row++;
 
+        CardLayout cl = (CardLayout) comboPanel.getLayout();
         // Toggle visibilidad
         rbClienteExistente.addActionListener(e -> {
-            cmbCliente.setVisible(true);
+            comboPanel.setVisible(true);
+            cl.show(comboPanel, "CLIENTE");
             pnlClienteRapido.setVisible(false);
         });
         rbClienteNuevo.addActionListener(e -> {
-            cmbCliente.setVisible(false);
+            comboPanel.setVisible(false);
             pnlClienteRapido.setVisible(true);
+        });
+        rbEmpleado.addActionListener(e -> {
+            comboPanel.setVisible(true);
+            cl.show(comboPanel, "EMPLEADO");
+            pnlClienteRapido.setVisible(false);
+        });
+        rbSinCliente.addActionListener(e -> {
+            comboPanel.setVisible(true);
+            cl.show(comboPanel, "SIN_CLIENTE");
+            pnlClienteRapido.setVisible(false);
         });
 
         // ── Sección Artículo ──────────────────────────────────────────────────
@@ -257,13 +296,18 @@ public class PurchaseDialog extends JDialog {
     // ── Operaciones ───────────────────────────────────────────────────────────
 
     private void loadClientes() {
-        new SwingWorker<List<Cliente>, Void>() {
-            @Override protected List<Cliente> doInBackground() throws Exception {
-                return clienteService.getAll();
+        new SwingWorker<Void, Void>() {
+            List<Cliente> clientes;
+            List<Profile> profiles;
+            @Override protected Void doInBackground() throws Exception {
+                clientes = clienteService.getAll();
+                profiles = profileService.findAll();
+                return null;
             }
             @Override protected void done() {
                 try {
-                    get().forEach(cmbCliente::addItem);
+                    if (clientes != null) clientes.forEach(cmbCliente::addItem);
+                    if (profiles != null) profiles.forEach(cmbEmpleado::addItem);
                 } catch (Exception ignored) {}
             }
         }.execute();
@@ -317,11 +361,18 @@ public class PurchaseDialog extends JDialog {
         if (rbClienteExistente.isSelected()) {
             Cliente sel = (Cliente) cmbCliente.getSelectedItem();
             if (sel != null) clienteId = sel.getId();
-        } else {
+            else { showError("Seleccione un cliente registrado."); return; }
+        } else if (rbClienteNuevo.isSelected()) {
             String nombre = txtNombreRapido.getText().trim();
             if (nombre.isBlank()) { showError("El nombre del cliente es obligatorio."); return; }
-            clienteRapido = Cliente.createRapido(null, nombre,
-                    null, txtTelefonoRapido.getText().trim());
+            clienteRapido = Cliente.createRapido(null, nombre, null, txtTelefonoRapido.getText().trim());
+        } else if (rbEmpleado.isSelected()) {
+            Profile sel = (Profile) cmbEmpleado.getSelectedItem();
+            if (sel == null) { showError("Seleccione un empleado."); return; }
+            // Create a quick client for the employee
+            clienteRapido = Cliente.createRapido(null, sel.getFullName(), null, sel.getEmail());
+        } else if (rbSinCliente.isSelected()) {
+            // Leave as 0 and null
         }
 
         final int fClienteId     = clienteId;

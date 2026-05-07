@@ -220,9 +220,9 @@ public class ArticleDao {
     }
 
     private static Article mapRow(ResultSet rs) throws SQLException {
-        ArticleCategory category = ArticleCategory.valueOf(rs.getString("category"));
-        SourceType sourceType = SourceType.valueOf(rs.getString("source_type"));
-        ItemState itemState = ItemState.valueOf(rs.getString("item_state"));
+        ArticleCategory category = safeEnum(ArticleCategory.class, rs.getString("category"), ArticleCategory.Otro);
+        SourceType sourceType = safeEnum(SourceType.class, rs.getString("source_type"), SourceType.OTRO);
+        ItemState itemState = safeEnum(ItemState.class, rs.getString("item_state"), ItemState.Bueno);
 
         Article article = new Article(
                 rs.getInt("cliente_id"),
@@ -248,6 +248,15 @@ public class ArticleDao {
         return article.getItemState() != null ? article.getItemState() : ItemState.Bueno;
     }
 
+    private static <T extends Enum<T>> T safeEnum(Class<T> enumType, String value, T defaultValue) {
+        if (value == null || value.trim().isEmpty()) return defaultValue;
+        for (T constant : enumType.getEnumConstants()) {
+            if (constant.name().equalsIgnoreCase(value)) {
+                return constant;
+            }
+        }
+        return defaultValue;
+    }
 
     @FunctionalInterface
     private interface SqlSetter {

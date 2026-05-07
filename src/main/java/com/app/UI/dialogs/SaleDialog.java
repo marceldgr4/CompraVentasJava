@@ -2,10 +2,12 @@ package com.app.UI.dialogs;
 
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
+import com.app.Model.domain.Profile;
 import com.app.Model.domain.Sale;
 import com.app.Model.domain.SalesDetail;
 import com.app.Service.ArticleService;
 import com.app.Service.ClienteService;
+import com.app.Service.ProfileService;
 import com.app.Service.SaleService;
 import com.app.UI.Components.ButtonFactory;
 import com.app.Utils.CurrencyUtils;
@@ -34,7 +36,9 @@ public class SaleDialog extends JDialog {
     private JRadioButton rbSinCliente;
     private JRadioButton rbClienteExistente;
     private JRadioButton rbNombreLibre;
+    private JRadioButton rbEmpleado;
     private JComboBox<Cliente> cmbCliente;
+    private JComboBox<Profile> cmbEmpleado;
     private JTextField txtNombreLibre;
 
     // Artículo
@@ -55,6 +59,7 @@ public class SaleDialog extends JDialog {
     private final ArticleService articleService = new ArticleService();
     private final ClienteService clienteService = new ClienteService();
     private final SaleService    saleService    = new SaleService();
+    private final ProfileService profileService = new ProfileService();
 
     public SaleDialog(JFrame parent) {
         super(parent, true);
@@ -74,6 +79,8 @@ public class SaleDialog extends JDialog {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                g2.setColor(new Color(210, 220, 235));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
                 g2.dispose();
             }
         };
@@ -131,51 +138,53 @@ public class SaleDialog extends JDialog {
         rbSinCliente      = new JRadioButton("Sin cliente (anónima)");
         rbClienteExistente= new JRadioButton("Cliente registrado");
         rbNombreLibre     = new JRadioButton("Nombre libre");
+        rbEmpleado        = new JRadioButton("Empleado");
         rbSinCliente.setSelected(true);
         rbSinCliente.setOpaque(false);
         rbClienteExistente.setOpaque(false);
         rbNombreLibre.setOpaque(false);
+        rbEmpleado.setOpaque(false);
         ButtonGroup grp = new ButtonGroup();
         grp.add(rbSinCliente);
         grp.add(rbClienteExistente);
         grp.add(rbNombreLibre);
+        grp.add(rbEmpleado);
 
         JPanel radioRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         radioRow.setOpaque(false);
         radioRow.add(rbSinCliente);
         radioRow.add(rbClienteExistente);
         radioRow.add(rbNombreLibre);
+        radioRow.add(rbEmpleado);
 
         // Input según modo
+        JPanel inputRow = new JPanel(new CardLayout());
+        inputRow.setOpaque(false);
+
         cmbCliente = new JComboBox<>();
         cmbCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cmbCliente.setPreferredSize(new Dimension(320, 34));
-        cmbCliente.setVisible(false);
+
+        cmbEmpleado = new JComboBox<>();
+        cmbEmpleado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cmbEmpleado.setPreferredSize(new Dimension(320, 34));
 
         txtNombreLibre = new JTextField();
         txtNombreLibre.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtNombreLibre.putClientProperty("JTextField.placeholderText", "Nombre del comprador...");
         txtNombreLibre.setPreferredSize(new Dimension(320, 34));
-        txtNombreLibre.setVisible(false);
 
-        JPanel inputRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        inputRow.setOpaque(false);
-        inputRow.add(cmbCliente);
-        inputRow.add(txtNombreLibre);
+        inputRow.add(new JLabel(" "), "SIN_CLIENTE");
+        inputRow.add(cmbCliente, "CLIENTE");
+        inputRow.add(txtNombreLibre, "NOMBRE_LIBRE");
+        inputRow.add(cmbEmpleado, "EMPLEADO");
 
+        CardLayout cl = (CardLayout) inputRow.getLayout();
         // Toggle
-        rbSinCliente.addActionListener(e -> {
-            cmbCliente.setVisible(false);
-            txtNombreLibre.setVisible(false);
-        });
-        rbClienteExistente.addActionListener(e -> {
-            cmbCliente.setVisible(true);
-            txtNombreLibre.setVisible(false);
-        });
-        rbNombreLibre.addActionListener(e -> {
-            cmbCliente.setVisible(false);
-            txtNombreLibre.setVisible(true);
-        });
+        rbSinCliente.addActionListener(e -> cl.show(inputRow, "SIN_CLIENTE"));
+        rbClienteExistente.addActionListener(e -> cl.show(inputRow, "CLIENTE"));
+        rbNombreLibre.addActionListener(e -> cl.show(inputRow, "NOMBRE_LIBRE"));
+        rbEmpleado.addActionListener(e -> cl.show(inputRow, "EMPLEADO"));
 
         panel.add(lbl,      BorderLayout.NORTH);
         panel.add(radioRow, BorderLayout.CENTER);
@@ -293,16 +302,19 @@ public class SaleDialog extends JDialog {
         new SwingWorker<Void, Void>() {
             List<Cliente> clientes;
             List<Article> articles;
+            List<Profile> profiles;
             @Override protected Void doInBackground() throws Exception {
                 clientes = clienteService.getAll();
                 articles = articleService.getAvailableForSaleOrPawn();
+                profiles = profileService.findAll();
                 return null;
             }
             @Override protected void done() {
                 try {
                     get();
-                    clientes.forEach(cmbCliente::addItem);
-                    articles.forEach(cmbArticle::addItem);
+                    if (clientes != null) clientes.forEach(cmbCliente::addItem);
+                    if (articles != null) articles.forEach(cmbArticle::addItem);
+                    if (profiles != null) profiles.forEach(cmbEmpleado::addItem);
                     updatePriceLabel();
                 } catch (ExecutionException ex) {
                     showError("Error al cargar datos: " + ex.getCause().getMessage());
@@ -403,6 +415,10 @@ public class SaleDialog extends JDialog {
             String nombre = txtNombreLibre.getText().trim();
             if (nombre.isBlank()) { showError("Ingresa el nombre del comprador."); return; }
             nombreAnon = nombre;
+        } else if (rbEmpleado.isSelected()) {
+            Profile sel = (Profile) cmbEmpleado.getSelectedItem();
+            if (sel == null) { showError("Seleccione un empleado de la lista."); return; }
+            nombreAnon = sel.getFullName();
         }
 
 
