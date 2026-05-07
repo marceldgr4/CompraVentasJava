@@ -273,7 +273,7 @@ public class LoginFrame extends JFrame {
             () -> {
                 setLoading(false);
                 dispose();
-                com.app.UI.Frame.MainFrame.getInstance().setVisible(true);
+                new com.app.UI.Frame.MainFrame().setVisible(true);
             },
             (msg, ex) -> {
                 setLoading(false);
@@ -281,6 +281,20 @@ public class LoginFrame extends JFrame {
                 animateErrorLabel();
             }
         );
+    }
+
+    private void animateErrorLabel() {
+        Timer timer = new Timer(80, null);
+        final int[] count = {0};
+        timer.addActionListener(e -> {
+            lblError.setVisible(count[0] % 2 == 0);
+            count[0]++;
+            if (count[0] >= 6) {
+                timer.stop();
+                lblError.setVisible(true);
+            }
+        });
+        timer.start();
     }
 
     private void setLoading(boolean loading) {

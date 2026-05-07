@@ -228,13 +228,8 @@ public class ArticleController extends BaseController {
      */
     public void removeStock(int articleId, int quantity, Component parent, Runnable onSuccess, OnError onError) {
         log.info("Retirando {} unidades del articulo ID: {}", quantity, articleId);
-        runAsync(() -> {
-                    try {
-                        return articleService.removeStock(articleId, quantity);
-                    } catch (ServiceException e) {
-                        throw new RuntimeException(e);
-                    }
-                },
+        runAsyncVoid(
+                () -> articleService.removeStock(articleId, quantity),
                 () -> {
                     showSuccess(parent, quantity + " unidad(es) retirada(s) del inventario.");
                     onSuccess.run();
