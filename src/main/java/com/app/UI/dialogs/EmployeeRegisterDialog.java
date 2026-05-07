@@ -1,6 +1,7 @@
 package com.app.UI.dialogs;
 
-import com.app.Service.AuthService;
+import com.app.Controllers.AuthController;
+import com.app.Model.Enum.RolUser;
 import com.app.UI.Components.ButtonFactory;
 import javax.swing.*;
 import java.awt.*;
@@ -13,14 +14,16 @@ public class EmployeeRegisterDialog extends JDialog {
     private JTextField txtFullName;
     private JTextField txtEmail;
     private JPasswordField txtPassword;
+    private JComboBox<RolUser> cmbRole;
     private JButton btnRegister;
     private JButton btnCancel;
     private boolean successful = false;
+    private final AuthController authController = new AuthController();
 
     public EmployeeRegisterDialog(Window parent) {
         super(parent, "Registrar Nuevo Empleado", ModalityType.APPLICATION_MODAL);
         initComponents();
-        setSize(400, 320);
+        setSize(400, 380);
         setLocationRelativeTo(parent);
         setResizable(false);
     }
@@ -59,15 +62,23 @@ public class EmployeeRegisterDialog extends JDialog {
         txtPassword.setFont(fieldFont);
         form.add(txtPassword, gc);
 
+        // Role
+        gc.gridx = 0; gc.gridy = 3; gc.weightx = 0;
+        form.add(new JLabel("Rol:"), gc);
+        gc.gridx = 1; gc.weightx = 1;
+        cmbRole = new JComboBox<>(RolUser.values());
+        cmbRole.setFont(fieldFont);
+        form.add(cmbRole, gc);
+
         // Help label
-        gc.gridx = 1; gc.gridy = 3;
+        gc.gridx = 1; gc.gridy = 4;
         JLabel lblHelp = new JLabel("Mínimo 6 caracteres");
         lblHelp.setFont(new Font("Segoe UI", Font.ITALIC, 11));
         lblHelp.setForeground(Color.GRAY);
         form.add(lblHelp, gc);
 
         // Buttons
-        gc.gridy = 4; gc.gridwidth = 2;
+        gc.gridy = 5; gc.gridwidth = 2;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 10));
         btnCancel = ButtonFactory.createNeutralButton("Cancelar");
         btnCancel.addActionListener(e -> dispose());
@@ -84,53 +95,21 @@ public class EmployeeRegisterDialog extends JDialog {
         String name = txtFullName.getText().trim();
         String email = txtEmail.getText().trim();
         String password = new String(txtPassword.getPassword());
+        RolUser role = (RolUser) cmbRole.getSelectedItem();
 
-        // Validaciones básicas
-        if (name.isBlank() || email.isBlank() || password.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios", "Validación", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (!email.contains("@") || !email.contains(".")) {
-            JOptionPane.showMessageDialog(this, "Correo electrónico inválido", "Validación", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (password.length() < 6) {
-            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 6 caracteres", "Validación", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Ejecutar registro en hilo secundario para no congelar la UI
         btnRegister.setEnabled(false);
         btnRegister.setText("Registrando...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                new AuthService().registerEmployee(email, password, name);
-                return null;
+        authController.registerEmployee(email, password, name, role, this,
+            () -> {
+                successful = true;
+                dispose();
+            },
+            (msg, ex) -> {
+                btnRegister.setEnabled(true);
+                btnRegister.setText("Registrar");
             }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    successful = true;
-                    JOptionPane.showMessageDialog(EmployeeRegisterDialog.this, 
-                        "Empleado registrado exitosamente.", 
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                    dispose();
-                } catch (Exception e) {
-                    btnRegister.setEnabled(true);
-                    btnRegister.setText("Registrar");
-                    String msg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-                    JOptionPane.showMessageDialog(EmployeeRegisterDialog.this, 
-                        "Error al registrar: " + msg, "Error de Registro", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
+        );
     }
 
     public boolean isSuccessful() {

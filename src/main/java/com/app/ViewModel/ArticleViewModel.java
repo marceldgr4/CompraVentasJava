@@ -1,4 +1,4 @@
 package com.app.ViewModel;
 
-public class ArticleViewModel {
+public class ArticleViewModel extends BaseViewModel {
 }

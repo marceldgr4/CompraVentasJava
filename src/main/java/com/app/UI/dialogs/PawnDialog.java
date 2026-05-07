@@ -171,7 +171,7 @@ public class PawnDialog extends JDialog {
     private void loadArticles() {
         try {
 
-            List<Article> list =new ArticleService().getAvilableForSaleOrPawn();
+            List<Article> list =new ArticleService().getAvailableForSaleOrPawn();
             cmbArticle.removeAllItems();
             list.forEach(cmbArticle::addItem);
         } catch (Exception ex) {

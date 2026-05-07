@@ -1,6 +1,6 @@
 package com.app.UI.Frame;
 
-import com.app.Service.AuthService;
+import com.app.Controllers.AuthController;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -33,7 +33,8 @@ public class LoginFrame extends JFrame {
     private JButton          btnLogin;
     private JLabel           lblError;
 
-    private final AuthService authService = new AuthService();
+    private final AuthController authController = new AuthController();
+    private JPanel rootPanel;
 
     public LoginFrame() {
         setUndecorated(true);                    // sin barra nativa de Windows
@@ -55,6 +56,7 @@ public class LoginFrame extends JFrame {
         root.add(buildRightPanel(), BorderLayout.CENTER);
 
         // Fondo real de la ventana (para el recorte redondeado)
+        this.rootPanel = root;
         setContentPane(root);
         setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 20, 20));
     }
@@ -255,37 +257,35 @@ public class LoginFrame extends JFrame {
     // ── Lógica de login ───────────────────────────────────────────────────────
 
     private void doLogin() {
-        String email    = txtEmail.getText().trim();
-        String password = new String(txtPassword.getPassword()).trim();
+        String email = txtEmail.getText().trim();
+        String pass = new String(txtPassword.getPassword());
 
-        if (email.isEmpty() || password.isEmpty()) {
-            lblError.setText("Por favor completa todos los campos.");
+        if (email.isEmpty() || pass.isEmpty()) {
+            lblError.setText("Correo y contraseña obligatorios");
+            animateErrorLabel();
             return;
         }
-        lblError.setText(" ");
-        btnLogin.setEnabled(false);
-        btnLogin.setText("Iniciando...");
 
-        new SwingWorker<Void, Void>() {
-            @Override protected Void doInBackground() throws Exception {
-                authService.Login(email, password);
-                return null;
+        setLoading(true);
+        lblError.setText("");
+
+        authController.login(email, pass, rootPanel,
+            () -> {
+                setLoading(false);
+                dispose();
+                com.app.UI.Frame.MainFrame.getInstance().setVisible(true);
+            },
+            (msg, ex) -> {
+                setLoading(false);
+                lblError.setText(msg);
+                animateErrorLabel();
             }
-            @Override protected void done() {
-                try {
-                    get();
-                    dispose();
-                    SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
-                } catch (ExecutionException ex) {
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    lblError.setText("<html>" + cause.getMessage() + "</html>");
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("Entrar al Sistema");
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }.execute();
+        );
+    }
+
+    private void setLoading(boolean loading) {
+        btnLogin.setEnabled(!loading);
+        btnLogin.setText(loading ? "Iniciando..." : "Iniciar Sesión");
     }
 
     // ═════════════════════════════════════════════════════════════════════════

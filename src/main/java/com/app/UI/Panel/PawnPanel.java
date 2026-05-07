@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.PawnController;
 import com.app.Model.domain.Pawn;
 import com.app.Service.PawnService;
 import com.app.Service.exceptions.ServiceException;
@@ -47,7 +48,7 @@ public class PawnPanel extends JPanel {
     private JLabel            lblStatus;
     private JLabel            lblTotal;
 
-    private final PawnService pawnService = new PawnService();
+    private final PawnController pawnController = new PawnController();
 
     public PawnPanel() {
         initComponents();
@@ -172,26 +173,39 @@ public class PawnPanel extends JPanel {
 
     private void loadData() {
         lblStatus.setText("Cargando...");
-        tableModel.setRowCount(0);
-        new LoadPawnsTask().execute();
+        pawnController.loadAll(
+            list -> {
+                populateTable(list);
+                lblStatus.setText(list.size() + " empeño(s) cargado(s)");
+                refreshTotalValue();
+            },
+            (msg, ex) -> showError("Error al cargar: " + msg)
+        );
     }
 
     private void applyFilter() {
         String filter = (String) cmbFilter.getSelectedItem();
-        if (filter == null || "Todos".equals(filter)) {
-            loadData();
-            return;
-        }
         lblStatus.setText("Filtrando: " + filter);
-        tableModel.setRowCount(0);
-        new FilterPawnsTask(filter).execute();
+        pawnController.filter(filter,
+            list -> {
+                populateTable(list);
+                lblStatus.setText(list.size() + " empeño(s)");
+                refreshTotalValue();
+            },
+            (msg, ex) -> showError("Error de filtrado: " + msg)
+        );
     }
 
     private void openNewDialog() {
         PawnDialog dlg = new PawnDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) new CreatePawnTask(dlg.getExistingPawn()).execute();
+        if (dlg.isConfirmed()) {
+            pawnController.create(dlg.getExistingPawn(), this,
+                this::loadData,
+                (msg, ex) -> {}
+            );
+        }
     }
 
     private void openEditDialog() {
@@ -200,34 +214,42 @@ public class PawnPanel extends JPanel {
         PawnDialog dlg = new PawnDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), selected);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) new UpdatePawnTask(dlg.getExistingPawn()).execute();
+        if (dlg.isConfirmed()) {
+            pawnController.update(dlg.getExistingPawn(), this,
+                this::loadData,
+                (msg, ex) -> {}
+            );
+        }
     }
 
     private void doMarkReturned() {
         Pawn selected = getSelectedPawn();
         if (selected == null) { showWarning("Seleccione un empeño para marcar como devuelto."); return; }
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Marcar empeño #" + selected.getId() + " como devuelto?",
-                "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (ok == JOptionPane.YES_OPTION) new MarkReturnedTask(selected.getId()).execute();
+        
+        pawnController.markAsReturned(selected.getId(), this,
+            this::loadData,
+            (msg, ex) -> {}
+        );
     }
 
     private void doDelete() {
         Pawn selected = getSelectedPawn();
         if (selected == null) { showWarning("Seleccione un empeño para eliminar."); return; }
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar empeño #" + selected.getId() + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (ok == JOptionPane.YES_OPTION) new DeleteTask(selected.getId()).execute();
+        
+        pawnController.delete(selected.getId(), this,
+            this::loadData,
+            (msg, ex) -> {}
+        );
     }
 
     private void doProcessOverdue() {
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Procesar todos los empeños vencidos? Esto los marcará como expirados.",
-                "Confirmar", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (ok == JOptionPane.YES_OPTION) new ProcessOverdueTask().execute();
+        pawnController.processOverdue(this,
+            n -> {
+                loadData();
+                showSuccess(n + " empeño(s) vencido(s) procesado(s).");
+            },
+            (msg, ex) -> showError("Error al procesar: " + msg)
+        );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -236,8 +258,14 @@ public class PawnPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) return null;
         int id = (int) tableModel.getValueAt(row, 0);
-        try { return pawnService.getById(id).orElse(null); }
-        catch (ServiceException e) { showError("Error al cargar empeño: " + e.getMessage()); return null; }
+        
+        // Using service synchronously for UI selection context - ideally should be async or from controller cache
+        try {
+            return new PawnService().getById(id).orElse(null);
+        } catch (ServiceException e) {
+            showError("Error al cargar empeño: " + e.getMessage());
+            return null;
+        }
     }
 
     private void populateTable(List<Pawn> pawns) {
@@ -259,96 +287,13 @@ public class PawnPanel extends JPanel {
     }
 
     private void refreshTotalValue() {
-        try {
-            var total = pawnService.getTotalActiveValues();
-            lblTotal.setText("Valor total activo: $" + total);
-        } catch (ServiceException e) {
-            lblTotal.setText("Total: Error");
-        }
+        pawnController.getTotalActiveValue(
+            total -> lblTotal.setText("Valor total activo: $" + total),
+            (msg, ex) -> lblTotal.setText("Total: Error")
+        );
     }
 
     private void showError  (String msg) { JOptionPane.showMessageDialog(this, msg, "Error",   JOptionPane.ERROR_MESSAGE); }
     private void showWarning(String msg) { JOptionPane.showMessageDialog(this, msg, "Advertencia", JOptionPane.WARNING_MESSAGE); }
     private void showSuccess(String msg) { JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE); }
-
-    // ── SwingWorker tasks ─────────────────────────────────────────────────────
-
-    private class LoadPawnsTask extends SwingWorker<List<Pawn>, Void> {
-        @Override protected List<Pawn> doInBackground() throws Exception { return pawnService.getAll(); }
-        @Override protected void done() {
-            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " empeño(s) cargado(s)"); refreshTotalValue(); }
-            catch (ExecutionException ex) { showError("Error al cargar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class FilterPawnsTask extends SwingWorker<List<Pawn>, Void> {
-        private final String filter;
-        FilterPawnsTask(String f) { this.filter = f; }
-        @Override protected List<Pawn> doInBackground() throws Exception {
-            return switch (filter) {
-                case "Activos"  -> pawnService.getActivePawns();
-                case "Vencidos" -> pawnService.getOverduePawns();
-                default        -> pawnService.getAll();
-            };
-        }
-        @Override protected void done() {
-            try { List<Pawn> list = get(); populateTable(list); lblStatus.setText(list.size() + " empeño(s)"); refreshTotalValue(); }
-            catch (ExecutionException ex) { showError("Error de filtrado: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class CreatePawnTask extends SwingWorker<Void, Void> {
-        private final Pawn pawn;
-        CreatePawnTask(Pawn p) { this.pawn = p; }
-        @Override protected Void doInBackground() throws Exception { pawnService.create(pawn); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); showSuccess("Empeño creado."); }
-            catch (ExecutionException ex) { showError("Error al crear: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class UpdatePawnTask extends SwingWorker<Void, Void> {
-        private final Pawn pawn;
-        UpdatePawnTask(Pawn p) { this.pawn = p; }
-        @Override protected Void doInBackground() throws Exception { pawnService.update(pawn); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); showSuccess("Empeño actualizado."); }
-            catch (ExecutionException ex) { showError("Error al actualizar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class DeleteTask extends SwingWorker<Void, Void> {
-        private final int id;
-        DeleteTask(int id) { this.id = id; }
-        @Override protected Void doInBackground() throws Exception { pawnService.delete(id); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); showSuccess("Empeño eliminado."); }
-            catch (ExecutionException ex) { showError("Error al eliminar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class MarkReturnedTask extends SwingWorker<Void, Void> {
-        private final int id;
-        MarkReturnedTask(int id) { this.id = id; }
-        @Override protected Void doInBackground() throws Exception { pawnService.markAsReturned(id); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); showSuccess("Empeño marcado como devuelto."); }
-            catch (ExecutionException ex) { showError("Error al marcar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class ProcessOverdueTask extends SwingWorker<Integer, Void> {
-        @Override protected Integer doInBackground() throws Exception { return pawnService.processOverduePawns(); }
-        @Override protected void done() {
-            try { int n = get(); loadData(); showSuccess(n + " empeño(s) vencido(s) procesado(s)."); }
-            catch (ExecutionException ex) { showError("Error al procesar: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
 }

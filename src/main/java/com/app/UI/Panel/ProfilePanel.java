@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.ProfileController;
 import com.app.Model.domain.Profile;
 import com.app.Service.ProfileService;
 import com.app.UI.Components.ButtonFactory;
@@ -18,6 +19,7 @@ public class ProfilePanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private JLabel lblStatus;
+    private final ProfileController profileController = new ProfileController();
 
     public ProfilePanel() {
         if (!SessionManager.isAdmin()) {
@@ -76,21 +78,22 @@ public class ProfilePanel extends JPanel {
 
     private void loadProfiles() {
         tableModel.setRowCount(0);
-        try {
-            java.util.List<Profile> profiles = new ProfileService().findAll();
-            for (Profile p : profiles) {
-                 tableModel.addRow(new Object[]{
-                    p.getId(), 
-                    p.getFullName(), 
-                    p.getRol() != null ? p.getRol().name() : "N/A", 
-                    p.isActive() ? "ACTIVO" : "INACTIVO", 
-                    "N/A"
-                 });
-            }
-            lblStatus.setText("Total: " + profiles.size() + " perfiles encontrados.");
-        } catch (Exception e) {
-            lblStatus.setText("Error al cargar perfiles: " + e.getMessage());
-        }
+        lblStatus.setText("Cargando perfiles...");
+        profileController.loadAll(this,
+            profiles -> {
+                for (Profile p : profiles) {
+                    tableModel.addRow(new Object[]{
+                       p.getId(), 
+                       p.getFullName(), 
+                       p.getRol() != null ? p.getRol().name() : "N/A", 
+                       p.isActive() ? "ACTIVO" : "INACTIVO", 
+                       "N/A"
+                    });
+               }
+               lblStatus.setText("Total: " + profiles.size() + " perfiles encontrados.");
+            },
+            (msg, ex) -> lblStatus.setText("Error al cargar perfiles: " + msg)
+        );
     }
 
     private void showCreateProfileDialog() {

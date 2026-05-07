@@ -1,6 +1,7 @@
 package com.app.UI.Panel;
 
 import Infrastructure.security.SessionManager;
+import com.app.Controllers.ClienteController;
 import com.app.Model.domain.Cliente;
 import com.app.Service.ClienteService;
 import com.app.Service.exceptions.ServiceException;
@@ -22,7 +23,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class ClientePanel extends JPanel {
 
-    private final ClienteService clienteService = new ClienteService();
+    private final ClienteController clienteController = new ClienteController();
 
     private DefaultTableModel tableModel;
     private JTable            table;
@@ -119,21 +120,31 @@ public class ClientePanel extends JPanel {
 
     private void loadData() {
         lblStatus.setText("Cargando...");
-        new LoadTask().execute();
+        clienteController.loadAll(this,
+            this::updateTable,
+            (msg, ex) -> lblStatus.setText("Error al cargar datos: " + msg)
+        );
     }
 
     private void searchClientes() {
         String term = txtSearch.getText().trim();
-        if (term.isEmpty()) { loadData(); return; }
         lblStatus.setText("Buscando '" + term + "'...");
-        new SearchTask(term).execute();
+        clienteController.search(term, this,
+            this::updateTable,
+            (msg, ex) -> lblStatus.setText("Error en búsqueda: " + msg)
+        );
     }
 
     private void showAddDialog() {
         ClienteDialog dlg = new ClienteDialog(
                 (JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) new CreateTask(dlg.getCliente()).execute();
+        if (dlg.isConfirmed()) {
+            clienteController.create(dlg.getCliente(), this,
+                this::loadData,
+                (msg, ex) -> {} // Error already shown by controller
+            );
+        }
     }
 
     private void showEditDialog() {
@@ -149,7 +160,10 @@ public class ClientePanel extends JPanel {
         if (dlg.isConfirmed()) {
             Cliente updated = dlg.getCliente();
             updated.setId(selected.getId());
-            new UpdateTask(updated).execute();
+            clienteController.update(updated, this,
+                this::loadData,
+                (msg, ex) -> {} // Error already shown by controller
+            );
         }
     }
 
@@ -160,11 +174,11 @@ public class ClientePanel extends JPanel {
                     "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int ok = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar a " + selected.getFullName() + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (ok == JOptionPane.YES_OPTION) new DeleteTask(selected.getId()).execute();
+        
+        clienteController.delete(selected.getId(), selected.getFullName(), this,
+            this::loadData,
+            (msg, ex) -> {} // Error already shown by controller
+        );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -203,60 +217,5 @@ public class ClientePanel extends JPanel {
             });
         }
         lblStatus.setText("Total: " + clientes.size() + " clientes encontrados.");
-    }
-
-    // ── SwingWorker tasks ─────────────────────────────────────────────────────
-
-    private class LoadTask extends SwingWorker<List<Cliente>, Void> {
-        @Override protected List<Cliente> doInBackground() throws Exception { return clienteService.getAll(); }
-        @Override protected void done() {
-            try { updateTable(get()); }
-            catch (ExecutionException ex) { lblStatus.setText("Error al cargar datos: " + ex.getCause().getMessage()); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class SearchTask extends SwingWorker<List<Cliente>, Void> {
-        private final String term;
-        SearchTask(String t) { this.term = t; }
-        @Override protected List<Cliente> doInBackground() throws Exception { return clienteService.search(term); }
-        @Override protected void done() {
-            try { updateTable(get()); }
-            catch (ExecutionException ex) { lblStatus.setText("Error en búsqueda."); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class CreateTask extends SwingWorker<Void, Void> {
-        private final Cliente cliente;
-        CreateTask(Cliente c) { this.cliente = c; }
-        @Override protected Void doInBackground() throws Exception { clienteService.create(cliente); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); JOptionPane.showMessageDialog(ClientePanel.this, "Cliente creado.", "OK", JOptionPane.INFORMATION_MESSAGE); }
-            catch (ExecutionException ex) { JOptionPane.showMessageDialog(ClientePanel.this, "Error: " + ex.getCause().getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class UpdateTask extends SwingWorker<Void, Void> {
-        private final Cliente cliente;
-        UpdateTask(Cliente c) { this.cliente = c; }
-        @Override protected Void doInBackground() throws Exception { clienteService.update(cliente); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); JOptionPane.showMessageDialog(ClientePanel.this, "Cliente actualizado.", "OK", JOptionPane.INFORMATION_MESSAGE); }
-            catch (ExecutionException ex) { JOptionPane.showMessageDialog(ClientePanel.this, "Error: " + ex.getCause().getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
-    }
-
-    private class DeleteTask extends SwingWorker<Void, Void> {
-        private final int id;
-        DeleteTask(int id) { this.id = id; }
-        @Override protected Void doInBackground() throws Exception { clienteService.softDelete(id); return null; }
-        @Override protected void done() {
-            try { get(); loadData(); JOptionPane.showMessageDialog(ClientePanel.this, "Cliente eliminado.", "OK", JOptionPane.INFORMATION_MESSAGE); }
-            catch (ExecutionException ex) { JOptionPane.showMessageDialog(ClientePanel.this, "Error: " + ex.getCause().getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
-            catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-        }
     }
 }

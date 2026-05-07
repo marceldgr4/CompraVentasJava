@@ -92,14 +92,14 @@ public class AuthService {
 
 
     // Register the employees(only admin)
-    public void registerEmployee(String email, String password, String full_name) throws AuthException {
+    public void registerEmployee(String email, String password, String full_name, RolUser role) throws AuthException {
         if (!SessionManager.isAdmin()) {
             throw new AuthException("Solo el administrador puede registrar empleados");
         }
 
         String body = String.format(
-                "{\"email\":\"%s\",\"password\":\"%s\",\"data\":{\"full_name\":\"%s\",\"rol\":\"Empleado\"}}",
-                email, password, full_name
+                "{\"email\":\"%s\",\"password\":\"%s\",\"data\":{\"full_name\":\"%s\",\"rol\":\"%s\"}}",
+                email, password, full_name, role.name()
         );
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/auth/v1/signup"))
