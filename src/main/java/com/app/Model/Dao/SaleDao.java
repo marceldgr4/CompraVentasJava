@@ -52,13 +52,15 @@ public class SaleDao extends BaseDao<Sale> {
         return sale;
     }
 
+    private static final String SELECT_COLS = "id, employee_id, cliente_id, cliente_nombre_anon, sale_date, notes";
+
     public Optional<Sale> findById(int id) throws SQLException {
-        String sql = "SELECT * FROM public.sales WHERE id = ?";
+        String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE id = ?";
         return executeSingle(sql, ps -> ps.setInt(1, id), SaleDao::mapRow);
     }
 
     public List<Sale> findAll() throws SQLException {
-        String sql = "SELECT * FROM public.sales ORDER BY id DESC";
+        String sql = "SELECT " + SELECT_COLS + " FROM public.sales ORDER BY id DESC";
         return executeList(sql, null, rs -> {
             Sale sale = mapRow(rs);
             try (Connection con = ConnectionPool.getConnection()) {
@@ -69,17 +71,17 @@ public class SaleDao extends BaseDao<Sale> {
     }
 
     public List<Sale> findClientes(int clienteId) throws SQLException {
-        String sql = "SELECT * FROM public.sales WHERE cliente_id = ? ORDER BY sale_date DESC";
+        String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE cliente_id = ? ORDER BY sale_date DESC";
         return findByParam(sql, ps -> ps.setInt(1, clienteId));
     }
 
     public List<Sale> findByEmployee(String employeeId) throws SQLException {
-        String sql = "SELECT * FROM public.sales WHERE employee_id = ?::uuid ORDER BY sale_date DESC";
+        String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE employee_id = ?::uuid ORDER BY sale_date DESC";
         return findByParam(sql, ps -> ps.setString(1, employeeId));
     }
 
     public List<Sale> findByDateRange(LocalDate from, LocalDate to) throws SQLException {
-        String sql = "SELECT * FROM public.sales WHERE sale_date::date BETWEEN ? AND ? ORDER BY sale_date DESC";
+        String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE sale_date::date BETWEEN ? AND ? ORDER BY sale_date DESC";
         return executeList(sql, ps -> {
             ps.setDate(1, Date.valueOf(from));
             ps.setDate(2, Date.valueOf(to));
