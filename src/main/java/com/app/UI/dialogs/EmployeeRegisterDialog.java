@@ -18,7 +18,6 @@ public class EmployeeRegisterDialog extends BaseDialog {
     private StyledCombo<RolUser> cmbRole;
     private JButton btnRegister;
 
-    private boolean successful = false;
     private final AuthController authController = new AuthController();
 
     public EmployeeRegisterDialog(Window parent) {
@@ -100,7 +99,7 @@ public class EmployeeRegisterDialog extends BaseDialog {
 
         authController.registerEmployee(email, password, name, role, this,
             () -> {
-                successful = true;
+                confirmed = true;
                 dispose();
             },
             (msg, ex) -> {
@@ -111,5 +110,4 @@ public class EmployeeRegisterDialog extends BaseDialog {
         );
     }
 
-    public boolean isSuccessful() { return successful; }
 }

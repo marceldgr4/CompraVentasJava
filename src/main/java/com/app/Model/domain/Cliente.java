@@ -3,7 +3,7 @@ package com.app.Model.domain;
 import com.app.Model.Enum.ClienteStatus;
 import com.app.Model.Enum.RegistrationType;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * Representa un cliente del sistema de compraventa/empeño.
@@ -19,10 +19,8 @@ public class Cliente {
     private String address;
     private String city;
     private ClienteStatus status;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
-
-    //---nuevos----
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private RegistrationType registrationType;
 
     /**
@@ -31,7 +29,7 @@ public class Cliente {
     public Cliente(int id, String cedula, String firstName, String lastName,
                    String email, String phone, String address, String city,
                    ClienteStatus status, RegistrationType registrationType,
-                   Timestamp createdAt, Timestamp updatedAt) {
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id        = id;
         this.cedula    = validateCedula(cedula);
         this.firstName = firstName;
@@ -45,6 +43,12 @@ public class Cliente {
         this.registrationType = registrationType != null ? registrationType : RegistrationType.COMPLETO;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    // Constructor para mapeo desde UI/Tablas
+    public Cliente(int id, String cedula, String firstName, String lastName, String email, String phone, String address, String city) {
+        this(id, cedula, firstName, lastName, email, phone, address, city,
+                ClienteStatus.Activo, RegistrationType.COMPLETO, null, null);
     }
 
     // Constructor para crear cliente COMPLETO desde formulario
@@ -76,47 +80,23 @@ public class Cliente {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public ClienteStatus getStatus() {
-        return status;
-    }
+    public ClienteStatus getStatus() { return status; }
+    public void setStatus(ClienteStatus status) { this.status = status; }
 
-    public void setStatus(ClienteStatus status) {
-        this.status = status;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
+    public RegistrationType getRegistrationType() { return registrationType; }
+    public void setRegistrationType(RegistrationType registrationType) { this.registrationType = registrationType; }
 
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public RegistrationType getRegistrationType() {
-        return registrationType;
-    }
-
-    public void setRegistrationType(RegistrationType registrationType) {
-        this.registrationType = registrationType;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getCedula() {
-        return cedula;
-    }
-
-    public void setCedula(String cedula) {
-        this.cedula = validateCedula(cedula);
-    }
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = validateCedula(cedula); }
 
     private String validateCedula(String val) {
         if (val == null) return null;
@@ -126,18 +106,12 @@ public class Cliente {
         return val;
     }
 
-    public String getCity() {
-        return city;
-    }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
     // ---- Utilidades -----------------------------------------------
 
-    public boolean isActive() {
-        return status == ClienteStatus.Activo;
-    }
+    public boolean isActive() { return status == ClienteStatus.Activo; }
 
     public boolean isRegistrationComplete() { return registrationType == RegistrationType.COMPLETO; }
 
@@ -147,8 +121,5 @@ public class Cliente {
     }
 
     @Override
-    public String toString() {
-        return getFullName();
-    }
-
+    public String toString() { return getFullName(); }
 }

@@ -12,15 +12,13 @@ public class EmployeeService {
 
     public Employee findById(String id) throws ServiceException {
         try {
-            Employee employee = employeeDAO.findById(id);
-            if (employee == null) {
-                throw new ServiceException("No se encontró el empleado con ID: " + id);
-            }
-            return employee;
+            return employeeDAO.findById(id)
+                    .orElseThrow(() -> new ServiceException("No se encontró el empleado con ID: " + id));
         } catch (SQLException e) {
             throw new ServiceException("Error al buscar empleado: " + e.getMessage());
         }
     }
+
 
     public List<Employee> findAll() throws ServiceException {
         try {

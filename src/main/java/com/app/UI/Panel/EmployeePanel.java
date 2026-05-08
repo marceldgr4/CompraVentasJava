@@ -8,22 +8,15 @@ import com.app.UI.dialogs.EmployeeEditDialog;
 import com.app.UI.dialogs.EmployeeRegisterDialog;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Panel CRUD para la gestión de Empleados.
- * Solo accesible por Administradores. (HU-Admin)
- */
-public class EmployeePanel extends JPanel {
+public class EmployeePanel extends BasePanel {
 
-    private static final Color PANEL_BG  = new Color(245, 247, 250);
-    private static final Color HEADER_FG = new Color(30, 42, 74);
-
+    private static final String[] COLUMNS = {"ID", "Email", "Nombre Completo", "Rol", "Estado"};
+    
     private DefaultTableModel tableModel;
     private JTable table;
     private JLabel lblStatus;
@@ -32,226 +25,126 @@ public class EmployeePanel extends JPanel {
     private List<Employee> currentEmployees = new ArrayList<>();
 
     public EmployeePanel() {
+        super();
+        if (SessionManager.isAdmin()) {
+            refresh();
+        }
+    }
+
+    @Override
+    protected void initComponents() {
         if (!SessionManager.isAdmin()) {
             setLayout(new BorderLayout());
-            JLabel lbl = new JLabel("⛔ Acceso Denegado: Solo administradores pueden ver este panel.",
-                    SwingConstants.CENTER);
+            JLabel lbl = new JLabel("⛔ Acceso Denegado: Solo administradores pueden ver este panel.", SwingConstants.CENTER);
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
             lbl.setForeground(new Color(180, 40, 40));
             add(lbl, BorderLayout.CENTER);
             return;
         }
-        initComponents();
-        loadEmployees();
-    }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
+        // Header
+        JPanel topPanel = new JPanel(new BorderLayout(0, 12));
+        topPanel.setOpaque(false);
+        topPanel.add(buildHeader("👔  Gestión de Empleados", "Administre los accesos y roles del personal del sistema"), BorderLayout.NORTH);
 
-    private void initComponents() {
-        setLayout(new BorderLayout(0, 16));
-        setBorder(new EmptyBorder(20, 24, 20, 24));
-        setBackground(PANEL_BG);
-
-        add(buildHeader(),  BorderLayout.NORTH);
-        add(buildTable(),   BorderLayout.CENTER);
-        add(buildStatus(),  BorderLayout.SOUTH);
-    }
-
-    private JPanel buildHeader() {
-        JPanel header = new JPanel(new BorderLayout(12, 0));
-        header.setOpaque(false);
-
-        // Título
-        JPanel titleArea = new JPanel();
-        titleArea.setOpaque(false);
-        titleArea.setLayout(new BoxLayout(titleArea, BoxLayout.Y_AXIS));
-
-        JLabel lblTitle = new JLabel("👔  Gestión de Empleados");
-        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 22));
-        lblTitle.setForeground(HEADER_FG);
-
-        JLabel lblSub = new JLabel("Administre los accesos y roles del personal del sistema");
-        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblSub.setForeground(new Color(120, 130, 155));
-
-        titleArea.add(lblTitle);
-        titleArea.add(Box.createVerticalStrut(3));
-        titleArea.add(lblSub);
-
-        // Botones
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        btnPanel.setOpaque(false);
-
-        JButton btnRefresh = ButtonFactory.createNeutralButton("↻ Actualizar");
-        JButton btnView    = ButtonFactory.createNeutralButton("Ver Detalle");
+        JPanel actionsBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actionsBar.setOpaque(false);
+        
+        JButton btnRefresh = ButtonFactory.createNeutralButton("↻");
         JButton btnEdit    = ButtonFactory.createPrimaryButton("✏ Editar");
-        JButton btnToggle  = ButtonFactory.createNeutralButton("⏯ Activar/Desactivar");
+        JButton btnToggle  = ButtonFactory.createNeutralButton("Activar/Desactivar");
         JButton btnDelete  = ButtonFactory.createDangerButton("🗑 Eliminar");
         JButton btnAdd     = ButtonFactory.createSuccessButton("+ Nuevo Empleado");
 
-        btnRefresh.addActionListener(e -> loadEmployees());
-        btnView   .addActionListener(e -> viewEmployee());
+        btnRefresh.addActionListener(e -> refresh());
         btnEdit   .addActionListener(e -> editEmployee());
         btnToggle .addActionListener(e -> toggleActive());
         btnDelete .addActionListener(e -> deleteEmployee());
         btnAdd    .addActionListener(e -> showRegisterDialog());
 
-        btnPanel.add(btnRefresh);
-        btnPanel.add(btnView);
-        btnPanel.add(btnEdit);
-        btnPanel.add(btnToggle);
-        btnPanel.add(btnDelete);
-        btnPanel.add(btnAdd);
+        actionsBar.add(btnRefresh);
+        actionsBar.add(btnEdit);
+        actionsBar.add(btnToggle);
+        actionsBar.add(btnDelete);
+        actionsBar.add(btnAdd);
+        
+        topPanel.add(actionsBar, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
 
-        header.add(titleArea, BorderLayout.WEST);
-        header.add(btnPanel,  BorderLayout.EAST);
-        return header;
-    }
-
-    private JScrollPane buildTable() {
-        String[] columns = {"ID (8 car.)", "Nombre Completo", "Email", "Rol", "Estado"};
-        tableModel = new DefaultTableModel(columns, 0) {
+        // Table
+        tableModel = new DefaultTableModel(COLUMNS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.setRowHeight(36);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new Color(235, 240, 250));
-        table.setGridColor(new Color(230, 235, 245));
-        table.setShowVerticalLines(false);
-        table.setFillsViewportHeight(true);
-        table.getColumnModel().getColumn(0).setMaxWidth(100);
-        table.getColumnModel().getColumn(3).setMaxWidth(140);
-        table.getColumnModel().getColumn(4).setMaxWidth(100);
+        styleTable(table);
+        add(createTableScroll(table), BorderLayout.CENTER);
 
-        // Renderer para colorear estado
-        table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable t, Object val,
-                    boolean sel, boolean foc, int row, int col) {
-                super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-                boolean active = "ACTIVO".equals(val);
-                setForeground(sel ? Color.WHITE : (active ? new Color(30, 130, 50) : new Color(180, 40, 40)));
-                setFont(new Font("Segoe UI", Font.BOLD, 12));
-                setHorizontalAlignment(CENTER);
-                return this;
-            }
-        });
-
-        JScrollPane sp = new JScrollPane(table);
-        sp.setBorder(BorderFactory.createLineBorder(new Color(210, 220, 235)));
-        sp.getViewport().setBackground(Color.WHITE);
-        return sp;
-    }
-
-    private JLabel buildStatus() {
-        lblStatus = new JLabel("Cargando empleados...");
+        // Status
+        lblStatus = new JLabel("Listo");
         lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblStatus.setForeground(Color.GRAY);
-        lblStatus.setBorder(new EmptyBorder(4, 0, 0, 0));
-        return lblStatus;
+        lblStatus.setForeground(SUBTITLE_FG);
+        add(lblStatus, BorderLayout.SOUTH);
     }
 
-    // ── Datos ─────────────────────────────────────────────────────────────────
-
-    private void loadEmployees() {
-        tableModel.setRowCount(0);
+    @Override
+    public void refresh() {
         lblStatus.setText("Cargando empleados...");
-        employeeController.loadAll(this,
-            employees -> {
-                currentEmployees = employees;
-                for (Employee e : employees) {
+        employeeController.loadAll(this, 
+            list -> {
+                currentEmployees = list;
+                tableModel.setRowCount(0);
+                for (Employee e : list) {
                     tableModel.addRow(new Object[]{
-                        e.getId() != null && e.getId().length() >= 8
-                                ? e.getId().substring(0, 8) + "…" : e.getId(),
-                        e.getFullName(),
-                        e.getEmail(),
-                        e.getRol() != null ? e.getRol().name() : "N/A",
-                        e.isActive() ? "ACTIVO" : "INACTIVO"
+                        e.getId(), e.getEmail(), e.getFullName(), e.getRol(),
+                        e.isActive() ? "✅ Activo" : "❌ Inactivo"
                     });
                 }
-                lblStatus.setText("Total: " + employees.size() + " empleado(s) registrado(s).");
+                lblStatus.setText(list.size() + " empleados registrados");
             },
-            (msg, ex) -> lblStatus.setText("Error al cargar: " + msg)
+            (msg, ex) -> showError(msg)
         );
     }
 
-    // ── Acciones ──────────────────────────────────────────────────────────────
+    private void showRegisterDialog() {
+        EmployeeRegisterDialog dlg = new EmployeeRegisterDialog((JFrame) SwingUtilities.getWindowAncestor(this));
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) refresh();
+    }
+
+    private void editEmployee() {
+        Employee selected = getSelectedEmployee();
+        if (selected == null) return;
+
+        EmployeeEditDialog dlg = new EmployeeEditDialog((JFrame) SwingUtilities.getWindowAncestor(this), selected);
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) refresh();
+    }
+
+    private void toggleActive() {
+        Employee selected = getSelectedEmployee();
+        if (selected == null) return;
+
+        boolean nextState = !selected.isActive();
+        employeeController.setActive(selected.getId(), nextState, selected.getFullName(), this, this::refresh, (m, e) -> showError(m));
+    }
+
+    private void deleteEmployee() {
+        Employee selected = getSelectedEmployee();
+        if (selected == null) return;
+
+        employeeController.delete(selected.getId(), this, this::refresh, (m, e) -> showError(m));
+    }
 
     private Employee getSelectedEmployee() {
         int row = table.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor seleccione un empleado de la lista.",
-                    "Selección requerida", JOptionPane.WARNING_MESSAGE);
+            showWarning("Seleccione un empleado de la lista.");
             return null;
         }
-        return currentEmployees.get(row);
+        String id = (String) tableModel.getValueAt(row, 0);
+        return currentEmployees.stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
-
-    private void showRegisterDialog() {
-        Window parent = SwingUtilities.getWindowAncestor(this);
-        EmployeeRegisterDialog dlg = new EmployeeRegisterDialog(parent);
-        dlg.setVisible(true);
-        if (dlg.isSuccessful()) {
-            loadEmployees();
-        }
-    }
-
-    private void viewEmployee() {
-        Employee e = getSelectedEmployee();
-        if (e == null) return;
-        String info = String.format(
-                "<html><body style='font-family:Segoe UI;padding:8px'>" +
-                "<b>ID:</b> %s<br><br>" +
-                "<b>Nombre:</b> %s<br>" +
-                "<b>Email:</b> %s<br>" +
-                "<b>Rol:</b> %s<br>" +
-                "<b>Estado:</b> %s" +
-                "</body></html>",
-                e.getId(),
-                e.getFullName(),
-                e.getEmail(),
-                e.getRol() != null ? e.getRol().name() : "N/A",
-                e.isActive() ? "✅ Activo" : "❌ Inactivo"
-        );
-        JOptionPane.showMessageDialog(this, info,
-                "Detalle del Empleado", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void editEmployee() {
-        Employee e = getSelectedEmployee();
-        if (e == null) return;
-
-        Window parent = SwingUtilities.getWindowAncestor(this);
-        EmployeeEditDialog dlg = new EmployeeEditDialog(parent, e);
-        dlg.setVisible(true);
-
-        if (dlg.isConfirmed()) {
-            employeeController.update(dlg.getEmployee(), this, this::loadEmployees,
-                    (msg, ex) -> JOptionPane.showMessageDialog(this,
-                            "Error al actualizar: " + msg, "Error", JOptionPane.ERROR_MESSAGE));
-        }
-    }
-
-    private void toggleActive() {
-        Employee e = getSelectedEmployee();
-        if (e == null) return;
-        employeeController.setActive(e.getId(), !e.isActive(), e.getFullName(), this,
-                this::loadEmployees,
-                (msg, ex) -> JOptionPane.showMessageDialog(this,
-                        "Error: " + msg, "Error", JOptionPane.ERROR_MESSAGE));
-    }
-
-    private void deleteEmployee() {
-        Employee e = getSelectedEmployee();
-        if (e == null) return;
-        employeeController.delete(e.getId(), this, this::loadEmployees,
-                (msg, ex) -> JOptionPane.showMessageDialog(this,
-                        "Error: " + msg, "Error", JOptionPane.ERROR_MESSAGE));
-    }
-
-    /** Recarga la tabla cuando el panel vuelve a ser visible. */
-    public void refresh() { loadEmployees(); }
 }

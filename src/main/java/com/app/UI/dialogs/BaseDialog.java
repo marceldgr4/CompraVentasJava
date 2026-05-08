@@ -34,6 +34,7 @@ public abstract class BaseDialog extends JDialog {
 
     private final JPanel bodyContainer;
     private final JPanel footerContainer;
+    protected boolean confirmed = false;
 
     /**
      * @param parent ventana padre
@@ -157,6 +158,10 @@ public abstract class BaseDialog extends JDialog {
      */
     protected void onCancel() {
         dispose();
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
     }
 
     // ── Helpers de construcción ───────────────────────────────────────────────
