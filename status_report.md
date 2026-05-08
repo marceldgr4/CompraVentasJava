@@ -7,8 +7,8 @@ Basado en la documentación v5, v5.1 y v6, a continuación se presenta el estado
 | Módulo | Funcionalidad | Descripción Técnica |
 | :--- | :--- | :--- |
 | **Base de Datos** | Infraestructura v6.1 | Esquema completo con Triggers, Procedimientos Almacenados y Auditoría. |
-| **Seguridad** | Perfil Automático | Creación automática de perfil al registrarse en Supabase Auth vía Trigger. |
-| **Seguridad** | Gestión de Sesión | `SessionManager` thread-safe para manejo de tokens JWT en memoria. |
+| **Seguridad** | Empleado Automático | Creación automática de registro en `employees` al registrarse en Supabase Auth. |
+| **Seguridad** | Gestión de Sesión | `SessionManager` thread-safe para manejo de tokens JWT y UUID de empleados. |
 | **Ventas** | Venta Atómica | Uso de `register_sale()` (PostgreSQL) para asegurar integridad de stock. |
 | **Ventas** | Ventas Anónimas | Soporte para campo `p_nombre_anon` cuando no hay cliente registrado. |
 | **Inventario** | Modelos Extendidos | `Article` ya soporta `source_type`, `item_state` y `purchase_price`. |
