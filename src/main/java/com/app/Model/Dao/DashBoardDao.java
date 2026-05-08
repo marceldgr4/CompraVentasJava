@@ -28,7 +28,7 @@ public class DashBoardDao {
                         rs.getInt("total_articles_stock"),    // nombre correcto en v6
                         rs.getInt("total_clientes_activos"),  // nombre correcto en v6
                         rs.getBigDecimal("total_active_pawn_value"),
-                        rs.getInt("incomplete_profiles"),
+                        rs.getInt("incomplete_clients"),
                         rs.getInt("purchases_today")
                 );
             }
@@ -76,7 +76,7 @@ public class DashBoardDao {
                     (SELECT cnt FROM articles_stock) AS total_articles_stock,
                     (SELECT cnt FROM active_clients) AS total_clientes_activos,
                     (SELECT total_value FROM active_pawns) AS total_active_pawn_value,
-                    (SELECT cnt FROM incomplete)     AS incomplete_profiles,
+                    (SELECT cnt FROM incomplete)     AS incomplete_clients,
                     (SELECT COUNT(*) FROM public.purchases WHERE purchase_date::date = CURRENT_DATE) AS purchases_today
                 """;
         try (PreparedStatement ps = con.prepareStatement(sql);
@@ -88,11 +88,12 @@ public class DashBoardDao {
                         rs.getInt("total_articles_stock"),
                         rs.getInt("total_clientes_activos"),
                         rs.getBigDecimal("total_active_pawn_value"),
-                        rs.getInt("incomplete_profiles"),
+                        rs.getInt("incomplete_clients"),
                         rs.getInt("purchases_today")
                 );
             }
         }
+
         return new DashBoardDto();
     }
 }

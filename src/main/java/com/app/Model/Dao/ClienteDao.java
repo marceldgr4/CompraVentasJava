@@ -101,7 +101,7 @@ public class ClienteDao {
         return Optional.empty();
     }
 
-    public List<Cliente> findIncompleteProfiles() throws SQLException {
+    public List<Cliente> findIncompleteClients() throws SQLException {
         String sql = "SELECT " + SELECT_COLS + " FROM public.clientes " +
                 "WHERE registration_type = 'RAPIDO'::registration_type " +
                 "AND status = 'Activo'::cliente_status " +
@@ -270,6 +270,7 @@ public class ClienteDao {
                 rs.getTimestamp("updated_at")
         );
     }
+
 
     private String sanitizePhone(String phone) {
         if (phone == null) return null;

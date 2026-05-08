@@ -82,9 +82,10 @@ public class SaleViewModel extends BaseViewModel {
             throw new ServiceException("Cart is empty, add article ");
         }
         Sale sale = new Sale(
-                SessionManager.getProfileId(),
+                SessionManager.getEmployeeId(),
                 clineteId, LocalDateTime.now()
         );
+
         cart.forEach(sale::addDetail);
         Sale created = saleService.create(sale);
         sales.add(created);

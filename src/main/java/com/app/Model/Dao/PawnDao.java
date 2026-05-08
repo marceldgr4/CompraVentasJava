@@ -11,27 +11,28 @@ import java.util.Optional;
 
 /**
  * DAO para operaciones CRUD sobre la tabla pawns.
- * Incluye queries con JOIN para traer datos relacionados (profile, article,
+ * Incluye queries con JOIN para traer datos relacionados (employee, article,
  * cliente).
  */
 public class PawnDao {
 
     private static final String SELECT_COLS = """
-            p.id, p.profile_id, p.article_id, p.cliente_id, p.amount,
+            p.id, p.employee_id, p.article_id, p.cliente_id, p.amount,
             p.price, p.weight_grams, p.installment_count, p.installments_paid,
             p.installments_missed, p.pawn_date, p.return_date,
             p.status, p.notes, p.updated_at,
-            pr.full_name  AS profile_name,
+            e.full_name  AS employee_name,
             a.name_article AS article_name,
             CONCAT(c.first_name, ' ', c.last_name) AS cliente_name
             """;
 
     private static final String FROM_JOINS = """
             FROM public.pawns p
-            LEFT JOIN public.profile  pr ON p.profile_id  = pr.id
+            LEFT JOIN public.employees  e ON p.employee_id  = e.id
             LEFT JOIN public.articles  a ON p.article_id  = a.id
             LEFT JOIN public.clientes  c ON p.cliente_id  = c.id
             """;
+
 
     //----READ-----
 
@@ -57,12 +58,12 @@ public class PawnDao {
     }
 
 
-    public List<Pawn> findByProfile(String profileId) throws SQLException {
+    public List<Pawn> findByEmployee(String employeeId) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + FROM_JOINS +
-                "WHERE p.profile_id = ?::uuid " +
+                "WHERE p.employee_id = ?::uuid " +
                 "ORDER BY p.pawn_date DESC ";
 
-                return executeList(sql, ps-> ps.setString(1, profileId));
+                return executeList(sql, ps-> ps.setString(1, employeeId));
     }
     public List<Pawn> findByStatus(PawnStatus status) throws SQLException {
         String sql = "SELECT " + SELECT_COLS+ FROM_JOINS+
@@ -89,14 +90,14 @@ public class PawnDao {
     public Pawn save( Pawn pawn) throws SQLException {
         String sql = """
                 INSERT INTO public.pawns(
-                    profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
+                    employee_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
                     installments_paid,installments_missed, pawn_date, return_date, status, notes)
                 VALUES (?::uuid, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
                 """;
         try (Connection con = ConnectionPool.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, pawn.getProfileId());
+            ps.setString(1, pawn.getEmployeeId());
             ps.setInt(2, pawn.getArticleId());
             ps.setInt(3, pawn.getClientId());
             ps.setInt(4, pawn.getAmount());
@@ -131,13 +132,13 @@ public class PawnDao {
     public Pawn save(Connection con, Pawn pawn) throws SQLException {
         String sql = """
                 INSERT INTO public.pawns(
-                profile_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
+                employee_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
                 installments_paid,installments_missed, pawn_date, return_date, status, notes)
                 VALUES(?::UUID, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
         """;
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, pawn.getProfileId());
+            ps.setString(1, pawn.getEmployeeId());
             ps.setInt(2, pawn.getArticleId());
             ps.setInt(3, pawn.getClientId());
             ps.setInt(4, pawn.getAmount());
@@ -234,7 +235,7 @@ public class PawnDao {
 
         Pawn pawn = new Pawn(
                 rs.getInt("id"),
-                rs.getString("profile_id"),
+                rs.getString("employee_id"),
                 rs.getInt("article_id"),
                 rs.getInt("cliente_id"),
                 rs.getInt("amount"),
@@ -253,7 +254,7 @@ public class PawnDao {
 
         // Campos del JOIN (pueden ser null si no se hizo JOIN)
         try {
-            pawn.setProfileName(rs.getString("profile_name"));
+            pawn.setEmployeeName(rs.getString("employee_name"));
             pawn.setArticleName(rs.getString("article_name"));
             pawn.setClientName(rs.getString("cliente_name"));
         } catch (SQLException ignored) {

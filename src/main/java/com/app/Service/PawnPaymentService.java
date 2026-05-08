@@ -26,7 +26,7 @@ public class PawnPaymentService {
                 throw new BusinessException("El articulo empeñado esta en estado de_'"+ pawn.getStatusLabel()+ "' y no se acepta pagos");
             }
             PawnPayment payment = new PawnPayment(
-            pawnId, amount, null, notes, SessionManager.getProfileId(), false);
+            pawnId, amount, null, notes, SessionManager.getEmployeeId(), false);
             return paymentDao.save(payment);
         }catch (SQLException e){
             throw  new ServiceException("Error al registar el pago: " +e.getMessage(),e);
@@ -41,7 +41,7 @@ public class PawnPaymentService {
 
             }
             PawnPayment missed = PawnPayment.missedInstallment(
-                    pawnId,SessionManager.getProfileId(),notes);
+                    pawnId,SessionManager.getEmployeeId(),notes);
             return paymentDao.save(missed);
         }catch (SQLException e){
             throw  new ServiceException("Error al registar el pago: " +e.getMessage(),e);

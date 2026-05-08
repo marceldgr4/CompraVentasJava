@@ -8,7 +8,7 @@ public class DashBoardDto {
     private int totalArticle;
     private  int totalClientes;
     private BigDecimal totalActiveValue;
-    private int incompleteProfile; // cliente rapida
+    private int incompleteClients; // cliente rapida
     private  int purchaseToday;// compras del dia
 
     public  DashBoardDto(){}
@@ -18,7 +18,7 @@ public class DashBoardDto {
                         int totalArticlesStock,
                         int totalClientesActivos,
                         BigDecimal totalActiveValue,
-                        int incompleteProfile,
+                        int incompleteClients,
                         int purchaseToday) {
 
         this.activePawns = activePawns;
@@ -26,7 +26,7 @@ public class DashBoardDto {
         this.totalArticle = totalArticlesStock;
         this.totalClientes = totalClientesActivos;
         this.totalActiveValue = totalActiveValue;
-        this.incompleteProfile = incompleteProfile;
+        this.incompleteClients = incompleteClients;
         this.purchaseToday = purchaseToday;
     }
     public DashBoardDto(int activePawns, int overduePawns, int totalArticlesStock,
@@ -75,13 +75,14 @@ public class DashBoardDto {
         this.totalActiveValue = totalActiveValue;
     }
 
-    public int getIncompleteProfile() {
-        return incompleteProfile;
+    public int getIncompleteClients() {
+        return incompleteClients;
     }
 
-    public void setIncompleteProfile(int incompleteProfile) {
-        this.incompleteProfile = incompleteProfile;
+    public void setIncompleteClients(int incompleteClients) {
+        this.incompleteClients = incompleteClients;
     }
+
 
     public int getPurchaseToday() {
         return purchaseToday;

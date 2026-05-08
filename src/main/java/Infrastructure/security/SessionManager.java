@@ -38,19 +38,19 @@ public class SessionManager {
         public boolean isAdmin()     { return SessionManager.isAdmin(); }
         public boolean isEmployee()  { return SessionManager.isEmployee(); }
         public boolean isActive()    { return SessionManager.isActive(); }
-        public String  getProfileId(){ return SessionManager.getProfileId(); }
+        public String  getEmployeeId(){ return SessionManager.getEmployeeId(); }
         public String  getFullName() { return SessionManager.getFullName(); }
     }
 
     public static void startSession(
-            String profileId,
+            String employeeId,
             String fullName,
             RolUser rol,
             String accessToken,
             String refreshToken) {
         SESSION_LOCK.writeLock().lock();
         try{
-           currentSession = new Session(profileId, fullName, rol, accessToken, refreshToken);
+           currentSession = new Session(employeeId, fullName, rol, accessToken, refreshToken);
         } finally {
             SESSION_LOCK.writeLock().unlock();
         }
@@ -63,6 +63,27 @@ public class SessionManager {
         try{
             currentSession = null;
         }finally {
+            SESSION_LOCK.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Actualiza el nombre completo en la sesión actual sin cerrarla.
+     * @param newFullName nuevo nombre completo
+     */
+    public static void updateFullName(String newFullName) {
+        SESSION_LOCK.writeLock().lock();
+        try {
+            if (currentSession != null) {
+                currentSession = new Session(
+                        currentSession.employeeId,
+                        newFullName,
+                        currentSession.rol,
+                        currentSession.accessToken,
+                        currentSession.refreshToken
+                );
+            }
+        } finally {
             SESSION_LOCK.writeLock().unlock();
         }
     }
@@ -100,12 +121,12 @@ public class SessionManager {
                 .orElse(false);
     }
     /*
-    * @retorna si el "id" del perfil del usario está activo
+    * @retorna si el "id" del empleado del usario está activo
     * @throws IllegalStateException si no hay ninguna sesión activa
     * */
-    public static String getProfileId() {
+    public static String getEmployeeId() {
         return getCurrentSession()
-                .map(session -> session.profileId)
+                .map(session -> session.employeeId)
                 .orElseThrow(() -> new IllegalStateException("No active session"));
     }
     /*
@@ -139,14 +160,14 @@ public class SessionManager {
 
     public static class Session
     {
-        public final String profileId;
+        public final String employeeId;
         public final String fullName;
         public final RolUser rol;
         public final String accessToken;
         public final String refreshToken;
 
-        public Session(String profileId, String fullName, RolUser rol, String accessToken, String refreshToken) {
-            this.profileId = profileId;
+        public Session(String employeeId, String fullName, RolUser rol, String accessToken, String refreshToken) {
+            this.employeeId = employeeId;
             this.fullName = fullName;
             this.rol = rol;
             this.accessToken = accessToken;
@@ -154,3 +175,4 @@ public class SessionManager {
         }
     }
 }
+

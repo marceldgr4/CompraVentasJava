@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 public class PurchasePanel extends JPanel {
     private static final String[] COLUMNS_ADMIN ={"ID", "Empleado", "Cliente", "Artículo", "Precio Compra", "Precio Venta", "Fecha", "Notas"};
     private static final String[] COLUMNS_EMP    = {"ID", "Cliente", "Artículo", "Fecha", "Notas"};
-    private static final DateTimeFormatter FMT   = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter FMT   = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -122,8 +122,9 @@ public class PurchasePanel extends JPanel {
             if (isAdmin) {
                 tableModel.addRow(new Object[]{
                         p.getId(),
-                        p.getProfileName() != null ? p.getProfileName() : "N/A",
+                        p.getEmployeeName() != null ? p.getEmployeeName() : "N/A",
                         cliente, articulo,
+
                         CurrencyUtils.format(p.getPurchasePrice()), "Ver articulos",
                         fecha, p.getNotes() != null ? p.getNotes() : " "
                 });

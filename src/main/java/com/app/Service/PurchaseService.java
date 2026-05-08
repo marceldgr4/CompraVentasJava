@@ -28,9 +28,10 @@ public class PurchaseService {
     public List<Purchase> getAll() throws ServiceException {
         try {
             if (SessionManager.isAdmin()) return purchaseDao.findAll();
-            return purchaseDao.findByProfile(SessionManager.getProfileId());
+            return purchaseDao.findByEmployee(SessionManager.getEmployeeId());
+
         } catch (SQLException e) {
-            throw new ServiceException("Errir al cargar compras:" + e.getMessage(), e);
+            throw new ServiceException("Error al cargar compras: " + e.getMessage(), e);
         }
     }
 
@@ -41,7 +42,7 @@ public class PurchaseService {
         try {
             return purchaseDao.findByDateRange(from, to);
         } catch (SQLException e) {
-            throw new ServiceException("error la filtrar compras:" + e.getMessage(), e);
+            throw new ServiceException("Error al filtrar compras: " + e.getMessage(), e);
         }
     }
 
@@ -56,13 +57,14 @@ public class PurchaseService {
          * @return Purchase persistida con ID asignado
      */
 
-    public Purchase Register(Article article, BigDecimal purchasePrice, int cluienteId, Cliente clienteRapido, String notes) throws ServiceException {
+    public Purchase register(Article article, BigDecimal purchasePrice, int clienteId, Cliente clienteRapido, String notes) throws ServiceException {
         validate(article, purchasePrice);
         try {
-            final int[] resolvedClienteId = {cluienteId};
-            final int[] resolveArticleId = {0};
+            final int[] resolvedClienteId = {clienteId};
+            final int[] resolvedArticleId = {0};
             Purchase purchase = new Purchase(
-                    SessionManager.getProfileId(), 0, 0, purchasePrice, notes);
+                    SessionManager.getEmployeeId(), 0, 0, purchasePrice, notes);
+
 
             DataBaseManeger.runInTransaction(con -> {
                 if (clienteRapido != null) {
@@ -77,10 +79,10 @@ public class PurchaseService {
                 article.setAmount(1);
 
                 Article savedArticle = articleDao.save(con, article);
-                resolvedClienteId[0] = savedArticle.getId();
+                resolvedArticleId[0] = savedArticle.getId();
 
                 purchase.setClientId(resolvedClienteId[0]);
-                purchase.setArticleId(resolveArticleId[0]);
+                purchase.setArticleId(resolvedArticleId[0]);
                 purchaseDao.save(con, purchase);
             });
             return purchase;
@@ -89,7 +91,7 @@ public class PurchaseService {
             if ("23505".equals(e.getSQLState())) {
                 throw new ServiceException("Ya existe un cliente con ese numero de cedula o telefono");
             }
-            throw new ServiceException("error aal regsitar compras:" + e.getMessage(), e);
+            throw new ServiceException("Error al registrar compra: " + e.getMessage(), e);
         }
 
 

@@ -43,9 +43,9 @@ public class SaleService {
         }
     }
 
-    public List<Sale> findByProfile(String profileId) throws ServiceException {
+    public List<Sale> findByEmployee(String employeeId) throws ServiceException {
         try {
-            return saleDao.findByProfile(profileId);
+            return saleDao.findByEmployee(employeeId);
         } catch (SQLException e) {
             throw new ServiceException("Error al buscar ventas del empleado: " + e.getMessage(), e);
         }
@@ -70,8 +70,8 @@ public class SaleService {
     public Sale create(Sale sale) throws ServiceException {
         validateSale(sale);
 
-        if (sale.getProfileId() == null || sale.getProfileId().isEmpty()) {
-            sale.setProfileId(SessionManager.getProfileId());
+        if (sale.getEmployeeId() == null || sale.getEmployeeId().isEmpty()) {
+            sale.setEmployeeId(SessionManager.getEmployeeId());
         }
         if (sale.getSaleDate() == null) {
             sale.setSaleDate(LocalDate.now().atStartOfDay());
@@ -104,11 +104,10 @@ public class SaleService {
         }
         items.append("]");
 
-        String sql = "SELECT public.register_sale(?::uuid, ?, ?, ?::jsonb)";
+        String sql = "SELECT public.register_sale(?::uuid, ?, ?::jsonb, ?)";
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, sale.getProfileId());
-
+            ps.setString(1, sale.getEmployeeId());
 
             if (sale.getClienteId() > 0) {
                 ps.setInt(2, sale.getClienteId());
@@ -116,8 +115,8 @@ public class SaleService {
                 ps.setNull(2, Types.INTEGER);
             }
 
-            ps.setString(3, sale.getClienteNombreAnon());
-            ps.setString(4, items.toString());
+            ps.setString(3, items.toString());
+            ps.setString(4, sale.getClienteNombreAnon());
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) sale.setId(rs.getInt(1));

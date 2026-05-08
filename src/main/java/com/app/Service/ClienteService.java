@@ -55,6 +55,7 @@ public class ClienteService {
             throw new ServiceException("Error en búsqueda de clientes: " + e.getMessage(), e);
         }
     }
+
     /**
      * Busca un cliente por teléfono exacto (para detectar duplicados en registro rápido).
      */

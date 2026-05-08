@@ -27,8 +27,9 @@ public class PawnService {
     /*-------------------------------------------------------
     // READ — listar empeños según rol del usuario
      * Retorna todos los empeños.
-     * Admin/Empleado ven todos; en caso de rol futuro restringido, filtra por profile.
+     * Admin/Empleado ven todos; en caso de rol futuro restringido, filtra por empleado.
      */
+
     // -------------------------------------------------------
     public List<Pawn> getAll() throws ServiceException {
         try {
@@ -133,7 +134,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
         try{
             Pawn pawn = pawnDao.findById(id).
                     orElseThrow(()-> new ServiceException("Empeño no encontrado id" + id));
-        if(!SessionManager.isAdmin() && !pawn.getProfileId().equals(SessionManager.getProfileId())) {
+        if(!SessionManager.isAdmin() && !pawn.getEmployeeId().equals(SessionManager.getEmployeeId())) {
             throw new ServiceException("Solo puede marcar como devuelto sus propios empeños ");
         }
         if(pawn.getStatus()!= null && pawn.getStatus().isTerminal()) {
@@ -233,7 +234,7 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
 
 
     private void validatePawn(Pawn pawn) {
-        check(pawn.getProfileId()== null || pawn.getProfileId().isBlank(),"El ID del perfil del empleado es obligatorio");
+        check(pawn.getEmployeeId()== null || pawn.getEmployeeId().isBlank(),"El ID del empleado es obligatorio");
         check(pawn.getArticleId() <= 0,   "Debe seleccionar un artículo válido.");
         check(pawn.getClientId() <= 0,    "Debe seleccionar un cliente válido.");
         check(pawn.getAmount()    <= 0,    "La cantidad debe ser mayor a 0.");

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 public class Purchase {
     private int id;
-    private String profileId;
+    private String employeeId;
     private int clienteId;
     private  int articleId;
     private BigDecimal purchasePrice;
@@ -14,13 +14,13 @@ public class Purchase {
 
     private  String clienteName;
     private String  articleName;
-    private String profileName;
+    private String employeeName;
 
     public Purchase(){}
 
-    public Purchase(String profileId, int clientId, int articleId,
+    public Purchase(String employeeId, int clientId, int articleId,
                     BigDecimal purchasePrice, String notes) {
-        this.profileId = profileId;
+        this.employeeId = employeeId;
         this.clienteId = clientId;
         this.articleId = articleId;
         this.purchasePrice = purchasePrice;
@@ -36,12 +36,12 @@ public class Purchase {
         this.id = id;
     }
 
-    public String getProfileId() {
-        return profileId;
+    public String getEmployeeId() {
+        return employeeId;
     }
 
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
 
     public int getClientId() {
@@ -100,11 +100,12 @@ public class Purchase {
         this.articleName = articleName;
     }
 
-    public String getProfileName() {
-        return profileName;
+    public String getEmployeeName() {
+        return employeeName;
     }
 
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
+
 }

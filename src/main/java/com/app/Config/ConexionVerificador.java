@@ -79,7 +79,7 @@ public class ConexionVerificador {
         print("");
         print(AZUL + BOLD + "[ 2 ] Tablas en el esquema public" + RESET);
 
-        String[] requeridas = {"profile", "articles", "sales", "sales_details", "pawns"};
+        String[] requeridas = {"employees", "articles", "sales", "sales_details", "pawns"};
         boolean todasOk = true;
 
         try (Connection con = ConnectionPool.getConnection();
@@ -120,7 +120,7 @@ public class ConexionVerificador {
             ResultSet rls = st.executeQuery(
                     "SELECT tablename, rowsecurity FROM pg_tables " +
                             "WHERE schemaname='public' AND tablename IN " +
-                            "('profile','articles','sales','sales_details','pawns') " +
+                            "('employees','articles','sales','sales_details','pawns') " +
                             "ORDER BY tablename"
             );
             while (rls.next()) {
@@ -132,6 +132,7 @@ public class ConexionVerificador {
             }
 
             return todasOk && triggerOk;
+
 
         } catch (Exception e) {
             print("      " + ROJO + "✘ Error: " + e.getMessage() + RESET);

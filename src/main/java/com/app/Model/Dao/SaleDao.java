@@ -17,12 +17,13 @@ public class SaleDao {
         DataBaseManeger.runInTransaction(connection -> {
             String sql =
                     """
-                    INSERT INTO public.sales(profile_id, cliente_id, cliente_nombre_anon, sale_date)
+                    INSERT INTO public.sales(employee_id, cliente_id, cliente_nombre_anon, sale_date)
                     VALUES (?::uuid, ?, ?, ?)
                     RETURNING id
                     """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, sale.getProfileId());
+                ps.setString(1, sale.getEmployeeId());
+
                 if (sale.getClienteId() > 0) ps.setInt(2, sale.getClienteId());
                 else ps.setNull(2, Types.INTEGER);
                 ps.setString(3, sale.getClienteNombreAnon());
@@ -98,14 +99,14 @@ public class SaleDao {
         """;
         return findByParam(sql, ps -> ps.setInt(1,clienteId));
     }
-    public List<Sale> findByProfile(String profileId) throws SQLException {
+    public List<Sale> findByEmployee(String employeeId) throws SQLException {
         String sql = """
                 SELECT *
                 FROM public.sales
-                WHERE profile_id = ?::uuid
+                WHERE employee_id = ?::uuid
                 ORDER BY sale_date DESC
         """;
-        return findByParam(sql, ps -> ps.setString(1, profileId));
+        return findByParam(sql, ps -> ps.setString(1, employeeId));
         }
 
 
@@ -187,7 +188,7 @@ public class SaleDao {
         Timestamp ts = rs.getTimestamp("sale_date");
         Sale sale = new Sale(
                 rs.getInt("id"),
-                rs.getString("profile_id"),
+                rs.getString("employee_id"),
                 rs.getInt("cliente_id"),
                 ts != null ? ts.toLocalDateTime() : null
         );
