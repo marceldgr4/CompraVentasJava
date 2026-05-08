@@ -44,15 +44,15 @@ public class PawnDao extends BaseDao<Pawn> {
 
     public List<Pawn> findByEmployee(String employeeId) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + FROM_JOINS +
-                "WHERE p.employee_id = ?::uuid " +
-                "ORDER BY p.pawn_date DESC";
+                " WHERE p.employee_id = ?::uuid " +
+                " ORDER BY p.pawn_date DESC";
         return executeList(sql, ps -> ps.setString(1, employeeId), PawnDao::mapRow);
     }
 
     public List<Pawn> findByStatus(PawnStatus status) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + FROM_JOINS +
-                "WHERE p.status = ?::pawn_status " +
-                "ORDER BY p.pawn_date DESC";
+                " WHERE p.status = ?::pawn_status " +
+                " ORDER BY p.pawn_date DESC";
         return executeList(sql, ps -> ps.setString(1, status.name()), PawnDao::mapRow);
     }
 
@@ -62,8 +62,8 @@ public class PawnDao extends BaseDao<Pawn> {
 
     public List<Pawn> findOverdue() throws SQLException {
         String sql = "SELECT " + SELECT_COLS + FROM_JOINS +
-                "WHERE p.status = 'Activo'::pawn_status AND p.return_date < CURRENT_DATE " +
-                "ORDER BY p.return_date ASC";
+                " WHERE p.status = 'Activo'::pawn_status AND p.return_date < CURRENT_DATE " +
+                " ORDER BY p.return_date ASC";
         return executeList(sql, null, PawnDao::mapRow);
     }
 
