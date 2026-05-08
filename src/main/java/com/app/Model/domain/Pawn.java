@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  */
 public class Pawn {
     private int id;
-    private String profileId;
+    private String employeeId;
     private int articleId;
     private int clientId;
     private int amount;
@@ -32,16 +32,16 @@ public class Pawn {
     private LocalDateTime updatedAt;
 
     // Campos adicionales cargados mediante JOIN
-    private String profileName;
+    private String employeeName;
     private String articleName;
     private String clientName;
 
 
-    public Pawn(String profileId, int articleId, int clientId, int amount,
+    public Pawn(String employeeId, int articleId, int clientId, int amount,
                 BigDecimal price, BigDecimal weightGrams, int installmentCount,
                 LocalDate pawnDate, LocalDate returnDate, String notes) {
 
-        this.profileId = profileId;
+        this.employeeId = employeeId;
         this.articleId = articleId;
         this.clientId = clientId;
         this.amount = amount;
@@ -61,7 +61,7 @@ public class Pawn {
     /**
      * Constructor simplificado sin peso ni notas.
      */
-    public Pawn(String profileId,
+    public Pawn(String employeeId,
                 int articleId,
                 int clientId,
                 int amount,
@@ -69,7 +69,7 @@ public class Pawn {
                 int installmentCount,
                 LocalDate pawnDate,
                 LocalDate returnDate) {
-        this(profileId, articleId, clientId, amount, price,
+        this(employeeId, articleId, clientId, amount, price,
                 null, installmentCount,
                 pawnDate, returnDate, null);
     }
@@ -78,12 +78,12 @@ public class Pawn {
     /**
      * Constructor completo mapeado desde la base de datos.
      */
-    public Pawn(int id, String profileId, int articleId, int clientId,
+    public Pawn(int id, String employeeId, int articleId, int clientId,
                 int amount, BigDecimal price, BigDecimal weightGrams,
                 int installmentCount, int installmentsPaid, int installmentsMissed,
                 LocalDate pawnDate, LocalDate returnDate,
                 PawnStatus status, String notes, LocalDateTime updatedAt) {
-        this(profileId, articleId, clientId, amount, price, weightGrams,
+        this(employeeId, articleId, clientId, amount, price, weightGrams,
                 installmentCount, pawnDate, returnDate, notes);
         this.id = id;
         this.installmentsPaid = installmentsPaid;
@@ -102,13 +102,14 @@ public class Pawn {
         this.id = id;
     }
 
-    public String getProfileId() {
-        return profileId;
+    public String getEmployeeId() {
+        return employeeId;
     }
 
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
+
 
     public int getArticleId() {
         return articleId;
@@ -214,13 +215,14 @@ public class Pawn {
         this.updatedAt = updatedAt;
     }
 
-    public String getProfileName() {
-        return profileName;
+    public String getEmployeeName() {
+        return employeeName;
     }
 
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
+
 
     public String getArticleName() {
         return articleName;

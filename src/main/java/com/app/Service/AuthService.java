@@ -4,7 +4,6 @@ package com.app.Service;
 import Infrastructure.security.SessionManager;
 import com.app.Config.AppConfig;
 import com.app.Model.Dao.AuthResponse;
-import com.app.Model.domain.Profile;
 import com.app.Service.exceptions.ServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +15,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import com.app.Model.Enum.RolUser;
+import com.app.Model.domain.Employee;
+import com.app.Service.EmployeeService;
 
 public class AuthService {
     private static final String BASE_URL = AppConfig.get("SUPABASE_URL");
@@ -56,38 +57,39 @@ public class AuthService {
             String refreshToken = json.has("refresh_token") ? json.get("refresh_token").asText() : null;
          
 
-            //Load profile from database to obtain full name and role
-            ProfileService profileService = new ProfileService();
-            Profile profile;
+            //Load employee from database to obtain full name and role
+            EmployeeService employeeService = new EmployeeService();
+            Employee employee;
             try {
-                profile = profileService.findById(userId);
+                employee = employeeService.findById(userId);
             } catch (ServiceException e) {
-                if (e.getMessage().contains("No se encontró el perfil")) {
-                    // Auto-repair: Create profile if missing
+                if (e.getMessage().contains("No se encontró el empleado")) {
+                    // Auto-repair: Create employee if missing
                     String fullName = authResponse.getUser().getEmail().split("@")[0]; // Fallback name
-                    profile = new Profile(userId, authResponse.getUser().getEmail(), fullName, RolUser.Empleado, true);
-                    profileService.create(profile);
+                    employee = new Employee(userId, authResponse.getUser().getEmail(), fullName, RolUser.Empleado, true);
+                    employeeService.create(employee);
                 } else {
                     throw e;
                 }
             }
 
-            if (!profile.isActive()) {
+            if (!employee.isActive()) {
                 throw new AuthException("Usuario deshabilitado. Llame al administrador");
             }
 
             SessionManager.startSession(
                     userId,
-                    profile.getFullName(),
-                    profile.getRol(),
+                    employee.getFullName(),
+                    employee.getRol(),
                     authResponse.getAccesoToken(),
                     authResponse.getRefreshToken()
             );
         } catch (IOException | InterruptedException e) {
             throw new AuthException("Fallo de red al conectar con Supabase Auth: " + e.getMessage());
         } catch (ServiceException e) {
-            throw new AuthException("Fallo al conectar con la base de datos para cargar el perfil: " + e.getMessage());
+            throw new AuthException("Fallo al conectar con la base de datos para cargar el empleado: " + e.getMessage());
         }
+
     }
 
 
@@ -142,6 +144,34 @@ public class AuthService {
         }
 
         SessionManager.endSession();
+    }
+
+    public void updateCurrentUser(String newPassword) throws AuthException {
+        if (!SessionManager.isActive()) {
+            throw new AuthException("No hay una sesión activa.");
+        }
+
+        String token = SessionManager.getAccessToken();
+        String body = String.format("{\"password\": \"%s\"}", newPassword);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/auth/v1/user"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + token)
+                .header("apikey", ANON_KEY)
+                .method("PUT", HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                JsonNode err = mapper.readTree(response.body());
+                String msg = err.has("msg") ? err.get("msg").asText() : "Error al actualizar usuario";
+                throw new AuthException(msg);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new AuthException("Error de red: " + e.getMessage());
+        }
     }
 
     public static class AuthException extends Exception {

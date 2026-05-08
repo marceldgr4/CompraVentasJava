@@ -67,7 +67,7 @@ public class AuthController extends BaseController {
  * Registra un nuevo empleado en Supabase Auth.
  * Solo disponible para administradores
  * El trigger {@code on_auth_user_created} en la BD crea automáticamente
- * el registro en la tabla {profile} al confirmar el signup.
+ * el registro en la tabla {employees} al confirmar el signup.
     Correo del nuevo empleado (no puede ser nulo ni vacío)
     contraseña (mínimo 6 caracteres)
     nombre completo del empleado (no puede ser nulo ni vacío)

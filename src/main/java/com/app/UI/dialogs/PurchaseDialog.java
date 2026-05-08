@@ -5,12 +5,10 @@ import com.app.Model.Enum.ItemState;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
 import com.app.Model.domain.Purchase;
-import com.app.Model.domain.Profile;
+import com.app.Model.domain.Employee;
 import com.app.Service.ClienteService;
-import com.app.Service.ProfileService;
+import com.app.Service.EmployeeService;
 import com.app.Service.PurchaseService;
-import com.app.Service.exceptions.ServiceException;
-import com.app.UI.Components.ButtonFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,98 +19,44 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Diálogo para registrar la compra de un producto usado al negocio (HU-28).
- * Soporta cliente existente o registro rápido embebido.
  */
-public class PurchaseDialog extends JDialog {
+public class PurchaseDialog extends BaseDialog {
 
-    private static final Color HEADER_BG   = new Color(18, 28, 58);
-    private static final Color BLUE_ACCENT = new Color(30, 136, 229);
-    private static final Color FIELD_BG    = new Color(245, 247, 252);
-    private static final Color TEXT_DARK   = new Color(15, 25, 50);
-    private static final Color WARNING_CLR = new Color(245, 124, 0);
-
-    // Modo cliente
     private JRadioButton rbClienteExistente;
     private JRadioButton rbClienteNuevo;
     private JRadioButton rbEmpleado;
     private JRadioButton rbSinCliente;
-    private JComboBox<Cliente> cmbCliente;
-    private JComboBox<Profile> cmbEmpleado;
+    private StyledCombo<Cliente> cmbCliente;
+    private StyledCombo<Employee> cmbEmpleado;
     private JPanel pnlClienteRapido;
-    private JTextField txtNombreRapido;
-    private JTextField txtTelefonoRapido;
+    private StyledField txtNombreRapido;
+    private StyledField txtTelefonoRapido;
 
-    // Artículo
-    private JTextField           txtNombreArticulo;
-    private JComboBox<ArticleCategory> cmbCategoria;
-    private JComboBox<ItemState> cmbEstado;
-    private JTextArea            txtDescripcion;
+    private StyledField txtNombreArticulo;
+    private StyledCombo<ArticleCategory> cmbCategoria;
+    private StyledCombo<ItemState> cmbEstado;
+    private JTextArea txtDescription;
 
-    // Precios
     private JSpinner spnPrecioCompra;
     private JSpinner spnPrecioVenta;
-    private JLabel   lblMargenWarning;
+    private JLabel lblMargenWarning;
 
-    // Estado
     private boolean confirmed = false;
     private Purchase result;
 
     private final PurchaseService purchaseService = new PurchaseService();
-    private final ClienteService  clienteService  = new ClienteService();
-    private final ProfileService  profileService  = new ProfileService();
+    private final ClienteService clienteService = new ClienteService();
+    private final EmployeeService employeeService = new EmployeeService();
 
     public PurchaseDialog(JFrame parent) {
-        super(parent, true);
-        setUndecorated(true);
-        setSize(600, 620);
+        super(parent, "Registrar Compra de Producto", "🛒");
+        setSize(600, 650);
         setLocationRelativeTo(parent);
-        setContentPane(buildRoot());
+        
+        setContentBody(buildBody());
+        setFooter(buildFooter());
+        
         loadClientes();
-    }
-
-    // ── Build UI ──────────────────────────────────────────────────────────────
-
-    private JPanel buildRoot() {
-        JPanel root = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
-                g2.setColor(new Color(210, 220, 235));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
-                g2.dispose();
-            }
-        };
-        root.setOpaque(false);
-        root.add(buildHeader(), BorderLayout.NORTH);
-        root.add(buildBody(),   BorderLayout.CENTER);
-        root.add(buildFooter(), BorderLayout.SOUTH);
-        return root;
-    }
-
-    private JPanel buildHeader() {
-        JPanel header = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(HEADER_BG);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight() + 14, 14, 14);
-                g2.fillRect(0, getHeight() / 2, getWidth(), getHeight());
-                g2.dispose();
-            }
-        };
-        header.setOpaque(false);
-        header.setPreferredSize(new Dimension(0, 58));
-        header.setBorder(new EmptyBorder(0, 20, 0, 20));
-
-        JLabel lbl = new JLabel("🛒  Registrar Compra de Producto");
-        lbl.setFont(new Font("Segoe UI Emoji", Font.BOLD, 15));
-        lbl.setForeground(Color.WHITE);
-
-        JButton btnClose = closeBtn();
-        header.add(lbl,      BorderLayout.WEST);
-        header.add(btnClose, BorderLayout.EAST);
-        return header;
     }
 
     private JScrollPane buildBody() {
@@ -128,7 +72,6 @@ public class PurchaseDialog extends JDialog {
         gc.gridx = 0; gc.gridy = row; gc.gridwidth = 2; gc.insets = ins(0, 0, 6, 0);
         body.add(sectionLabel("👤  Cliente Vendedor"), gc); row++;
 
-        // Radio buttons
         rbClienteExistente = new JRadioButton("Cliente registrado");
         rbClienteNuevo     = new JRadioButton("Cliente nuevo");
         rbEmpleado         = new JRadioButton("Empleado");
@@ -138,6 +81,11 @@ public class PurchaseDialog extends JDialog {
         rbClienteNuevo.setOpaque(false);
         rbEmpleado.setOpaque(false);
         rbSinCliente.setOpaque(false);
+        rbClienteExistente.setFont(FONT_FIELD);
+        rbClienteNuevo.setFont(FONT_FIELD);
+        rbEmpleado.setFont(FONT_FIELD);
+        rbSinCliente.setFont(FONT_FIELD);
+
         ButtonGroup grp = new ButtonGroup();
         grp.add(rbClienteExistente);
         grp.add(rbClienteNuevo);
@@ -153,15 +101,11 @@ public class PurchaseDialog extends JDialog {
         gc.gridy = row; gc.insets = ins(0, 0, 6, 0);
         body.add(radioPanel, gc); row++;
 
-        // Combo cliente existente y empleado
         JPanel comboPanel = new JPanel(new CardLayout());
         comboPanel.setOpaque(false);
         
-        cmbCliente = new JComboBox<>();
-        cmbCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        
-        cmbEmpleado = new JComboBox<>();
-        cmbEmpleado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cmbCliente = styledCombo();
+        cmbEmpleado = styledCombo();
         
         comboPanel.add(cmbCliente, "CLIENTE");
         comboPanel.add(cmbEmpleado, "EMPLEADO");
@@ -170,7 +114,6 @@ public class PurchaseDialog extends JDialog {
         gc.gridy = row; gc.insets = ins(0, 0, 12, 0);
         body.add(comboPanel, gc); row++;
 
-        // Panel cliente rápido
         pnlClienteRapido = new JPanel(new GridLayout(1, 2, 8, 0));
         pnlClienteRapido.setOpaque(false);
         txtNombreRapido   = styledField("Nombre completo *");
@@ -182,7 +125,6 @@ public class PurchaseDialog extends JDialog {
         body.add(pnlClienteRapido, gc); row++;
 
         CardLayout cl = (CardLayout) comboPanel.getLayout();
-        // Toggle visibilidad
         rbClienteExistente.addActionListener(e -> {
             comboPanel.setVisible(true);
             cl.show(comboPanel, "CLIENTE");
@@ -207,13 +149,12 @@ public class PurchaseDialog extends JDialog {
         gc.gridy = row; gc.insets = ins(4, 0, 6, 0);
         body.add(sectionLabel("📦  Datos del Artículo"), gc); row++;
 
-        gc.gridy = row; gc.insets = ins(0, 0, 4, 0);
+        gc.gridy = row; gc.gridwidth = 2; gc.insets = ins(0, 0, 4, 0);
         body.add(fieldLabel("Nombre del artículo *"), gc); row++;
-        txtNombreArticulo = styledField("");
+        txtNombreArticulo = styledField("Nombre del producto");
         gc.gridy = row; gc.insets = ins(0, 0, 10, 0);
         body.add(txtNombreArticulo, gc); row++;
 
-        // Categoría + Estado lado a lado
         gc.gridwidth = 1; gc.weightx = 1;
         gc.gridx = 0; gc.gridy = row; gc.insets = ins(0, 0, 4, 6);
         body.add(fieldLabel("Categoría *"), gc);
@@ -221,10 +162,10 @@ public class PurchaseDialog extends JDialog {
         body.add(fieldLabel("Estado del producto"), gc);
         row++;
 
-        cmbCategoria = new JComboBox<>(ArticleCategory.values());
-        cmbCategoria.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cmbEstado = new JComboBox<>(ItemState.values());
-        cmbEstado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cmbCategoria = styledCombo();
+        for (ArticleCategory cat : ArticleCategory.values()) cmbCategoria.addItem(cat);
+        cmbEstado = styledCombo();
+        for (ItemState st : ItemState.values()) cmbEstado.addItem(st);
 
         gc.gridx = 0; gc.gridy = row; gc.insets = ins(0, 0, 10, 6);
         body.add(cmbCategoria, gc);
@@ -232,18 +173,11 @@ public class PurchaseDialog extends JDialog {
         body.add(cmbEstado, gc);
         row++;
 
-        // Descripción
         gc.gridx = 0; gc.gridwidth = 2; gc.gridy = row; gc.insets = ins(0, 0, 4, 0);
         body.add(fieldLabel("Descripción / Observaciones"), gc); row++;
-        txtDescripcion = new JTextArea(2, 20);
-        txtDescripcion.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtDescripcion.setLineWrap(true);
-        txtDescripcion.setWrapStyleWord(true);
-        txtDescripcion.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 220, 235)),
-                new EmptyBorder(6, 8, 6, 8)));
+        txtDescription = styledTextArea(2);
         gc.gridy = row; gc.insets = ins(0, 0, 12, 0);
-        body.add(new JScrollPane(txtDescripcion), gc); row++;
+        body.add(new JScrollPane(txtDescription), gc); row++;
 
         // ── Sección Precios ───────────────────────────────────────────────────
         gc.gridy = row; gc.insets = ins(4, 0, 6, 0);
@@ -251,7 +185,7 @@ public class PurchaseDialog extends JDialog {
 
         gc.gridwidth = 1;
         gc.gridx = 0; gc.gridy = row; gc.insets = ins(0, 0, 4, 6);
-        body.add(fieldLabel("Precio de compra (lo que pagamos) *"), gc);
+        body.add(fieldLabel("Precio de compra *"), gc);
         gc.gridx = 1; gc.insets = ins(0, 6, 4, 0);
         body.add(fieldLabel("Precio de venta sugerido *"), gc);
         row++;
@@ -268,7 +202,7 @@ public class PurchaseDialog extends JDialog {
         row++;
 
         lblMargenWarning = new JLabel(" ");
-        lblMargenWarning.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblMargenWarning.setFont(FONT_SMALL);
         lblMargenWarning.setForeground(WARNING_CLR);
         gc.gridx = 0; gc.gridwidth = 2; gc.gridy = row; gc.insets = ins(0, 0, 4, 0);
         body.add(lblMargenWarning, gc);
@@ -279,35 +213,27 @@ public class PurchaseDialog extends JDialog {
     }
 
     private JPanel buildFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
-        footer.setBackground(Color.WHITE);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(225, 232, 245)));
-
-        JButton btnCancel  = ButtonFactory.createNeutralButton("Cancelar");
-        JButton btnConfirm = ButtonFactory.createSuccessButton("Registrar Compra");
-        btnCancel .addActionListener(e -> dispose());
-        btnConfirm.addActionListener(e -> doSave());
-
-        footer.add(btnCancel);
-        footer.add(btnConfirm);
-        return footer;
+        JButton btnCancel = buildCancelButton();
+        JButton btnSave   = buildSuccessButton("Registrar Compra");
+        btnCancel.addActionListener(e -> onCancel());
+        btnSave  .addActionListener(e -> doSave());
+        return buildStandardFooter(btnCancel, btnSave);
     }
-
-    // ── Operaciones ───────────────────────────────────────────────────────────
 
     private void loadClientes() {
         new SwingWorker<Void, Void>() {
             List<Cliente> clientes;
-            List<Profile> profiles;
+            List<Employee> employees;
             @Override protected Void doInBackground() throws Exception {
                 clientes = clienteService.getAll();
-                profiles = profileService.findAll();
+                employees = employeeService.findAll();
                 return null;
             }
             @Override protected void done() {
                 try {
+                    get();
                     if (clientes != null) clientes.forEach(cmbCliente::addItem);
-                    if (profiles != null) profiles.forEach(cmbEmpleado::addItem);
+                    if (employees != null) employees.forEach(cmbEmpleado::addItem);
                 } catch (Exception ignored) {}
             }
         }.execute();
@@ -324,16 +250,14 @@ public class PurchaseDialog extends JDialog {
     }
 
     private void doSave() {
-        // Validaciones UI básicas
         if (txtNombreArticulo.getText().isBlank()) {
-            showError("El nombre del artículo es obligatorio."); return;
+            showValidationError("El nombre del artículo es obligatorio."); return;
         }
         double compra = (double) spnPrecioCompra.getValue();
         double venta  = (double) spnPrecioVenta.getValue();
-        if (compra <= 0) { showError("El precio de compra debe ser mayor a $0."); return; }
-        if (venta  <= 0) { showError("El precio de venta debe ser mayor a $0."); return; }
+        if (compra <= 0) { showValidationError("El precio de compra debe ser mayor a $0."); return; }
+        if (venta  <= 0) { showValidationError("El precio de venta debe ser mayor a $0."); return; }
 
-        // Confirmación de margen negativo
         if (compra >= venta) {
             int ok = JOptionPane.showConfirmDialog(this,
                     "El precio de compra es igual o mayor al precio de venta.\n¿Confirmar de todas formas?",
@@ -341,11 +265,10 @@ public class PurchaseDialog extends JDialog {
             if (ok != JOptionPane.YES_OPTION) return;
         }
 
-        // Construir artículo
         Article article = new Article(
                 0,
                 txtNombreArticulo.getText().trim(),
-                txtDescripcion.getText().trim(),
+                txtDescription.getText().trim(),
                 1,
                 BigDecimal.valueOf(venta),
                 (ArticleCategory) cmbCategoria.getSelectedItem(),
@@ -354,34 +277,30 @@ public class PurchaseDialog extends JDialog {
                 BigDecimal.valueOf(compra)
         );
 
-        // Resolver cliente
         int    clienteId     = 0;
         Cliente clienteRapido = null;
 
         if (rbClienteExistente.isSelected()) {
-            Cliente sel = (Cliente) cmbCliente.getSelectedItem();
+            Cliente sel = cmbCliente.getItemAt(cmbCliente.getSelectedIndex());
             if (sel != null) clienteId = sel.getId();
-            else { showError("Seleccione un cliente registrado."); return; }
+            else { showValidationError("Seleccione un cliente registrado."); return; }
         } else if (rbClienteNuevo.isSelected()) {
             String nombre = txtNombreRapido.getText().trim();
-            if (nombre.isBlank()) { showError("El nombre del cliente es obligatorio."); return; }
+            if (nombre.isBlank()) { showValidationError("El nombre del cliente es obligatorio."); return; }
             clienteRapido = Cliente.createRapido(null, nombre, null, txtTelefonoRapido.getText().trim());
         } else if (rbEmpleado.isSelected()) {
-            Profile sel = (Profile) cmbEmpleado.getSelectedItem();
-            if (sel == null) { showError("Seleccione un empleado."); return; }
-            // Create a quick client for the employee
+            Employee sel = cmbEmpleado.getItemAt(cmbEmpleado.getSelectedIndex());
+            if (sel == null) { showValidationError("Seleccione un empleado."); return; }
             clienteRapido = Cliente.createRapido(null, sel.getFullName(), null, sel.getEmail());
-        } else if (rbSinCliente.isSelected()) {
-            // Leave as 0 and null
         }
 
         final int fClienteId     = clienteId;
         final Cliente fClienteRapido = clienteRapido;
-        final String notes = txtDescripcion.getText().trim();
+        final String notes = txtDescription.getText().trim();
 
         new SwingWorker<Purchase, Void>() {
             @Override protected Purchase doInBackground() throws Exception {
-                return purchaseService.Register(article, BigDecimal.valueOf(compra),
+                return purchaseService.register(article, BigDecimal.valueOf(compra),
                         fClienteId, fClienteRapido, notes);
             }
             @Override protected void done() {
@@ -393,59 +312,12 @@ public class PurchaseDialog extends JDialog {
                             "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     dispose();
                 } catch (ExecutionException ex) {
-                    showError("Error: " + ex.getCause().getMessage());
+                    showValidationError("Error: " + ex.getCause().getMessage());
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
             }
         }.execute();
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private JTextField styledField(String placeholder) {
-        JTextField tf = new JTextField();
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tf.putClientProperty("JTextField.placeholderText", placeholder);
-        tf.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 220, 235)),
-                new EmptyBorder(8, 10, 8, 10)));
-        tf.setPreferredSize(new Dimension(200, 38));
-        return tf;
-    }
-
-    private JLabel sectionLabel(String text) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        lbl.setForeground(new Color(30, 80, 160));
-        lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(210, 220, 235)));
-        return lbl;
-    }
-
-    private JLabel fieldLabel(String text) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lbl.setForeground(TEXT_DARK);
-        return lbl;
-    }
-
-    private Insets ins(int t, int l, int b, int r) {
-        return new Insets(t, l, b, r);
-    }
-
-    private JButton closeBtn() {
-        JButton btn = new JButton("✕");
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btn.setForeground(new Color(180, 200, 230));
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.addActionListener(e -> dispose());
-        return btn;
-    }
-
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Validación", JOptionPane.WARNING_MESSAGE);
     }
 
     public boolean isConfirmed()  { return confirmed; }

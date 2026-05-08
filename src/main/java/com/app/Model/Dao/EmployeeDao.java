@@ -1,7 +1,7 @@
 package com.app.Model.Dao;
 
 import Infrastructure.DataBase.ConnectionPool;
-import com.app.Model.domain.Profile;
+import com.app.Model.domain.Employee;
 import com.app.Model.Enum.RolUser;
 
 import java.sql.Connection;
@@ -11,11 +11,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfileDao {
+public class EmployeeDao {
 
-    public Profile findById(String id) throws SQLException{
-        String sql= "SELECT id, email, full_name,rol, active " +
-                "FROM public.profile " +
+    public Employee findById(String id) throws SQLException{
+        String sql= "SELECT id, email, full_name, rol, active " +
+                "FROM public.employees " +
                 "WHERE id = ?::uuid";
 
         try(Connection con = ConnectionPool.getConnection();
@@ -29,9 +29,10 @@ public class ProfileDao {
             }
         }
     }
-    public List<Profile> findAll() throws SQLException{
-        String sql= "SELECT id, email, full_name,rol, active FROM public.profile ORDER BY full_name ASC";
-        List<Profile> list = new ArrayList<>();
+
+    public List<Employee> findAll() throws SQLException{
+        String sql= "SELECT id, email, full_name, rol, active FROM public.employees ORDER BY full_name ASC";
+        List<Employee> list = new ArrayList<>();
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
         ResultSet rs = ps.executeQuery()){
@@ -42,8 +43,9 @@ public class ProfileDao {
         }
         return list;
     }
-    public boolean updateActive(String id,boolean active) throws SQLException{
-        String sql= "UPDATE public.profile SET active = ?, updated_at = NOW() WHERE id = ?::uuid";
+
+    public boolean updateActive(String id, boolean active) throws SQLException{
+        String sql= "UPDATE public.employees SET active = ?, updated_at = NOW() WHERE id = ?::uuid";
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)){
             ps.setBoolean(1, active);
@@ -51,37 +53,38 @@ public class ProfileDao {
             return ps.executeUpdate()> 0;
         }
     }
-    public Profile save(Profile profile) throws SQLException {
-        String sql = "INSERT INTO public.profile (id, email, full_name, rol, active) VALUES (?::uuid, ?, ?, ?::role_user, ?) RETURNING created_at, updated_at";
+
+    public Employee save(Employee employee) throws SQLException {
+        String sql = "INSERT INTO public.employees (id, email, full_name, rol, active) VALUES (?::uuid, ?, ?, ?::role_user, ?) RETURNING created_at, updated_at";
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, profile.getId());
-            ps.setString(2, profile.getEmail());
-            ps.setString(3, profile.getFullName());
-            ps.setString(4, profile.getRol().name());
-            ps.setBoolean(5, profile.isActive());
+            ps.setString(1, employee.getId());
+            ps.setString(2, employee.getEmail());
+            ps.setString(3, employee.getFullName());
+            ps.setString(4, employee.getRol().name());
+            ps.setBoolean(5, employee.isActive());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     // Update any metadata if needed
                 }
             }
         }
-        return profile;
+        return employee;
     }
 
-    public boolean update(Profile profile) throws SQLException {
-        String sql= "UPDATE public.profile SET full_name = ?, rol = ?::role_user, updated_at = NOW() WHERE id = ?::uuid";
+    public boolean update(Employee employee) throws SQLException {
+        String sql= "UPDATE public.employees SET full_name = ?, rol = ?::role_user, updated_at = NOW() WHERE id = ?::uuid";
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)){
-            ps.setString(1, profile.getFullName());
-            ps.setString(2, profile.getRol().name());
-            ps.setString(3, profile.getId());
+            ps.setString(1, employee.getFullName());
+            ps.setString(2, employee.getRol().name());
+            ps.setString(3, employee.getId());
             return ps.executeUpdate() > 0;
         }
     }
 
     public boolean delete(String id) throws SQLException {
-        String sql = "DELETE FROM public.profile WHERE id = ?::uuid";
+        String sql = "DELETE FROM public.employees WHERE id = ?::uuid";
         try(Connection con = ConnectionPool.getConnection();
         PreparedStatement ps = con.prepareStatement(sql)){
             ps.setString(1, id);
@@ -89,8 +92,8 @@ public class ProfileDao {
         }
     }
 
-    private Profile mapRow(ResultSet rs) throws SQLException{
-        return new Profile(
+    private Employee mapRow(ResultSet rs) throws SQLException{
+        return new Employee(
                 rs.getString("id"),
                 rs.getString("email"),
                 rs.getString("full_name"),

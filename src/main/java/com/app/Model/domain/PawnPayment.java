@@ -10,7 +10,7 @@ public class PawnPayment {
     private BigDecimal amount;
     private LocalDate paymentDate;
     private String notes;
-    private String createByProfileId;
+    private String createByEmployeeId;
     private boolean isMissed;
     private LocalDateTime createdAt;
 
@@ -18,24 +18,25 @@ public class PawnPayment {
 
     public PawnPayment(int pawnId, BigDecimal amount,
                        LocalDate paymentDate, String notes,
-                       String createByProfileId, boolean isMissed) {
+                       String createByEmployeeId, boolean isMissed) {
         this.pawnId = pawnId;
         this.amount = amount;
         this.paymentDate = paymentDate != null ? paymentDate : LocalDate.now();
         this.notes = notes;
-        this.createByProfileId = createByProfileId;
+        this.createByEmployeeId = createByEmployeeId;
         this.isMissed = isMissed;
     }
-    public static PawnPayment missedInstallment(int pawnId,String adminProfileId, String notes){
+    public static PawnPayment missedInstallment(int pawnId,String adminEmployeeId, String notes){
         PawnPayment p = new PawnPayment();
         p.pawnId = pawnId;
         p.amount = BigDecimal.ZERO;
         p.paymentDate = LocalDate.now();
         p.notes = notes;
-        p.createByProfileId = adminProfileId;
+        p.createByEmployeeId = adminEmployeeId;
         p.isMissed = true;
         return p;
     }
+
 
     public int getId() {
         return id;
@@ -77,13 +78,14 @@ public class PawnPayment {
         this.notes = notes;
     }
 
-    public String getCreateByProfileId() {
-        return createByProfileId;
+    public String getCreateByEmployeeId() {
+        return createByEmployeeId;
     }
 
-    public void setCreateByProfileId(String createByProfileId) {
-        this.createByProfileId = createByProfileId;
+    public void setCreateByEmployeeId(String createByEmployeeId) {
+        this.createByEmployeeId = createByEmployeeId;
     }
+
 
     public boolean isMissed() {
         return isMissed;

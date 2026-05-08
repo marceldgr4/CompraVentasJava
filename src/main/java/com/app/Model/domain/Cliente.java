@@ -139,7 +139,7 @@ public class Cliente {
         return status == ClienteStatus.Activo;
     }
 
-    public boolean isProfileComplete() { return registrationType == RegistrationType.COMPLETO; }
+    public boolean isRegistrationComplete() { return registrationType == RegistrationType.COMPLETO; }
 
     public String getFullName() {
         if (lastName == null || lastName.isBlank()) return firstName;
@@ -150,4 +150,5 @@ public class Cliente {
     public String toString() {
         return getFullName();
     }
+
 }

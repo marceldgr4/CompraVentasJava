@@ -7,13 +7,13 @@ import java.util.List;
 
 /**
  * Representa una venta realizada en el sistema de compraventa.
- * Una venta tiene un empleado (profile), un cliente, una fecha
+ * Una venta tiene un empleado (employee), un cliente, una fecha
  * y una lista de detalles (artículos vendidos).
  */
 public class Sale {
 
     private int id;
-    private String profileId;   // UUID del empleado
+    private String employeeId;   // UUID del empleado
     private int clienteId;
     private String clienteNombreAnon; // Para ventas anónimas (v6)
     private LocalDateTime saleDate;
@@ -26,9 +26,9 @@ public class Sale {
     /**
      * Constructor de creación (sin id).
      */
-    public Sale(String profileId, int clienteId, LocalDateTime saleDate) {
+    public Sale(String employeeId, int clienteId, LocalDateTime saleDate) {
         this();
-        this.profileId = profileId;
+        this.employeeId = employeeId;
         this.clienteId = clienteId;
         this.saleDate  = saleDate;
     }
@@ -36,8 +36,8 @@ public class Sale {
     /**
      * Constructor completo (desde base de datos).
      */
-    public Sale(int id, String profileId, int clienteId, LocalDateTime saleDate) {
-        this(profileId, clienteId, saleDate);
+    public Sale(int id, String employeeId, int clienteId, LocalDateTime saleDate) {
+        this(employeeId, clienteId, saleDate);
         this.id = id;
     }
 
@@ -46,8 +46,9 @@ public class Sale {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public String getProfileId() { return profileId; }
-    public void setProfileId(String profileId) { this.profileId = profileId; }
+    public String getEmployeeId() { return employeeId; }
+    public void setEmployeeId(String employeeId) { this.employeeId = employeeId; }
+
 
     public int getClienteId() { return clienteId; }
     public void setClienteId(int clienteId) { this.clienteId = clienteId; }

@@ -89,17 +89,8 @@ public class ArticleController extends BaseController {
     // CREATE
     // -------------------------------------------------------
      * Crea un nuevo artículo en el inventario.
-     * Solo disponible para administradores.
-     * @param article   artículo a crear (sin ID)
-     * @param parent    componente padre para mensajes
-     * @param onSuccess callback invocado si se creó correctamente (en EDT)
-     * @param onError   callback con el mensaje de error (en EDT)
      */
     public void createArticle(Article article, Component parent, OnSuccess<Article> onSuccess, OnError onError) {
-        if (!SessionManager.isAdmin()) {
-            showError(parent, "Solo el administrador puede crear un articulos");
-            return;
-        }
         log.info("Creando articulo: {}", article.getNameArticle());
         runAsync(
                 () -> {
@@ -110,9 +101,9 @@ public class ArticleController extends BaseController {
                     }
                 },
                 result -> {
-                    log.info("Articlo creadi con el ID:{}", result.getId());
-                    showSuccess(parent, "Articulo creado con el ID: " + result.getId() +
-                            "creado con le nombre de: {" + result.getNameArticle() + "}");
+                    log.info("Artículo creado con el ID: {}", result.getId());
+                    showSuccess(parent, "Artículo creado con el ID: " + result.getId() +
+                            " con el nombre de: {" + result.getNameArticle() + "}");
                     onSuccess.onResult(result);
                 },
                 (msg, ex) -> {
@@ -139,8 +130,8 @@ public class ArticleController extends BaseController {
         runAsyncVoid(
                 () -> articleService.edit(article),
                 () -> {
-                    log.info("Articulo con ID: {} actulizado", article.getId());
-                    showSuccess(parent, "Articulo Actulizado correctamente " + article.getId());
+                    log.info("Artículo con ID: {} actualizado", article.getId());
+                    showSuccess(parent, "Artículo actualizado correctamente " + article.getId());
                     onSuccess.run();
                 },
                 (msg, ex) -> {
@@ -173,7 +164,7 @@ public class ArticleController extends BaseController {
         runAsyncVoid(
                 () -> articleService.editBasicFields(id, nameArticle, description, category, sourceType, itemState),
                 () -> {
-                    showSuccess(parent, "Articulo Actualizado correctamente " + id);
+                    showSuccess(parent, "Artículo actualizado correctamente " + id);
                     onSuccess.run();
                 },
                 (msg, ex) -> onError.onError("Error al editar articulo: " + msg, ex)
@@ -191,11 +182,11 @@ public class ArticleController extends BaseController {
             showError(parent, "Solo el administrador puede editar precios $");
             return;
         }
-        log.info("Actulizar precio del articulo: ${} a ${}", articleId, newPrice);
+        log.info("Actualizar precio del artículo: ${} a ${}", articleId, newPrice);
         runAsyncVoid(
                 () -> articleService.editPrice(articleId, newPrice),
                 () -> {
-                    showSuccess(parent, "Articulo Actualizado correctamente $: " + newPrice);
+                    showSuccess(parent, "Artículo actualizado correctamente $: " + newPrice);
                     onSuccess.run();
                 },
                 (msg, ex) -> onError.onError("Error al editar precio del articulo: " + msg, ex)
@@ -217,7 +208,7 @@ public class ArticleController extends BaseController {
                     showSuccess(parent, quantity + " Unidad(es)  Agregado correctamente al inventario");
                     onSuccess.run();
                 },
-                (msg, ex) -> onError.onError("Errror al agregar al stock: " + msg, ex)
+                (msg, ex) -> onError.onError("Error al agregar al stock: " + msg, ex)
         );
     }
 

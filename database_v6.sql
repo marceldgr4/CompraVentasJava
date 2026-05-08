@@ -7,13 +7,12 @@
 -- 0. LIMPIEZA TOTAL (Idempotencia)
 -- ============================================================
 DROP TRIGGER IF EXISTS on_auth_user_created       ON auth.users;
-DROP TRIGGER IF EXISTS trg_profile_upd            ON public.profile;
+DROP TRIGGER IF EXISTS trg_employee_upd           ON public.employees;
 DROP TRIGGER IF EXISTS trg_cliente_upd            ON public.clientes;
 DROP TRIGGER IF EXISTS trg_article_upd            ON public.articles;
 DROP TRIGGER IF EXISTS trg_pawn_upd               ON public.pawns;
 DROP TRIGGER IF EXISTS trg_audit_articles         ON public.articles;
 DROP TRIGGER IF EXISTS trg_audit_pawns            ON public.pawns;
-DROP TRIGGER IF EXISTS trg_audit_sales            ON public.articles; -- Corrected from articles to sales if it existed there
 DROP TRIGGER IF EXISTS trg_audit_sales            ON public.sales;
 DROP TRIGGER IF EXISTS trg_pawn_payment_after     ON public.pawn_payments;
 
@@ -27,6 +26,7 @@ DROP FUNCTION IF EXISTS public.update_pawn_status_on_payment()                CA
 DROP FUNCTION IF EXISTS public.validate_pawn_jewelry_weight()                 CASCADE;
 DROP FUNCTION IF EXISTS public.next_invoice_number()                          CASCADE;
 DROP FUNCTION IF EXISTS public.fn_audit_trigger()                             CASCADE;
+DROP FUNCTION IF EXISTS public.get_my_role()                                  CASCADE;
 
 DROP TABLE IF EXISTS public.invoice_sequence  CASCADE;
 DROP TABLE IF EXISTS public.audit_log         CASCADE;
@@ -36,7 +36,7 @@ DROP TABLE IF EXISTS public.purchases         CASCADE;
 DROP TABLE IF EXISTS public.pawn_payments     CASCADE;
 DROP TABLE IF EXISTS public.pawns             CASCADE;
 DROP TABLE IF EXISTS public.articles          CASCADE;
-DROP TABLE IF EXISTS public.profile           CASCADE;
+DROP TABLE IF EXISTS public.employees         CASCADE;
 DROP TABLE IF EXISTS public.clientes          CASCADE;
 
 DROP TYPE IF EXISTS public.role_user         CASCADE;
@@ -68,14 +68,14 @@ CREATE TYPE public.item_state        AS ENUM ('Nuevo', 'Bueno', 'Regular', 'Dañ
 -- 3. TABLAS MAESTRAS
 -- ============================================================
 
-CREATE TABLE public.profile (
-    id         UUID                 PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email      VARCHAR(255)         NOT NULL UNIQUE,
-    full_name  VARCHAR(255)         NOT NULL,
-    rol        public.role_user     NOT NULL DEFAULT 'Empleado',
-    active     BOOLEAN              NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ          NOT NULL DEFAULT NOW()
+CREATE TABLE public.employees (
+    id          UUID                 PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email       VARCHAR(255)         NOT NULL UNIQUE,
+    full_name   VARCHAR(255)         NOT NULL,
+    rol         public.role_user     NOT NULL DEFAULT 'Empleado',
+    active      BOOLEAN              NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ          NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE public.clientes (
@@ -116,7 +116,7 @@ CREATE TABLE public.articles (
 -- ============================================================
 CREATE TABLE public.purchases (
     id             SERIAL        PRIMARY KEY,
-    profile_id     UUID          NOT NULL REFERENCES public.profile(id),
+    employee_id    UUID          NOT NULL REFERENCES public.employees(id),
     cliente_id     INTEGER       NOT NULL REFERENCES public.clientes(id),
     article_id     INTEGER       NOT NULL REFERENCES public.articles(id),
     purchase_price NUMERIC(12,2) NOT NULL CHECK (purchase_price > 0),
@@ -129,7 +129,7 @@ CREATE TABLE public.purchases (
 -- ============================================================
 CREATE TABLE public.pawns (
     id                  SERIAL             PRIMARY KEY,
-    profile_id          UUID               NOT NULL REFERENCES public.profile(id),
+    employee_id         UUID               NOT NULL REFERENCES public.employees(id),
     article_id          INTEGER            NOT NULL REFERENCES public.articles(id),
     cliente_id          INTEGER            NOT NULL REFERENCES public.clientes(id),
     amount              INTEGER            NOT NULL CHECK (amount > 0),
@@ -148,14 +148,14 @@ CREATE TABLE public.pawns (
 );
 
 CREATE TABLE public.pawn_payments (
-    id                    SERIAL        PRIMARY KEY,
-    pawn_id               INTEGER       NOT NULL REFERENCES public.pawns(id) ON DELETE CASCADE,
-    amount                NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
-    payment_date          DATE          NOT NULL DEFAULT CURRENT_DATE,
-    notes                 VARCHAR(500),
-    created_by_profile_id UUID          NOT NULL REFERENCES public.profile(id),
-    is_missed             BOOLEAN       NOT NULL DEFAULT FALSE,
-    created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+    id                     SERIAL        PRIMARY KEY,
+    pawn_id                INTEGER       NOT NULL REFERENCES public.pawns(id) ON DELETE CASCADE,
+    amount                 NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
+    payment_date           DATE          NOT NULL DEFAULT CURRENT_DATE,
+    notes                  VARCHAR(500),
+    created_by_employee_id UUID          NOT NULL REFERENCES public.employees(id),
+    is_missed              BOOLEAN       NOT NULL DEFAULT FALSE,
+    created_at             TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -163,7 +163,7 @@ CREATE TABLE public.pawn_payments (
 -- ============================================================
 CREATE TABLE public.sales (
     id                  SERIAL      PRIMARY KEY,
-    profile_id          UUID        NOT NULL REFERENCES public.profile(id),
+    employee_id         UUID        NOT NULL REFERENCES public.employees(id),
     cliente_id          INTEGER     REFERENCES public.clientes(id),
     cliente_nombre_anon VARCHAR(255),
     sale_date           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -183,14 +183,14 @@ CREATE TABLE public.sales_details (
 -- 8. AUDITORÍA Y SECUENCIAS
 -- ============================================================
 CREATE TABLE public.audit_log (
-    id         BIGSERIAL   PRIMARY KEY,
-    table_name VARCHAR(50) NOT NULL,
-    operation  VARCHAR(10) NOT NULL,
-    record_id  INTEGER,
-    profile_id UUID,
-    old_data   JSONB,
-    new_data   JSONB,
-    changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          BIGSERIAL   PRIMARY KEY,
+    table_name  VARCHAR(50) NOT NULL,
+    operation   VARCHAR(10) NOT NULL,
+    record_id   INTEGER,
+    employee_id UUID,
+    old_data    JSONB,
+    new_data    JSONB,
+    changed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE public.invoice_sequence (
@@ -212,9 +212,7 @@ BEGIN
 END;
 $$;
 
--- 9.2 Sincronización Auth → Profile
--- SECURITY DEFINER es obligatorio: el trigger corre como el owner
--- de la función, no como anon/authenticated, para poder insertar en profile
+-- 9.2 Sincronización Auth → Employees
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -222,7 +220,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    INSERT INTO public.profile (id, email, full_name, rol)
+    INSERT INTO public.employees (id, email, full_name, rol)
     VALUES (
         NEW.id,
         NEW.email,
@@ -254,7 +252,7 @@ $$;
 
 -- 9.4 Venta atómica con bloqueo pesimista
 CREATE OR REPLACE FUNCTION public.register_sale(
-    p_profile_id  UUID,
+    p_employee_id UUID,
     p_cliente_id  INTEGER,
     p_items       JSONB,
     p_nombre_anon TEXT DEFAULT NULL
@@ -270,8 +268,8 @@ BEGIN
         RAISE EXCEPTION 'Venta vacía no permitida.';
     END IF;
 
-    INSERT INTO public.sales (profile_id, cliente_id, cliente_nombre_anon)
-    VALUES (p_profile_id, p_cliente_id, p_nombre_anon)
+    INSERT INTO public.sales (employee_id, cliente_id, cliente_nombre_anon)
+    VALUES (p_employee_id, p_cliente_id, p_nombre_anon)
     RETURNING id INTO v_sale_id;
 
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
@@ -372,16 +370,16 @@ $$;
 -- 10. TRIGGERS
 -- ============================================================
 
--- Auth: crear perfil automáticamente al registrar usuario
+-- Auth: crear empleado automáticamente al registrar usuario
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Timestamps automáticos
-CREATE TRIGGER trg_profile_upd  BEFORE UPDATE ON public.profile  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER trg_cliente_upd  BEFORE UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER trg_article_upd  BEFORE UPDATE ON public.articles FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER trg_pawn_upd     BEFORE UPDATE ON public.pawns    FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_employee_upd BEFORE UPDATE ON public.employees FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_cliente_upd  BEFORE UPDATE ON public.clientes  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_article_upd  BEFORE UPDATE ON public.articles  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER trg_pawn_upd     BEFORE UPDATE ON public.pawns     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- Auditoría
 CREATE TRIGGER trg_audit_articles AFTER INSERT OR UPDATE OR DELETE ON public.articles     FOR EACH ROW EXECUTE FUNCTION public.fn_audit_trigger();
@@ -398,7 +396,7 @@ CREATE TRIGGER trg_pawn_payment_after
 -- 11. ROW LEVEL SECURITY
 -- ============================================================
 
-ALTER TABLE public.profile       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employees     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clientes      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.articles      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchases     ENABLE ROW LEVEL SECURITY;
@@ -415,22 +413,22 @@ LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
 STABLE AS $$
-    SELECT rol FROM public.profile WHERE id = auth.uid();
+    SELECT rol FROM public.employees WHERE id = auth.uid();
 $$;
 
--- profile
-CREATE POLICY "profile: select authenticated"
-    ON public.profile FOR SELECT TO authenticated USING (true);
+-- employees
+CREATE POLICY "employees: select authenticated"
+    ON public.employees FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "profile: insert via trigger"
-    ON public.profile FOR INSERT WITH CHECK (true);
+CREATE POLICY "employees: insert via trigger"
+    ON public.employees FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "profile: update own"
-    ON public.profile FOR UPDATE TO authenticated
+CREATE POLICY "employees: update own"
+    ON public.employees FOR UPDATE TO authenticated
     USING (auth.uid() = id);
 
-CREATE POLICY "profile: admin update any"
-    ON public.profile FOR UPDATE TO authenticated
+CREATE POLICY "employees: admin update any"
+    ON public.employees FOR UPDATE TO authenticated
     USING (public.get_my_role() = 'Admin');
 
 -- clientes
@@ -458,7 +456,6 @@ CREATE POLICY "pawn_payments: authenticated all"
 -- sales
 CREATE POLICY "sales: select all"    ON public.sales FOR SELECT TO authenticated USING (true);
 CREATE POLICY "sales: insert all"    ON public.sales FOR INSERT TO authenticated WITH CHECK (true);
--- Sin DELETE: ventas son inmutables por auditoría
 
 -- sales_details
 CREATE POLICY "sales_details: select all"  ON public.sales_details FOR SELECT TO authenticated USING (true);
@@ -476,23 +473,21 @@ CREATE POLICY "audit_log: insert trigger"
 -- 12. ÍNDICES
 -- ============================================================
 
--- Búsqueda por texto parcial (GIN trgm — un índice por columna)
 CREATE INDEX idx_art_name_trgm   ON public.articles USING GIN (name_article gin_trgm_ops);
 CREATE INDEX idx_cli_fname_trgm  ON public.clientes USING GIN (first_name  gin_trgm_ops);
 CREATE INDEX idx_cli_lname_trgm  ON public.clientes USING GIN (last_name   gin_trgm_ops);
 CREATE INDEX idx_cli_phone_trgm  ON public.clientes USING GIN (phone       gin_trgm_ops);
 CREATE INDEX idx_cli_cedula_trgm ON public.clientes USING GIN (cedula      gin_trgm_ops);
 
--- Operacionales
 CREATE INDEX idx_pawns_status_date     ON public.pawns    (status, return_date);
 CREATE INDEX idx_pawns_cliente         ON public.pawns    (cliente_id);
 CREATE INDEX idx_pawns_article         ON public.pawns    (article_id);
 CREATE INDEX idx_sales_date            ON public.sales    (sale_date DESC);
-CREATE INDEX idx_sales_profile         ON public.sales    (profile_id);
+CREATE INDEX idx_sales_employee        ON public.sales    (employee_id);
 CREATE INDEX idx_sales_cliente         ON public.sales    (cliente_id);
 CREATE INDEX idx_sales_details_sale    ON public.sales_details (sale_id);
 CREATE INDEX idx_sales_details_article ON public.sales_details (article_id);
-CREATE INDEX idx_purchases_profile     ON public.purchases (profile_id);
+CREATE INDEX idx_purchases_employee    ON public.purchases (employee_id);
 CREATE INDEX idx_purchases_cliente     ON public.purchases (cliente_id);
 CREATE INDEX idx_pawn_payments_pawn    ON public.pawn_payments (pawn_id);
 CREATE INDEX idx_articles_available    ON public.articles (id) WHERE amount > 0;
@@ -509,22 +504,21 @@ SELECT
     (SELECT COUNT(*) FROM public.pawns    WHERE status = 'Vencido')             AS overdue_pawns,
     (SELECT COUNT(*) FROM public.articles WHERE amount > 0)                     AS total_articles_stock,
     (SELECT COUNT(*) FROM public.clientes WHERE status = 'Activo')              AS total_clientes_activos,
-    (SELECT COUNT(*) FROM public.clientes WHERE registration_type = 'RAPIDO')   AS incomplete_profiles,
+    (SELECT COUNT(*) FROM public.clientes WHERE registration_type = 'RAPIDO')   AS incomplete_clients,
     (SELECT COUNT(*) FROM public.purchases WHERE purchase_date::date = CURRENT_DATE) AS purchases_today,
     COALESCE(
         (SELECT SUM(price * amount) FROM public.pawns WHERE status = 'Activo'), 0
     )                                                                            AS total_active_pawn_value;
 
 -- ============================================================
--- 14. BACKFILL — Perfiles de usuarios ya existentes en auth
---     Ejecutar solo si había usuarios antes del trigger
+-- 14. BACKFILL — Empleados ya existentes en auth
 -- ============================================================
-INSERT INTO public.profile (id, email, full_name, rol)
+INSERT INTO public.employees (id, email, full_name, rol)
 SELECT
     u.id,
     u.email,
     COALESCE(u.raw_user_meta_data->>'full_name', u.email),
     'Empleado'
 FROM auth.users u
-LEFT JOIN public.profile p ON p.id = u.id
-WHERE p.id IS NULL;
+LEFT JOIN public.employees e ON e.id = u.id
+WHERE e.id IS NULL;

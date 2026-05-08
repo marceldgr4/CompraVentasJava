@@ -281,7 +281,8 @@ public class PawnPanel extends JPanel {
                     p.getPawnDate()   != null ? p.getPawnDate()  .format(FMT) : "N/A",
                     p.getReturnDate() != null ? p.getReturnDate().format(FMT) : "N/A",
                     p.getStatus(),
-                    p.getProfileName() != null ? p.getProfileName() : "N/A"
+                    p.getEmployeeName() != null ? p.getEmployeeName() : "N/A"
+
             });
         }
     }

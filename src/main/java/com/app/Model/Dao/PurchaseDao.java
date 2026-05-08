@@ -14,11 +14,11 @@ import java.util.Optional;
 public class PurchaseDao {
 
     private static final String SELECT_COLS = """
-             p.id, p.profile_id, p.cliente_id, p.article_id,
+             p.id, p.employee_id, p.cliente_id, p.article_id,
             p.purchase_price, p.purchase_date, p.notes,
             CONCAT(c.first_name, ' ', COALESCE(c.last_name, '')) AS cliente_name,
             a.name_article AS article_name,
-            pr.full_name   AS profile_name
+            pr.full_name   AS employee_name
             
             """;
 
@@ -26,27 +26,27 @@ public class PurchaseDao {
             FROM public.purchases p
             LEFT JOIN public.articles a ON p.article_id = a.id
             LEFT JOIN public.clientes c ON p.cliente_id = c.id
-            LEFT JOIN public.profile pr ON p.profile_id = pr.id
+            LEFT JOIN public.employees pr ON p.employee_id = pr.id
             """;
 
 
     public List<Purchase> findAll() throws SQLException{
-        String sql = "SELECT"+SELECT_COLS + FORM_JOINS+
-                "ORDER BY p.purchase_date DESC LIMIT 1";
+        String sql = "SELECT " + SELECT_COLS + FORM_JOINS +
+                " ORDER BY p.purchase_date DESC";
         return executeList(sql,ps -> {});
     }
 
-    public List<Purchase> findByProfile(String profileId) throws SQLException {
-        String sql = "SELECT"+ SELECT_COLS + FORM_JOINS+
-                "WHERE p.profile_id = ?::uuid"+
-                "ORDER BY p.purchase_date DESC";
-        return executeList(sql, ps-> ps.setString(1, profileId));
+    public List<Purchase> findByEmployee(String employeeId) throws SQLException {
+        String sql = "SELECT " + SELECT_COLS + FORM_JOINS +
+                " WHERE p.employee_id = ?::uuid " +
+                " ORDER BY p.purchase_date DESC";
+        return executeList(sql, ps-> ps.setString(1, employeeId));
     }
 
     public List<Purchase> findByDateRange(LocalDate start, LocalDate end) throws SQLException {
-        String sql = "SELECT"+ SELECT_COLS+ FORM_JOINS+
-                "WHERE p.purchase_date BETWEEN ? AND ?"+
-                "ORDER BY p.purchase_date DESC";
+        String sql = "SELECT " + SELECT_COLS + FORM_JOINS +
+                " WHERE p.purchase_date BETWEEN ? AND ? " +
+                " ORDER BY p.purchase_date DESC";
         return executeList(sql,ps -> {
             ps.setDate(1, Date.valueOf(start));
             ps.setDate(2, Date.valueOf(end));
@@ -54,8 +54,8 @@ public class PurchaseDao {
     }
 
     public Optional<Purchase> findById(int id) throws SQLException {
-        String sql = "SELECT"+ SELECT_COLS+ FORM_JOINS+
-                "WHERE p.purchase_id = ?";
+        String sql = "SELECT " + SELECT_COLS + FORM_JOINS +
+                " WHERE p.id = ?";
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)){
             ps.setInt(1, id);
@@ -68,7 +68,7 @@ public class PurchaseDao {
     //-----create----//
     public Purchase save(Purchase purchase) throws SQLException {
         String sql = """
-                INSERT INTO public.purchases(profile_id, cliente_id, article_id, purchase_price, notes)
+                INSERT INTO public.purchases(employee_id, cliente_id, article_id, purchase_price, notes)
                 VALUES (?::uuid, ?, ?, ?, ?)
                 RETURNING id, purchase_date
                 """;
@@ -89,7 +89,7 @@ public class PurchaseDao {
     /** Versión transaccional para usar dentro de una transacción JDBC existente. */
     public Purchase save(Connection con, Purchase purchase) throws SQLException {
         String sql = """
-                INSERT INTO public.purchases(profile_id, cliente_id, article_id, purchase_price, notes)
+                INSERT INTO public.purchases(employee_id, cliente_id, article_id, purchase_price, notes)
                 VALUES (?::uuid, ?, ?, ?, ?)
                 RETURNING id, purchase_date
                 """;
@@ -122,7 +122,7 @@ public class PurchaseDao {
   }
 
   private void setParams(PreparedStatement ps, Purchase purchase) throws SQLException {
-        ps.setString(1, purchase.getProfileId());
+        ps.setString(1, purchase.getEmployeeId());
         if (purchase.getClientId() > 0) ps.setInt(2, purchase.getClientId());
         else ps.setNull(2, Types.INTEGER);
         ps.setInt(3, purchase.getArticleId());
@@ -132,7 +132,7 @@ public class PurchaseDao {
     private Purchase mapRow(ResultSet rs) throws SQLException {
         Purchase p = new Purchase();
         p.setId(rs.getInt("id"));
-        p.setProfileId(rs.getString("profile_id"));
+        p.setEmployeeId(rs.getString("employee_id"));
         p.setClientId(rs.getInt("cliente_id"));
         p.setArticleId(rs.getInt("article_id"));
         p.setPurchasePrice(rs.getBigDecimal("purchase_price"));
@@ -141,7 +141,7 @@ public class PurchaseDao {
         p.setNotes(rs.getString("notes"));
         p.setClienteName(rs.getString("cliente_name"));
         p.setArticleName(rs.getString("article_name"));
-        p.setProfileName(rs.getString("profile_name"));
+        p.setEmployeeName(rs.getString("employee_name"));
         return p;
     }
 

@@ -40,7 +40,7 @@ public class MainFrame extends JFrame {
     private static final int SIDEBAR_W_COL  = 64;
 
     // ── Secciones ─────────────────────────────────────────────────────────────
-    private static final String[] PANEL_IDS   = {"Dashboard","Articles","Pawns","Sales","Purchases","Clients","Profiles"};
+    private static final String[] PANEL_IDS   = {"Dashboard","Articles","Pawns","Sales","Purchases","Clients","Employees"};
     private static final String[] NAV_ICONS   = {"🏠","📦","🤝","💰","🛒","👤","👔"};
     private static final String[] NAV_LABELS  = {"Dashboard","Artículos","Empeños","Ventas","Compras","Clientes","Empleados"};
 
@@ -193,7 +193,7 @@ public class MainFrame extends JFrame {
 
         boolean isAdmin = SessionManager.isAdmin();
         for (int i = 0; i < PANEL_IDS.length; i++) {
-            if (PANEL_IDS[i].equals("Profiles") && !isAdmin) continue;
+            if (PANEL_IDS[i].equals("Employees") && !isAdmin) continue;
 
             NavItem item = new NavItem(NAV_ICONS[i], NAV_LABELS[i], PANEL_IDS[i]);
             item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
@@ -250,6 +250,22 @@ public class MainFrame extends JFrame {
 
         panel.add(avatar);
         panel.add(info);
+
+        panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        panel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                com.app.UI.dialogs.EmployeeSelfEditDialog dlg = new com.app.UI.dialogs.EmployeeSelfEditDialog(MainFrame.this);
+                dlg.setVisible(true);
+
+                // Si el usuario cambió su nombre, refrescamos el panel de info
+                lblName.setText(SessionManager.getFullName());
+                avatar.setInitials(getInitials(SessionManager.getFullName()));
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
         return panel;
     }
 
@@ -268,7 +284,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new ClientePanel(),   "Clients");
 
         if (SessionManager.isAdmin()) {
-            contentPanel.add(new ProfilePanel(), "Profiles");
+            contentPanel.add(new EmployeePanel(), "Employees");
         }
         return contentPanel;
     }
@@ -400,7 +416,7 @@ public class MainFrame extends JFrame {
      * Círculo con iniciales para el avatar del sidebar.
      */
     static class AvatarCircle extends JPanel {
-        private final String initials;
+        private String initials;
         private final Color  bg;
         private final int    size;
 
@@ -411,6 +427,11 @@ public class MainFrame extends JFrame {
             setOpaque(false);
             setPreferredSize(new Dimension(size, size));
             setMaximumSize (new Dimension(size, size));
+        }
+
+        public void setInitials(String initials) {
+            this.initials = initials;
+            repaint();
         }
 
         @Override protected void paintComponent(Graphics g) {

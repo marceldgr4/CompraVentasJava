@@ -2,8 +2,6 @@ package com.app.UI.dialogs;
 
 import com.app.Model.domain.Pawn;
 import com.app.Service.PawnPaymentService;
-import com.app.Service.exceptions.ServiceException;
-import com.app.Utils.CurrencyUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,95 +11,40 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Diálogo para registrar un pago de cuota o una cuota impagada.
- * HU-16: Empleado o Admin registra pago exitoso.
- * HU-17: Solo Admin registra cuota impagada.
  */
-public class PawnPaymentDialog extends JDialog {
+public class PawnPaymentDialog extends BaseDialog {
 
     public enum Mode { PAYMENT, MISSED_INSTALLMENT }
 
-    private static final Color HEADER_BG   = new Color(18, 28, 58);
-    private static final Color BLUE_ACCENT = new Color(30, 136, 229);
-    private static final Color WARNING_BG  = new Color(255, 243, 224);
+    private final Pawn pawn;
+    private final Mode mode;
+    private final PawnPaymentService paymentService = new PawnPaymentService();
 
-    private final Pawn                pawn;
-    private final Mode                mode;
-    private final PawnPaymentService  paymentService = new PawnPaymentService();
-
-    private JSpinner   spnAmount;
-    private JTextArea  txtNotes;
-    private JButton    btnConfirm;
-    private boolean    confirmed = false;
+    private JSpinner spnAmount;
+    private JTextArea txtNotes;
+    private JButton btnConfirm;
+    private boolean confirmed = false;
 
     public PawnPaymentDialog(JFrame parent, Pawn pawn, Mode mode) {
-        super(parent, true);
+        super(parent, mode == Mode.PAYMENT ? "Registrar Pago" : "Cuota Impagada", mode == Mode.PAYMENT ? "💳" : "⚠️");
         this.pawn = pawn;
         this.mode = mode;
-        setUndecorated(true);
-        setSize(420, mode == Mode.PAYMENT ? 320 : 260);
+        setSize(420, mode == Mode.PAYMENT ? 350 : 280);
         setLocationRelativeTo(parent);
-        setContentPane(buildRoot());
-    }
-
-    private JPanel buildRoot() {
-        JPanel root = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                g2.dispose();
-            }
-        };
-        root.setOpaque(false);
-        root.add(buildHeader(), BorderLayout.NORTH);
-        root.add(buildBody(),   BorderLayout.CENTER);
-        root.add(buildFooter(), BorderLayout.SOUTH);
-        return root;
-    }
-
-    private JPanel buildHeader() {
-        JPanel header = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(HEADER_BG);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight() + 12, 12, 12);
-                g2.fillRect(0, getHeight() / 2, getWidth(), getHeight());
-                g2.dispose();
-            }
-        };
-        header.setOpaque(false);
-        header.setPreferredSize(new Dimension(0, 55));
-        header.setBorder(new EmptyBorder(0, 16, 0, 16));
-
-        String title = mode == Mode.PAYMENT
-                ? "💳  Registrar Pago — Empeño #" + pawn.getId()
-                : "⚠️  Registrar Cuota Impagada — Empeño #" + pawn.getId();
-        JLabel lbl = new JLabel(title);
-        lbl.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        lbl.setForeground(Color.WHITE);
-
-        JButton btnClose = new JButton("✕");
-        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnClose.setForeground(new Color(180, 200, 230));
-        btnClose.setContentAreaFilled(false);
-        btnClose.setBorderPainted(false);
-        btnClose.setFocusPainted(false);
-        btnClose.addActionListener(e -> dispose());
-
-        header.add(lbl,      BorderLayout.WEST);
-        header.add(btnClose, BorderLayout.EAST);
-        return header;
+        
+        setContentBody(buildBody());
+        setFooter(buildFooter());
     }
 
     private JPanel buildBody() {
         JPanel body = new JPanel(new GridBagLayout());
         body.setBackground(Color.WHITE);
         body.setBorder(new EmptyBorder(16, 20, 8, 20));
+        
         GridBagConstraints gc = new GridBagConstraints();
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
-        gc.insets = new Insets(4, 0, 4, 0);
+        gc.insets = ins(4, 0, 4, 0);
         int row = 0;
 
         // Info empeño
@@ -109,24 +52,24 @@ public class PawnPaymentDialog extends JDialog {
         JLabel lblInfo = new JLabel(
                 "<html>Artículo: <b>" + (pawn.getArticleName() != null ? pawn.getArticleName() : "N/A") + "</b> &nbsp;|&nbsp;" +
                         "Cuotas: <b>" + pawn.getInstallmentsPaid() + "/" + pawn.getInstallmentCount() + "</b></html>");
-        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblInfo.setForeground(new Color(80, 90, 120));
+        lblInfo.setFont(FONT_FIELD);
+        lblInfo.setForeground(TEXT_MUTED);
         body.add(lblInfo, gc); row++;
 
         if (mode == Mode.MISSED_INSTALLMENT) {
             gc.gridy = row;
             JLabel warn = new JLabel("<html><b>⚠ Advertencia:</b> Si las cuotas impagadas superan 4, el empeño pasará a estado PERDIDO.</html>");
-            warn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            warn.setForeground(new Color(180, 100, 0));
+            warn.setFont(FONT_SMALL);
+            warn.setForeground(WARNING_CLR);
             warn.setOpaque(true);
-            warn.setBackground(WARNING_BG);
+            warn.setBackground(new Color(255, 243, 224));
             warn.setBorder(new EmptyBorder(8, 8, 8, 8));
             body.add(warn, gc); row++;
         }
 
         if (mode == Mode.PAYMENT) {
             gc.gridy = row; gc.gridwidth = 1; gc.weightx = 0;
-            body.add(label("Monto del pago: *"), gc);
+            body.add(fieldLabel("Monto del pago: *"), gc);
             gc.gridx = 1; gc.weightx = 1;
             spnAmount = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 9_999_999.0, 1000.0));
             body.add(spnAmount, gc);
@@ -135,35 +78,23 @@ public class PawnPaymentDialog extends JDialog {
         }
 
         gc.gridy = row;
-        body.add(label("Notas (opcional):"), gc); row++;
+        body.add(fieldLabel("Notas (opcional):"), gc); row++;
         gc.gridy = row;
-        txtNotes = new JTextArea(3, 20);
-        txtNotes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtNotes.setLineWrap(true);
-        txtNotes.setWrapStyleWord(true);
-        txtNotes.setBorder(BorderFactory.createLineBorder(new Color(210, 220, 235)));
+        txtNotes = styledTextArea(3);
         body.add(new JScrollPane(txtNotes), gc);
 
         return body;
     }
 
     private JPanel buildFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        footer.setBackground(Color.WHITE);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(225, 232, 245)));
-
-        JButton btnCancel = com.app.UI.Components.ButtonFactory.createNeutralButton("Cancelar");
-        btnCancel.addActionListener(e -> dispose());
-
+        JButton btnCancel = buildCancelButton();
         String confirmText = mode == Mode.PAYMENT ? "Registrar Pago" : "Registrar Impagada";
-        btnConfirm = mode == Mode.PAYMENT 
-                ? com.app.UI.Components.ButtonFactory.createPrimaryButton(confirmText)
-                : com.app.UI.Components.ButtonFactory.createDangerButton(confirmText);
+        btnConfirm = mode == Mode.PAYMENT ? buildPrimaryButton(confirmText) : buildDangerButton(confirmText);
+        
+        btnCancel.addActionListener(e -> onCancel());
         btnConfirm.addActionListener(e -> doConfirm());
-
-        footer.add(btnCancel);
-        footer.add(btnConfirm);
-        return footer;
+        
+        return buildStandardFooter(btnCancel, btnConfirm);
     }
 
     private void doConfirm() {
@@ -189,8 +120,7 @@ public class PawnPaymentDialog extends JDialog {
                     dispose();
                 } catch (ExecutionException ex) {
                     Throwable cause = ex.getCause();
-                    JOptionPane.showMessageDialog(PawnPaymentDialog.this,
-                            cause.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    showValidationError(cause.getMessage());
                     btnConfirm.setEnabled(true);
                     btnConfirm.setText(mode == Mode.PAYMENT ? "Registrar Pago" : "Registrar Impagada");
                 } catch (InterruptedException ex) {
@@ -198,13 +128,6 @@ public class PawnPaymentDialog extends JDialog {
                 }
             }
         }.execute();
-    }
-
-    private JLabel label(String text) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lbl.setForeground(new Color(15, 25, 50));
-        return lbl;
     }
 
     public boolean isConfirmed() { return confirmed; }

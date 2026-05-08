@@ -220,8 +220,9 @@ public class SalePanel extends JPanel {
         for (Sale s : sales) {
             tableModel.addRow(new Object[]{
                     s.getId(),
-                    s.getProfileId() != null ? s.getProfileId().substring(0, 8) + "..." : "N/A",
+                    s.getEmployeeId() != null ? s.getEmployeeId().substring(0, 8) + "..." : "N/A",
                     s.getClienteId(),
+
                     s.getSaleDate() != null ? s.getSaleDate().format(FORMATTER) : "N/A",
                     CurrencyUtils.format(s.getTotal()),
                     s.getDetails() != null ? s.getDetails().size() + " art." : "0 art."

@@ -1,6 +1,7 @@
 package com.app.Model.Enum;
 
-public enum ClienteStatus {
+public enum EmployeeStatus {
     Activo,
     Eliminado,
+
 }

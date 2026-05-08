@@ -14,7 +14,7 @@ public class PawnPaymentDao {
 
     public PawnPayment save(PawnPayment pawnPayment) throws SQLException {
       String Sql = """
-              INSERT INTO public.pawn_payments(pawn_id, amount, payment_date, notes, created_by_profile_id,
+              INSERT INTO public.pawn_payments(pawn_id, amount, payment_date, notes, created_by_employee_id,
               is_missed)
               VALUES (?, ?, ?, ?, ?, ?)
               RETURNING id, created_at;
@@ -25,7 +25,7 @@ public class PawnPaymentDao {
                   ps.setBigDecimal(2, pawnPayment.getAmount());
                   ps.setDate(3, Date.valueOf(pawnPayment.getPaymentDate()));
                   ps.setString(4, pawnPayment.getNotes());
-                  ps.setString(5, pawnPayment.getCreateByProfileId());
+                  ps.setString(5, pawnPayment.getCreateByEmployeeId());
                   ps.setBoolean(6, pawnPayment.isMissed());
                   try(ResultSet rs = ps.executeQuery()){
                       if(rs.next()){
@@ -40,7 +40,7 @@ public class PawnPaymentDao {
 
     public List<PawnPayment> findByPawnId(int pawnId) throws SQLException {
         String Sql = """
-                  SELECT id,pawn_id, amount, payment_date, notes, created_by_profile_id, is_missed, created_at
+                  SELECT id,pawn_id, amount, payment_date, notes, created_by_employee_id, is_missed, created_at
                   FROM public.pawn_payments 
                   WHERE pawn_id = ?
                   ORDER BY payment_date DESC, id DESC;
@@ -65,11 +65,12 @@ public class PawnPaymentDao {
         Date paymentDate = rs.getDate("payment_date");
         if(paymentDate!=null) p.setPaymentDate(paymentDate.toLocalDate());
         p.setNotes(rs.getString("notes"));
-        p.setCreateByProfileId(rs.getString("created_by_profile_id"));
+        p.setCreateByEmployeeId(rs.getString("created_by_employee_id"));
         p.setMissed(rs.getBoolean("is_missed"));
         Timestamp ts = rs.getTimestamp("created_at");
         if(ts!=null) p.setCreatedAt(ts.toLocalDateTime());
         return p;
 
     }
+
 }
