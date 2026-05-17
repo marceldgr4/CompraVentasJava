@@ -117,11 +117,12 @@ public class ClienteDialog extends BaseDialog {
     }
 
     private void doSave() {
-        if (txtCedula.getText().isBlank() || txtFirstName.getText().isBlank() || txtLastName.getText().isBlank()) {
-            showValidationError("Cédula, nombre y apellido son obligatorios.");
+        if (txtFirstName.getText().isBlank()) {
+            showValidationError("El nombre es obligatorio.");
             return;
         }
-        if (!txtCedula.getText().trim().matches("^[0-9]+$")) {
+        String cedula = txtCedula.getText().trim();
+        if (!cedula.isEmpty() && !cedula.matches("^[0-9]+$")) {
             showValidationError("La cédula solo permite números.");
             return;
         }
@@ -137,8 +138,9 @@ public class ClienteDialog extends BaseDialog {
     public boolean isConfirmed() { return confirmed; }
 
     public Cliente getCliente() {
+        String cedula = txtCedula.getText().trim();
         return new Cliente(
-                txtCedula   .getText().trim(),
+                cedula.isEmpty() ? null : cedula,
                 txtFirstName.getText().trim(),
                 txtLastName .getText().trim(),
                 txtEmail    .getText().trim(),

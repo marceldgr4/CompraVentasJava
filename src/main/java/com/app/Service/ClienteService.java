@@ -67,6 +67,7 @@ public class ClienteService {
             throw new ServiceException("Error al buscar por teléfono: " + e.getMessage(), e);
         }
     }
+
     public Optional<Cliente> findByCedula(String cedula) throws ServiceException {
         if (cedula == null || cedula.isBlank()) return Optional.empty();
         try {
@@ -85,8 +86,9 @@ public class ClienteService {
         validateCompleto(cliente);
         return persist(cliente);
     }
+
     public Cliente createRapido(String firstName, String cedula, String phone) throws ServiceException {
-        if(firstName == null || firstName.isBlank()){
+        if (firstName == null || firstName.isBlank()) {
             throw new BusinessException("El nombre completo es Obligatorio para el regsitro rapida");
         }
         if (cedula != null && !cedula.isBlank()) {
@@ -108,10 +110,10 @@ public class ClienteService {
         }
 
         Cliente rapido = Cliente.createRapido(
-                cedula    != null ? cedula.trim()    : null,
+                cedula != null ? cedula.trim() : null,
                 firstName.trim(),
                 null,
-                phone     != null ? phone.trim()     : null
+                phone != null ? phone.trim() : null
         );
         return persist(rapido);
     }
@@ -154,34 +156,37 @@ public class ClienteService {
             findById(id);
             boolean updated = clienteDao.softDelete(id);
             if (!updated) {
-                throw new ServiceException("No se puede marcar el Cliente como eliminado." );
+                throw new ServiceException("No se puede marcar el Cliente como eliminado.");
             }
         } catch (SQLException e) {
             throw new ServiceException("Error al eliminar el cliente: " + e.getMessage(), e);
         }
     }
+
     /*
      * Eliminación física. Solo Admin.
      * Falla si el cliente tiene ventas, empeños o artículos asociados (ON DELETE RESTRICT).
      */
     public void hardDelete(int id) throws ServiceException {
         requireAdmin("eliminar cliente de forma permanente");
-    try {
-        findById(id);
-        boolean deleted = clienteDao.delete(id);
-        if (!deleted) {
-            throw new ServiceException("No se puede marcar el Cliente con ID:."+ id);
-        }
-    }catch (SQLException e) {
-        if(isFKViolation(e)){
-          throw new ServiceException("Error al eliminar el cliente tiene operacion regsitados ");
-        }
-        throw new ServiceException("Error al eliminar el cliente: " + e.getMessage(), e);
+        try {
+            findById(id);
+            boolean deleted = clienteDao.delete(id);
+            if (!deleted) {
+                throw new ServiceException("No se puede marcar el Cliente con ID:." + id);
+            }
+        } catch (SQLException e) {
+            if (isFKViolation(e)) {
+                throw new ServiceException("Error al eliminar el cliente tiene operacion regsitados ");
+            }
+            throw new ServiceException("Error al eliminar el cliente: " + e.getMessage(), e);
         }
     }
+
     private boolean isFKViolation(SQLException e) {
         return "23503".equals(e.getSQLState());
     }
+
     private boolean isUniqueViolation(SQLException e) {
         return "23505".equals(e.getSQLState());
     }
@@ -211,19 +216,20 @@ public class ClienteService {
         }
     }
 
-    private void validateCompleto(Cliente cliente)  {
+    private void validateCompleto(Cliente cliente) {
         List<String> errors = new ArrayList<>();
-        checkField(cliente.getCedula(),"La cedula es obligatoria",errors);
+
         checkField(cliente.getFirstName(), "El nombre es obligatorio.", errors);
-        checkField(cliente.getLastName(),  "El apellido es obligatorio.", errors);
-        checkField(cliente.getEmail(),     "El correo es obligatorio.", errors);
-        checkField(cliente.getPhone(),     "El teléfono es obligatorio.", errors);
+        checkField(cliente.getLastName(), "El apellido es obligatorio.", errors);
 
+        // Cédula: si se provee, debe ser numérica (validación de formato)
+        if (cliente.getCedula() != null && !cliente.getCedula().isBlank()) {
+            if (!cliente.getCedula().trim().matches("^[0-9]+$")) {
+                errors.add("La cédula solo acepta números.");
+            }
+        }
 
-
-
-
-        //  Validar formato de teléfono (alineado con DB constraint)
+        // Teléfono: si se provee, debe tener formato válido (alineado con CHECK en BD)
         if (cliente.getPhone() != null && !cliente.getPhone().isBlank()) {
             String cleanPhone = cliente.getPhone().trim().replaceAll("[^0-9+]", "");
             if (!cleanPhone.matches("^[+]?[0-9]{7,15}$")) {
@@ -234,7 +240,6 @@ public class ClienteService {
         if (!errors.isEmpty()) {
             throw new BusinessException(String.join(" ", errors));
         }
-
     }
 
     private void checkField(String value, String errorMsg, List<String> errors) {
@@ -242,4 +247,5 @@ public class ClienteService {
             errors.add(errorMsg);
         }
     }
+
 }

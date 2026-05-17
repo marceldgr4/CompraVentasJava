@@ -115,6 +115,58 @@ public List<Pawn> getStatus(PawnStatus status) throws ServiceException {
         }
         return pawn;
     }
+
+    public Pawn registerAgilePawn(Pawn pawn, Article article, com.app.Model.domain.Cliente clienteRapido) throws ServiceException {
+        validatePawn(pawn);
+        try {
+            final int[] resolvedClienteId = {pawn.getClientId()};
+            final int[] resolvedArticleId = {pawn.getArticleId()};
+
+            DataBaseManeger.runInTransaction(con -> {
+                // 1. Guardar cliente rápido si existe
+                if (clienteRapido != null) {
+                    clienteRapido.setRegistrationType(com.app.Model.Enum.RegistrationType.RAPIDO);
+                    com.app.Model.domain.Cliente saved = new com.app.Model.Dao.ClienteDao().save(con, clienteRapido);
+                    resolvedClienteId[0] = saved.getId();
+                }
+
+                // 2. Guardar artículo nuevo si existe
+                if (article != null) {
+                    article.setClienteId(resolvedClienteId[0]);
+                    article.setSourceType(com.app.Model.Enum.SourceType.EMPENO);
+                    article.setAmount(pawn.getAmount()); // Inicialmente tiene la cantidad a empeñar
+                    com.app.Model.domain.Article savedArticle = new com.app.Model.Dao.ArticleDao().save(con, article);
+                    resolvedArticleId[0] = savedArticle.getId();
+                }
+
+                pawn.setClientId(resolvedClienteId[0]);
+                pawn.setArticleId(resolvedArticleId[0]);
+
+                // 3. Ejecutar la lógica de creación de empeño y reducción de stock
+                com.app.Model.domain.Article art = articleDao.findById(resolvedArticleId[0]).orElseThrow(() -> new SQLException(
+                        "Artículo no encontrado ID: " + resolvedArticleId[0]
+                ));
+                if (art.getAmount() < pawn.getAmount()) {
+                    throw new BusinessException("Stock insuficiente para el artículo seleccionado.");
+                }
+                if (art.requireWeigthForPawn() && (pawn.getWeightGrams() == null ||
+                        pawn.getWeightGrams().compareTo(BigDecimal.ZERO) < 0)) {
+                    throw new BusinessException("El peso en gramos es obligatorio para el artículo de joyería.");
+                }
+
+                final int newAmount = art.getAmount() - pawn.getAmount();
+                pawnDao.save(con, pawn);
+                articleDao.updateAmountTransactional(con, art.getId(), newAmount);
+            });
+
+            return pawn;
+        } catch (SQLException e) {
+            if ("23505".equals(e.getSQLState())) {
+                throw new ServiceException("Ya existe un cliente con ese número de cédula o teléfono.");
+            }
+            throw new ServiceException("Error al registrar empeño ágil: " + e.getMessage(), e);
+        }
+    }
     /*-------------------------------------------------------
     // UPDATE
     * Marca un empeño como Retirado (cliente devuelve el artículo).

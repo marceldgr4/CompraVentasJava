@@ -77,6 +77,22 @@ public class PawnController extends BaseController {
         );
     }
 
+    public void createAgile(Pawn pawn, com.app.Model.domain.Article article, com.app.Model.domain.Cliente clienteRapido, Component parent, Runnable onSuccess, OnError onError) {
+        log.info("Creando nuevo empeño ágil (HU-26)");
+        runAsyncVoid(
+                () -> pawnService.registerAgilePawn(pawn, article, clienteRapido),
+                () -> {
+                    log.info("Empeño ágil creado exitosamente");
+                    showSuccess(parent, "Empeño ágil registrado correctamente.");
+                    onSuccess.run();
+                },
+                (msg, ex) -> {
+                    log.error("Error al crear empeño ágil: {}", msg);
+                    onError.onError("Error al crear empeño ágil: " + msg, ex);
+                }
+        );
+    }
+
     public void update(Pawn pawn, Component parent, Runnable onSuccess, OnError onError) {
         log.info("Actualizando empeño ID: {}", pawn.getId());
         runAsyncVoid(
