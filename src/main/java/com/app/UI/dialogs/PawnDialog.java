@@ -51,7 +51,7 @@ public class PawnDialog extends BaseDialog {
     private Pawn existingPawn;
 
     public PawnDialog(JFrame parent, Pawn pawn) {
-        super(parent, pawn == null ? "Nuevo Registro de Empeño (Ágil)" : "Editar Registro de Empeño", "🤝");
+        super(parent, pawn == null ? "Nuevo Registro de Empeño (Ágil)" : "Editar Registro de Empeño", "");
         this.existingPawn = pawn;
         setSize(650, 720);
         setLocationRelativeTo(parent);
@@ -78,7 +78,7 @@ public class PawnDialog extends BaseDialog {
 
         // ── Sección Cliente ───────────────────────────────────────────────────
         gc.gridx = 0; gc.gridy = row; gc.gridwidth = 2; gc.insets = ins(0, 0, 4, 0);
-        form.add(sectionLabel("👤  Cliente Vendedor"), gc); row++;
+        form.add(sectionLabel("Cliente Vendedor"), gc); row++;
 
         rbClienteExistente = new JRadioButton("Cliente registrado");
         rbClienteNuevo     = new JRadioButton("Cliente nuevo rápido");
@@ -111,7 +111,7 @@ public class PawnDialog extends BaseDialog {
 
         // ── Sección Artículo ──────────────────────────────────────────────────
         gc.gridy = row; gc.insets = ins(4, 0, 4, 0);
-        form.add(sectionLabel("📦  Datos del Artículo"), gc); row++;
+        form.add(sectionLabel("Datos del Artículo"), gc); row++;
 
         rbArticuloExistente = new JRadioButton("Artículo en inventario");
         rbArticuloNuevo     = new JRadioButton("Artículo nuevo");

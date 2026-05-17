@@ -52,8 +52,8 @@ public class PurchasePanel extends JPanel {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
         btnPanel.setOpaque(false);
 
-        JButton btnNew = ButtonFactory.createSuccessButton("+ Registrar");
-        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar");
+        JButton btnNew = ButtonFactory.createSuccessButton("Registrar", "add");
+        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar", "refresh");
         btnNew.addActionListener(e -> openNewDialog());
         btnRefresh.addActionListener(e -> loadData());
 

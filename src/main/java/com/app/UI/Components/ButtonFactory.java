@@ -15,7 +15,7 @@ public final class ButtonFactory {
     private ButtonFactory() {
     }
 
-    // ── Métodos de conveniencia ────────────────────────────────────────────────
+    // ── Métodos de conveniencia sin icono ──────────────────────────────────────
 
     /** Botón azul primario (crear, buscar, guardar). */
     public static JButton createPrimaryButton(String text) {
@@ -52,6 +52,46 @@ public final class ButtonFactory {
         return createButton(text, AMBER);
     }
 
+    // ── Métodos de conveniencia con icono (Nuevas Sobrecargas) ────────────────
+
+    public static JButton createPrimaryButton(String text, String iconName) {
+        JButton btn = createButton(text, PRIMARY);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    public static JButton createSuccessButton(String text, String iconName) {
+        JButton btn = createButton(text, SUCCESS);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    public static JButton createWarningButton(String text, String iconName) {
+        JButton btn = createButton(text, WARNING);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    public static JButton createDangerButton(String text, String iconName) {
+        JButton btn = createButton(text, DANGER);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    public static JButton createNeutralButton(String text, String iconName) {
+        JButton btn = createButton(text, NEUTRAL);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    public static JButton createAmberButton(String text, String iconName) {
+        JButton btn = createButton(text, AMBER);
+        ButtonStyleUtils.applyModernStyle(btn, iconName, null, null);
+        return btn;
+    }
+
+    // ── Método principal de creación ──────────────────────────────────────────
+
     public static JButton createButton(String text, Color background) {
         JButton btn = new JButton(text) {
             @Override
@@ -74,7 +114,7 @@ public final class ButtonFactory {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(),
                         UIConstants.BORDER_RADIUS, UIConstants.BORDER_RADIUS);
 
-                // Texto: llamar al super sobre fondo transparente
+                // Texto e icono: llamar al super sobre fondo transparente
                 super.paintComponent(g2);
                 g2.dispose();
             }
@@ -94,7 +134,7 @@ public final class ButtonFactory {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         // Padding interno uniforme
-        btn.setMargin(new Insets(5, 14, 5, 14));
+        btn.setMargin(new Insets(6, 16, 6, 16));
 
         return btn;
     }

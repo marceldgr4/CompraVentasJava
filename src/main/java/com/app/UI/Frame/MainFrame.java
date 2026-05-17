@@ -37,7 +37,7 @@ public class MainFrame extends JFrame {
     private static final int SIDEBAR_W_COL = 64;
 
     private static final String[] PANEL_IDS  = {"Dashboard","Articles","Pawns","Sales","Purchases","Clients","Employees"};
-    private static final String[] NAV_ICONS  = {"🏠","📦","🤝","💰","🛒","👤","👔"};
+    private static final String[] NAV_ICONS  = {"📊","📦","🤝","💰","🛒","👤","👔"};
     private static final String[] NAV_LABELS = {"Dashboard","Artículos","Empeños","Ventas","Compras","Clientes","Empleados"};
 
     private JPanel       sidebar;
@@ -86,7 +86,7 @@ public class MainFrame extends JFrame {
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         left.setOpaque(false);
 
-        JButton btnHamburger = buildIconButton("☰", 20);
+        JButton btnHamburger = buildIconButton();
         btnHamburger.addActionListener(e -> toggleSidebar());
 
         lblTopTitle = new JLabel("Dashboard");
@@ -99,11 +99,9 @@ public class MainFrame extends JFrame {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setOpaque(false);
 
-        JButton btnRefresh = buildTopBarButton("⟳  Actualizar", new Color(60, 130, 220));
-        JButton btnLogout  = buildTopBarButton("Cerrar Sesión", LOGOUT_RED);
+        JButton btnLogout  = buildTopBarButton("Cerrar Sesión", "logout", LOGOUT_RED);
         btnLogout.addActionListener(e -> doLogout());
 
-        right.add(btnRefresh);
         right.add(btnLogout);
 
         bar.add(left,  BorderLayout.WEST);
@@ -111,21 +109,57 @@ public class MainFrame extends JFrame {
         return bar;
     }
 
-    private JButton buildIconButton(String text, int fontSize) {
-        JButton btn = new JButton(text) {
+    private void refreshActivePanel() {
+        for (Component comp : contentPanel.getComponents()) {
+            if (comp.isVisible()) {
+                if (comp instanceof BasePanel) {
+                    ((BasePanel) comp).refresh();
+                } else if (comp instanceof SalePanel) {
+                    ((SalePanel) comp).refresh();
+                } else if (comp instanceof PawnPanel) {
+                    ((PawnPanel) comp).refresh();
+                } else if (comp instanceof PurchasePanel) {
+                    ((PurchasePanel) comp).refresh();
+                } else if (comp instanceof DashboardPanel) {
+                    ((DashboardPanel) comp).refresh();
+                }
+                break;
+            }
+        }
+    }
+
+    private JButton buildIconButton() {
+        JButton btn = new JButton() {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
                 if (getModel().isRollover()) {
-                    g2.setColor(new Color(255, 255, 255, 30));
+                    g2.setColor(new Color(255, 255, 255, 40));
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
                 }
+                
+                // Dibujado vectorial de alta definición para las 3 barras de hamburguesa
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                
+                int padX = 10;
+                int totalH = getHeight();
+                int barWidth = getWidth() - (padX * 2);
+                
+                int y1 = totalH / 2 - 6;
+                int y2 = totalH / 2;
+                int y3 = totalH / 2 + 6;
+                
+                g2.draw(new java.awt.geom.Line2D.Double(padX, y1, padX + barWidth, y1));
+                g2.draw(new java.awt.geom.Line2D.Double(padX, y2, padX + barWidth, y2));
+                g2.draw(new java.awt.geom.Line2D.Double(padX, y3, padX + barWidth, y3));
+                
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        btn.setFont(new Font("Segoe UI Emoji", Font.BOLD, fontSize));
-        btn.setForeground(Color.WHITE);
+        btn.setPreferredSize(new Dimension(38, 38));
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
@@ -133,7 +167,7 @@ public class MainFrame extends JFrame {
         return btn;
     }
 
-    private JButton buildTopBarButton(String text, Color bg) {
+    private JButton buildTopBarButton(String text, String iconName, Color bg) {
         JButton btn = new JButton(text) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -154,6 +188,14 @@ public class MainFrame extends JFrame {
         btn.setOpaque(false);
         btn.setMargin(new Insets(6, 16, 6, 16));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        if (iconName != null && !iconName.isEmpty()) {
+            ImageIcon icon = com.app.UI.Components.IconUtils.getIcon(iconName, 18);
+            if (icon != null) {
+                btn.setIcon(icon);
+                btn.setIconTextGap(8);
+            }
+        }
         return btn;
     }
 

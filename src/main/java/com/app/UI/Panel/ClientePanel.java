@@ -35,14 +35,13 @@ public class ClientePanel extends BasePanel {
         // Top Bar
         JPanel topPanel = new JPanel(new BorderLayout(0, 12));
         topPanel.setOpaque(false);
-        topPanel.add(buildHeader("👥  Gestión de Clientes", "Administre la base de datos de clientes y su información de contacto"), BorderLayout.NORTH);
+        topPanel.add(buildHeader(" Gestión de Clientes", "Administre la base de datos de clientes y su información de contacto"), BorderLayout.NORTH);
 
-        JPanel actionsBar = new JPanel(new BorderLayout());
-        actionsBar.setOpaque(false);
+        com.app.UI.Components.ResponsivePanel actionsBar = new com.app.UI.Components.ResponsivePanel();
 
         txtSearch = new JTextField();
-        actionsBar.add(buildSearchPanel("Buscar por nombre, CC o tel...", txtSearch, e -> searchClientes()), BorderLayout.WEST);
-        actionsBar.add(buildButtonPanel(), BorderLayout.EAST);
+        actionsBar.addFilterComponent(buildSearchPanel("Buscar por nombre, CC o tel...", txtSearch, e -> searchClientes()));
+        buildButtonPanel(actionsBar);
 
         topPanel.add(actionsBar, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
@@ -63,14 +62,11 @@ public class ClientePanel extends BasePanel {
         add(lblStatus, BorderLayout.SOUTH);
     }
 
-    private JPanel buildButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        panel.setOpaque(false);
-
-        JButton btnAdd = ButtonFactory.createSuccessButton("+ Nuevo Cliente");
-        btnEdit   = ButtonFactory.createWarningButton("Editar");
-        btnDelete = ButtonFactory.createDangerButton("Eliminar");
-        JButton btnRefresh = ButtonFactory.createNeutralButton("↻");
+    private void buildButtonPanel(com.app.UI.Components.ResponsivePanel actionsBar) {
+        JButton btnAdd = ButtonFactory.createSuccessButton("Nuevo Cliente", "add");
+        btnEdit   = ButtonFactory.createWarningButton("Editar", "edit");
+        btnDelete = ButtonFactory.createDangerButton("Eliminar", "delete");
+        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar", "refresh");
 
         btnAdd.addActionListener(e -> showAddDialog());
         btnEdit.addActionListener(e -> showEditDialog());
@@ -82,11 +78,10 @@ public class ClientePanel extends BasePanel {
         btnEdit.setVisible(isAdmin);
         btnDelete.setVisible(isAdmin);
 
-        panel.add(btnAdd);
-        panel.add(btnEdit);
-        panel.add(btnDelete);
-        panel.add(btnRefresh);
-        return panel;
+        actionsBar.addActionComponent(btnAdd);
+        actionsBar.addActionComponent(btnEdit);
+        actionsBar.addActionComponent(btnDelete);
+        actionsBar.addActionComponent(btnRefresh);
     }
 
     @Override

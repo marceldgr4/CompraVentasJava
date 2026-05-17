@@ -53,70 +53,82 @@ public class SalePanel extends JPanel {
     private JPanel builHeader() {
         JPanel wrapper = new JPanel(new BorderLayout(0,8));
         wrapper.setOpaque(false);
-        JLabel lblTitle = new JLabel("Gestion de Ventas");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        JLabel lblTitle = new JLabel("Gestión de Ventas");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTitle.setForeground(new Color(30, 42, 74));
-        wrapper.add(lblTitle,BorderLayout.NORTH);
+        wrapper.add(lblTitle, BorderLayout.NORTH);
 
-        JPanel toolbar = new JPanel(new BorderLayout(12,0));
-        toolbar.setOpaque(false);
-        toolbar.add(buildFilterPanel(), BorderLayout.WEST);
-        toolbar.add(buildButtonPanel(), BorderLayout.EAST);
-        wrapper.add(toolbar,BorderLayout.CENTER);
+        com.app.UI.Components.ResponsivePanel toolbar = new com.app.UI.Components.ResponsivePanel();
+        buildFilterPanel(toolbar);
+        buildButtonPanel(toolbar);
+        
+        wrapper.add(toolbar, BorderLayout.CENTER);
         return wrapper;
     }
-    private JPanel buildFilterPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT,8,0));
-        panel.setOpaque(false);
 
+    private void buildFilterPanel(com.app.UI.Components.ResponsivePanel toolbar) {
         SpinnerDateModel fromModel = new SpinnerDateModel();
         SpinnerDateModel toModel = new SpinnerDateModel();
         spnFrom = new JSpinner(fromModel);
         spnTo = new JSpinner(toModel);
 
         JSpinner.DateEditor fromEd = new JSpinner.DateEditor(spnFrom, "dd/MM/yyyy");
-        JSpinner.DateEditor toEd =new JSpinner.DateEditor(spnTo, "dd/MM/yyyy");
+        JSpinner.DateEditor toEd = new JSpinner.DateEditor(spnTo, "dd/MM/yyyy");
         spnFrom.setEditor(fromEd);
         spnTo.setEditor(toEd);
-        spnFrom.setPreferredSize(new Dimension(110,32));
-        spnTo.setPreferredSize(new Dimension(110,32));
+        spnFrom.setPreferredSize(new Dimension(115, 36));
+        spnTo.setPreferredSize(new Dimension(115, 36));
+        
         txtClienteId = new JTextField();
-        txtClienteId.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtClienteId.setPreferredSize(new Dimension(140, 36));
+        txtClienteId.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtClienteId.putClientProperty("JTextField.placeholderText", "ID Cliente");
 
-        btnFilter = ButtonFactory.createPrimaryButton("Filter");
+        btnFilter = ButtonFactory.createPrimaryButton("Filtrar", "search");
         btnFilter.addActionListener(e -> applyFilter());
 
-        JButton btnClear = ButtonFactory.createPrimaryButton("Limpiar");
+        JButton btnClear = ButtonFactory.createNeutralButton("Limpiar", "refresh");
         btnClear.addActionListener(e -> { txtClienteId.setText(""); loadAll(); });
 
-        panel.add(new JLabel("Desde:"));
-        panel.add(spnFrom);
-        panel.add(new JLabel("Hasta:"));
-        panel.add(spnTo);
-        panel.add(new JLabel("Cliente ID:"));
-        panel.add(txtClienteId);
-        panel.add(btnFilter);
-        panel.add(btnClear);
-        return panel;
+        toolbar.addFilterComponent(createFilterPair("Desde:", spnFrom));
+        toolbar.addFilterComponent(createFilterPair("Hasta:", spnTo));
+        toolbar.addFilterComponent(createFilterPair("Cliente ID:", txtClienteId));
+        
+        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        pnlBtns.setOpaque(false);
+        pnlBtns.add(btnFilter);
+        pnlBtns.add(btnClear);
+        toolbar.addFilterComponent(pnlBtns);
     }
-    private JPanel buildButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        panel.setOpaque(false);
 
-        btnNew = ButtonFactory.createSuccessButton("+ Nueva Venta");
+    private JPanel createFilterPair(String label, Component comp) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        p.setOpaque(false);
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(new Color(30, 42, 74));
+        p.add(lbl);
+        p.add(comp);
+        return p;
+    }
+
+    private void buildButtonPanel(com.app.UI.Components.ResponsivePanel toolbar) {
+        btnNew = ButtonFactory.createSuccessButton("Nueva Venta", "add");
         btnNew.addActionListener(e -> openNewSaleDialog());
 
-        btnDelete = ButtonFactory.createDangerButton("Eliminar");
+        JButton btnPrint = ButtonFactory.createPrimaryButton("Imprimir Factura", "print");
+        btnPrint.addActionListener(e -> doPrint());
+
+        btnDelete = ButtonFactory.createDangerButton("Eliminar", "delete");
         btnDelete.addActionListener(e -> doDelete());
 
-        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar");
+        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar", "refresh");
         btnRefresh.addActionListener(e -> loadAll());
 
-        panel.add(btnNew);
-        panel.add(btnDelete);
-        panel.add(btnRefresh);
-        return panel;
+        toolbar.addActionComponent(btnNew);
+        toolbar.addActionComponent(btnPrint);
+        toolbar.addActionComponent(btnDelete);
+        toolbar.addActionComponent(btnRefresh);
     }
     private JScrollPane buildTable() {
         tableModel = new DefaultTableModel(COLUMNS, 0) {
@@ -212,6 +224,30 @@ public class SalePanel extends JPanel {
             this::loadAll,
             (msg, ex) -> {} // Error already shown by controller
         );
+    }
+
+    private void doPrint() {
+        int row = table.getSelectedRow();
+        if (row < 0) { showWarning("Selecciona una venta de la tabla para imprimir su factura."); return; }
+        int id = (int) tableModel.getValueAt(row, 0);
+        
+        new SwingWorker<Sale, Void>() {
+            @Override protected Sale doInBackground() throws Exception {
+                return new com.app.Service.SaleService().findById(id);
+            }
+            @Override protected void done() {
+                try {
+                    Sale sale = get();
+                    if (sale != null) {
+                        com.app.Utils.pdf.PdfInvoiceGenerator.generateSaleInvoice(sale);
+                    } else {
+                        showError("No se pudo cargar la información de la venta.");
+                    }
+                } catch (Exception ex) {
+                    showError("Error al generar PDF: " + ex.getMessage());
+                }
+            }
+        }.execute();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
