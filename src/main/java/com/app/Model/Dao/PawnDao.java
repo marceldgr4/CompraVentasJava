@@ -1,5 +1,6 @@
 package com.app.Model.Dao;
 
+import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.Pawn;
 import com.app.Model.Enum.PawnStatus;
 
@@ -88,11 +89,13 @@ public class PawnDao extends BaseDao<Pawn> {
         });
     }
 
+    /** Versión transaccional para la pantalla única de empeño (HU-26, RF-04.14). */
     public Pawn save(Connection con, Pawn pawn) throws SQLException {
         String sql = """
                 INSERT INTO public.pawns(
-                    employee_id, article_id, cliente_id, amount, price, weight_grams, installment_count,
-                    installments_paid, installments_missed, pawn_date, return_date, status, notes)
+                    employee_id, article_id, cliente_id, amount, price, weight_grams,
+                    installment_count, installments_paid, installments_missed,
+                    pawn_date, return_date, status, notes)
                 VALUES (?::uuid, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
                 """;
@@ -120,7 +123,7 @@ public class PawnDao extends BaseDao<Pawn> {
     }
 
     public boolean markAsReturned(int id) throws SQLException {
-        return updateStatus(id, PawnStatus.Finalizado);
+        return updateStatus(id, PawnStatus.Retirado);
     }
 
     public boolean markAsExpired(int id) throws SQLException {
@@ -129,7 +132,7 @@ public class PawnDao extends BaseDao<Pawn> {
 
     public int expireOverduePawns() throws SQLException {
         String sql = "SELECT public.fn_expire_overdue_pawns()";
-        try (Connection con = Infrastructure.DataBase.ConnectionPool.getConnection();
+        try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) return rs.getInt(1);

@@ -136,14 +136,15 @@ public class ClienteDao extends BaseDao<Cliente> {
             ps.setInt(10, cliente.getId());
         });
     }
-
+    // ── DELETE ──────
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM public.clientes WHERE id = ?";
         return executeUpdate(sql, ps -> ps.setInt(1, id));
     }
 
     public boolean softDelete(int id) throws SQLException {
-        String sql = "UPDATE public.clientes SET status = 'Inactivo'::cliente_status, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE public.clientes SET status = 'Eliminado'::cliente_status, " +
+                "updated_at = NOW() WHERE id = ?";
         return executeUpdate(sql, ps -> ps.setInt(1, id));
     }
 

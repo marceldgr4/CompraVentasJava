@@ -10,4 +10,7 @@ public enum RegistrationType {
     public boolean isCompleto() {
         return this == (COMPLETO);
     }
+    public boolean isRapido() {
+        return this == (RAPIDO);
+    }
 }

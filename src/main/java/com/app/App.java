@@ -6,22 +6,12 @@ import com.app.UI.Frame.LoginFrame;
 import org.slf4j.Logger;
 
 import javax.swing.*;
-import java.util.concurrent.CompletableFuture;
 
 public class App {
+
     private static final Logger log = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) {
-        // Run background task to expire overdue pawns automatically (RF-04.6)
-        CompletableFuture.runAsync(() -> {
-            try {
-                int expiredCount = new PawnService().processOverduePawns();
-                log.info("Proceso de expiración automática completado. Empeños vencidos actualizados: {}", expiredCount);
-            } catch (Exception e) {
-                log.error("Error al procesar empeños vencidos en el arranque", e);
-            }
-        });
-
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -30,5 +20,25 @@ public class App {
             }
             new LoginFrame().setVisible(true);
         });
+
+        // RF-04.6: expirar empeños vencidos al inicio en un SwingWorker
+        // (no CompletableFuture, para garantizar que cualquier callback de UI
+        //  ocurra en el EDT — RNF-02.1)
+        new SwingWorker<Integer, Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                return new PawnService().processOverduePawns();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    int expired = get();
+                    log.info("Expiración automática completada. Empeños vencidos actualizados: {}", expired);
+                } catch (Exception e) {
+                    log.error("Error al procesar empeños vencidos en el arranque", e);
+                }
+            }
+        }.execute();
     }
 }

@@ -197,6 +197,7 @@ public class SalePanel extends JPanel {
         SaleDialog dlg = new SaleDialog((JFrame) SwingUtilities.getWindowAncestor(this));
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {
+            com.app.Utils.pdf.PdfInvoiceGenerator.generateSaleInvoice(dlg.getConfirmedSale());
             showSuccess("Venta registrada correctamente.");
             loadAll();
         }

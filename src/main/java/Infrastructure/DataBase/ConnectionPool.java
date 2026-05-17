@@ -23,13 +23,20 @@ public class ConnectionPool {
         config.setConnectionTimeout(30_000);
         config.setIdleTimeout(600_000);
         config.setMaxLifetime(1_800_000);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("cachePrepStmts", "false");
+        config.addDataSourceProperty("prepStmtCacheSize", "0");
 
         dataSource = new HikariDataSource(config);
     }
-    public static Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+    private static boolean migrated = false;
+
+    public static synchronized Connection getConnection() throws SQLException {
+        Connection conn = dataSource.getConnection();
+        if (!migrated) {
+            migrated = true;
+            DatabaseMigrator.verifyAndMigrate(conn);
+        }
+        return conn;
     }
     public static void close (){
         if (dataSource != null && !dataSource.isClosed()) {

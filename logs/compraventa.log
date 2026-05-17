@@ -1,0 +1,65 @@
+2026-05-17 14:23:46.744 [SwingWorker-pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource -- CompraVentaPool - Starting...
+2026-05-17 14:23:48.727 [SwingWorker-pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool -- CompraVentaPool - Added connection org.postgresql.jdbc.PgConnection@18c2e71d
+2026-05-17 14:23:48.728 [SwingWorker-pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource -- CompraVentaPool - Start completed.
+2026-05-17 14:23:48.730 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Iniciando verificación y migración automática de esquema de base de datos (v7)...
+2026-05-17 14:23:48.981 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Migrando tabla purchases: renombrando profile_id a employee_id...
+2026-05-17 14:23:49.345 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Migrando tabla sales: renombrando profile_id a employee_id...
+2026-05-17 14:23:49.669 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Migrando tabla pawns: renombrando profile_id a employee_id...
+2026-05-17 14:23:49.991 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Migrando tabla pawn_payments: renombrando created_by_profile_id a created_by_employee_id...
+2026-05-17 14:23:50.313 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Migrando tabla audit_log: renombrando profile_id a employee_id...
+2026-05-17 14:23:50.474 [SwingWorker-pool-1-thread-1] INFO  I.DataBase.DatabaseMigrator -- Verificando/Actualizando stored procedure register_sale...
+2026-05-17 14:23:50.651 [SwingWorker-pool-1-thread-1] ERROR I.DataBase.DatabaseMigrator -- Error durante la migración automática de la base de datos
+org.postgresql.util.PSQLException: ERROR: cannot change name of input parameter "p_profile_id"
+  Hint: Use DROP FUNCTION register_sale(uuid,integer,jsonb,text) first.
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2412)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:371)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:502)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:419)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:341)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:326)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:302)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:297)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at Infrastructure.DataBase.DatabaseMigrator.verifyAndMigrate(DatabaseMigrator.java:116)
+	at Infrastructure.DataBase.ConnectionPool.getConnection(ConnectionPool.java:37)
+	at com.app.Model.Dao.PawnDao.expireOverduePawns(PawnDao.java:135)
+	at com.app.Service.PawnService.processOverduePawns(PawnService.java:219)
+	at com.app.App$1.doInBackground(App.java:30)
+	at com.app.App$1.doInBackground(App.java:27)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-17 14:23:50.857 [AWT-EventQueue-0] INFO  com.app.App -- Expiración automática completada. Empeños vencidos actualizados: 0
+2026-05-17 14:24:02.605 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login : marcel@cv.com
+2026-05-17 14:24:04.461 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Login exitoso para: marcel@cv.com
+2026-05-17 14:24:04.561 [AWT-EventQueue-0] INFO  c.app.Controllers.ArticleController -- Cargando inventario completo de artículos
+2026-05-17 14:24:04.582 [AWT-EventQueue-0] INFO  com.app.Controllers.PawnController -- Cargando todos los empeños
+2026-05-17 14:24:04.606 [AWT-EventQueue-0] INFO  com.app.Controllers.SaleController -- Cargando todas las ventas
+2026-05-17 14:24:04.612 [AWT-EventQueue-0] INFO  c.app.Controllers.PurchaseController -- Cargando historial de compras
+2026-05-17 14:24:04.621 [AWT-EventQueue-0] INFO  c.app.Controllers.ClienteController -- Cargando todos los clientes
+2026-05-17 14:24:04.627 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cargando todos los empleados
+2026-05-17 14:24:05.067 [AWT-EventQueue-0] DEBUG c.app.Controllers.ArticleController -- Inventario cargado: 4 artículo(s)
+2026-05-17 14:24:05.271 [AWT-EventQueue-0] DEBUG c.app.Controllers.EmployeeController -- Empleados cargados: 3
+2026-05-17 14:25:02.686 [AWT-EventQueue-0] INFO  c.app.Controllers.ClienteController -- Actualizando cliente ID: 6
+2026-05-17 14:25:03.127 [AWT-EventQueue-0] INFO  c.app.Controllers.ClienteController -- Cliente actualizado exitosamente
+2026-05-17 14:25:03.127 [AWT-EventQueue-0] INFO  c.app.Controllers.ClienteController -- Cargando todos los clientes
+2026-05-17 14:25:09.844 [AWT-EventQueue-0] INFO  c.app.Controllers.ClienteController -- Cargando todos los clientes
+2026-05-17 14:25:28.756 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- desactivar cuenta de empleado: rossana (ID=875ce275-708d-4e1e-b2f1-26294199ef0b)
+2026-05-17 14:25:29.197 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cuenta desactivarda correctamente: rossana (ID=875ce275-708d-4e1e-b2f1-26294199ef0b)
+2026-05-17 14:25:29.198 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cargando todos los empleados
+2026-05-17 14:25:29.556 [AWT-EventQueue-0] DEBUG c.app.Controllers.EmployeeController -- Empleados cargados: 3
+2026-05-17 14:25:37.194 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- activar cuenta de empleado: rossana (ID=875ce275-708d-4e1e-b2f1-26294199ef0b)
+2026-05-17 14:25:37.651 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cuenta activarda correctamente: rossana (ID=875ce275-708d-4e1e-b2f1-26294199ef0b)
+2026-05-17 14:25:37.652 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cargando todos los empleados
+2026-05-17 14:25:38.054 [AWT-EventQueue-0] DEBUG c.app.Controllers.EmployeeController -- Empleados cargados: 3
+2026-05-17 14:27:14.525 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Usuario 9b9cef90-ce1c-4cdb-93d9-44e3f1885ad1 actualizando su propio perfil
+2026-05-17 14:27:15.205 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Perfil actualizado por el propio usuario
+2026-05-17 14:27:49.927 [AWT-EventQueue-0] INFO  c.app.Controllers.EmployeeController -- Cargando todos los empleados
+2026-05-17 14:27:50.355 [AWT-EventQueue-0] DEBUG c.app.Controllers.EmployeeController -- Empleados cargados: 3
+2026-05-17 14:28:20.491 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Cerrar session del Usuario: Marcel diaz granados
+2026-05-17 14:28:21.169 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Logout

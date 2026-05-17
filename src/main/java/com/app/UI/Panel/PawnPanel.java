@@ -201,10 +201,23 @@ public class PawnPanel extends JPanel {
                 (JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {
-            pawnController.create(dlg.getExistingPawn(), this,
-                this::loadData,
-                (msg, ex) -> {}
-            );
+            if (dlg.isAgile()) {
+                pawnController.createAgile(dlg.getExistingPawn(), dlg.getNewArticle(), dlg.getNewCliente(), this,
+                    () -> {
+                        loadData();
+                        com.app.Utils.pdf.PdfInvoiceGenerator.generatePawnInvoice(dlg.getExistingPawn());
+                    },
+                    (msg, ex) -> {}
+                );
+            } else {
+                pawnController.create(dlg.getExistingPawn(), this,
+                    () -> {
+                        loadData();
+                        com.app.Utils.pdf.PdfInvoiceGenerator.generatePawnInvoice(dlg.getExistingPawn());
+                    },
+                    (msg, ex) -> {}
+                );
+            }
         }
     }
 
