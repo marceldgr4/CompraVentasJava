@@ -21,7 +21,7 @@ public class ClienteDialog extends BaseDialog {
     private boolean confirmed = false;
 
     public ClienteDialog(Window parent, Cliente cliente) {
-        super(parent, cliente == null ? "Nuevo Cliente" : "Editar Cliente", "👤");
+        super(parent, cliente == null ? "Nuevo Cliente" : "Editar Cliente", "");
         setSize(500, 560);
         setLocationRelativeTo(parent);
         

@@ -35,7 +35,7 @@ public class EmployeePanel extends BasePanel {
     protected void initComponents() {
         if (!SessionManager.isAdmin()) {
             setLayout(new BorderLayout());
-            JLabel lbl = new JLabel("⛔ Acceso Denegado: Solo administradores pueden ver este panel.", SwingConstants.CENTER);
+            JLabel lbl = new JLabel(" Acceso Denegado: Solo administradores pueden ver este panel.", SwingConstants.CENTER);
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
             lbl.setForeground(new Color(180, 40, 40));
             add(lbl, BorderLayout.CENTER);
@@ -45,16 +45,15 @@ public class EmployeePanel extends BasePanel {
         // Header
         JPanel topPanel = new JPanel(new BorderLayout(0, 12));
         topPanel.setOpaque(false);
-        topPanel.add(buildHeader("👔  Gestión de Empleados", "Administre los accesos y roles del personal del sistema"), BorderLayout.NORTH);
+        topPanel.add(buildHeader(" Gestión de Empleados", "Administre los accesos y roles del personal del sistema"), BorderLayout.NORTH);
 
-        JPanel actionsBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        actionsBar.setOpaque(false);
+        com.app.UI.Components.ResponsivePanel actionsBar = new com.app.UI.Components.ResponsivePanel();
         
-        JButton btnRefresh = ButtonFactory.createNeutralButton("↻");
-        JButton btnEdit    = ButtonFactory.createPrimaryButton("✏ Editar");
-        JButton btnToggle  = ButtonFactory.createNeutralButton("Activar/Desactivar");
-        JButton btnDelete  = ButtonFactory.createDangerButton("🗑 Eliminar");
-        JButton btnAdd     = ButtonFactory.createSuccessButton("+ Nuevo Empleado");
+        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar", "refresh");
+        JButton btnEdit    = ButtonFactory.createPrimaryButton("Editar", "edit");
+        JButton btnToggle  = ButtonFactory.createNeutralButton("Activar/Desactivar", "toggle");
+        JButton btnDelete  = ButtonFactory.createDangerButton("Eliminar", "delete");
+        JButton btnAdd     = ButtonFactory.createSuccessButton("Nuevo Empleado", "add");
 
         btnRefresh.addActionListener(e -> refresh());
         btnEdit   .addActionListener(e -> editEmployee());
@@ -62,11 +61,11 @@ public class EmployeePanel extends BasePanel {
         btnDelete .addActionListener(e -> deleteEmployee());
         btnAdd    .addActionListener(e -> showRegisterDialog());
 
-        actionsBar.add(btnRefresh);
-        actionsBar.add(btnEdit);
-        actionsBar.add(btnToggle);
-        actionsBar.add(btnDelete);
-        actionsBar.add(btnAdd);
+        actionsBar.addActionComponent(btnRefresh);
+        actionsBar.addActionComponent(btnEdit);
+        actionsBar.addActionComponent(btnToggle);
+        actionsBar.addActionComponent(btnDelete);
+        actionsBar.addActionComponent(btnAdd);
         
         topPanel.add(actionsBar, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);

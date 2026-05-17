@@ -68,61 +68,56 @@ public class PawnPanel extends JPanel {
         add(buildBottomBar(),BorderLayout.SOUTH);
     }
 
-    private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout(10, 0));
-        bar.setOpaque(false);
-        bar.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
-        bar.add(buildFilterPanel(), BorderLayout.WEST);
-        bar.add(buildButtonPanel(), BorderLayout.EAST);
-        return bar;
+    private com.app.UI.Components.ResponsivePanel buildTopBar() {
+        com.app.UI.Components.ResponsivePanel toolbar = new com.app.UI.Components.ResponsivePanel();
+        toolbar.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
+        buildFilterPanel(toolbar);
+        buildButtonPanel(toolbar);
+        return toolbar;
     }
 
-    private JPanel buildFilterPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        panel.setOpaque(false);
-
-        JLabel lbl = new JLabel("Filtro:");
+    private void buildFilterPanel(com.app.UI.Components.ResponsivePanel toolbar) {
+        JLabel lbl = new JLabel("Filtro Estado:");
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         cmbFilter = new JComboBox<>(
                 new String[]{"Todos", "Activos", "Vencidos", "Devueltos", "Expirados"});
         cmbFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cmbFilter.setPreferredSize(new Dimension(130, 36));
         cmbFilter.addActionListener(e -> applyFilter());
 
-        panel.add(lbl);
-        panel.add(cmbFilter);
-        return panel;
+        JPanel pFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        pFilter.setOpaque(false);
+        pFilter.add(lbl);
+        pFilter.add(cmbFilter);
+
+        toolbar.addFilterComponent(pFilter);
     }
 
-    /**
-     * Todos los botones creados con {@link ButtonFactory} para garantizar
-     * que el color se vea en el Look&Feel nativo de Windows.
-     */
-    private JPanel buildButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        panel.setOpaque(false);
-
-        btnNew            = ButtonFactory.createPrimaryButton("+ Nuevo empeño");
-        btnEdit           = ButtonFactory.createWarningButton("Editar");
-        btnMarkReturned   = ButtonFactory.createSuccessButton("Marcar devuelto");
-        btnDelete         = ButtonFactory.createDangerButton("Eliminar");
-        btnProcessOverdue = ButtonFactory.createAmberButton("Procesar vencidos");
-        btnRefresh        = ButtonFactory.createNeutralButton("Actualizar");
+    private void buildButtonPanel(com.app.UI.Components.ResponsivePanel toolbar) {
+        btnNew            = ButtonFactory.createPrimaryButton("Nuevo Empeño", "add");
+        JButton btnPrint  = ButtonFactory.createPrimaryButton("Imprimir Boleta", "print");
+        btnEdit           = ButtonFactory.createWarningButton("Editar", "edit");
+        btnMarkReturned   = ButtonFactory.createSuccessButton("Marcar Devuelto", "toggle");
+        btnDelete         = ButtonFactory.createDangerButton("Eliminar", "delete");
+        btnProcessOverdue = ButtonFactory.createAmberButton("Procesar Vencidos", "warning");
+        btnRefresh        = ButtonFactory.createNeutralButton("Actualizar", "refresh");
 
         btnNew           .addActionListener(e -> openNewDialog());
+        btnPrint         .addActionListener(e -> doPrint());
         btnEdit          .addActionListener(e -> openEditDialog());
         btnMarkReturned  .addActionListener(e -> doMarkReturned());
         btnDelete        .addActionListener(e -> doDelete());
         btnProcessOverdue.addActionListener(e -> doProcessOverdue());
         btnRefresh       .addActionListener(e -> loadData());
 
-        panel.add(btnNew);
-        panel.add(btnEdit);
-        panel.add(btnMarkReturned);
-        panel.add(btnDelete);
-        panel.add(btnProcessOverdue);
-        panel.add(btnRefresh);
-        return panel;
+        toolbar.addActionComponent(btnNew);
+        toolbar.addActionComponent(btnPrint);
+        toolbar.addActionComponent(btnEdit);
+        toolbar.addActionComponent(btnMarkReturned);
+        toolbar.addActionComponent(btnDelete);
+        toolbar.addActionComponent(btnProcessOverdue);
+        toolbar.addActionComponent(btnRefresh);
     }
 
     private JScrollPane buildTable() {
@@ -221,6 +216,23 @@ public class PawnPanel extends JPanel {
         }
     }
 
+    private void doPrint() {
+        int row = table.getSelectedRow();
+        if (row < 0) { showWarning("Selecciona un empeño de la tabla para imprimir su boleta."); return; }
+        int id = (int) tableModel.getValueAt(row, 0);
+        
+        pawnController.getById(id,
+            opt -> {
+                if (opt.isPresent()) {
+                    com.app.Utils.pdf.PdfInvoiceGenerator.generatePawnInvoice(opt.get());
+                } else {
+                    showError("No se pudo cargar la información del empeño.");
+                }
+            },
+            (msg, ex) -> showError("Error al cargar empeño: " + msg)
+        );
+    }
+
     private void openEditDialog() {
         Pawn selected = getSelectedPawn();
         if (selected == null) { showWarning("Seleccione un empeño para editar."); return; }
@@ -310,4 +322,8 @@ public class PawnPanel extends JPanel {
     private void showError  (String msg) { JOptionPane.showMessageDialog(this, msg, "Error",   JOptionPane.ERROR_MESSAGE); }
     private void showWarning(String msg) { JOptionPane.showMessageDialog(this, msg, "Advertencia", JOptionPane.WARNING_MESSAGE); }
     private void showSuccess(String msg) { JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE); }
+
+    public void refresh() {
+        loadData();
+    }
 }

@@ -40,14 +40,13 @@ public class ArticlePanel extends BasePanel {
         // Top Bar: Header + Search/Actions
         JPanel topPanel = new JPanel(new BorderLayout(0, 12));
         topPanel.setOpaque(false);
-        topPanel.add(buildHeader("📦  Inventario de Artículos", "Gestione el stock, precios y categorías de sus productos"), BorderLayout.NORTH);
+        topPanel.add(buildHeader("Inventario de Artículos", "Gestione el stock, precios y categorías de sus productos"), BorderLayout.NORTH);
         
-        JPanel actionsBar = new JPanel(new BorderLayout());
-        actionsBar.setOpaque(false);
+        com.app.UI.Components.ResponsivePanel actionsBar = new com.app.UI.Components.ResponsivePanel();
         
         txtSearch = new JTextField();
-        actionsBar.add(buildSearchPanel("Buscar artículo...", txtSearch, e -> doSearch()), BorderLayout.WEST);
-        actionsBar.add(buildButtonPanel(), BorderLayout.EAST);
+        actionsBar.addFilterComponent(buildSearchPanel("Buscar artículo...", txtSearch, e -> doSearch()));
+        buildButtonPanel(actionsBar);
         
         topPanel.add(actionsBar, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
@@ -73,25 +72,21 @@ public class ArticlePanel extends BasePanel {
         add(lblStatus, BorderLayout.SOUTH);
     }
 
-    private JPanel buildButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        panel.setOpaque(false);
-
-        btnNew     = ButtonFactory.createPrimaryButton("+ Nuevo");
-        btnEdit    = ButtonFactory.createWarningButton("Editar");
-        btnDelete  = ButtonFactory.createDangerButton("Eliminar");
-        JButton btnRefresh = ButtonFactory.createNeutralButton("↻");
+    private void buildButtonPanel(com.app.UI.Components.ResponsivePanel actionsBar) {
+        btnNew     = ButtonFactory.createPrimaryButton("Nuevo", "add");
+        btnEdit    = ButtonFactory.createWarningButton("Editar", "edit");
+        btnDelete  = ButtonFactory.createDangerButton("Eliminar", "delete");
+        JButton btnRefresh = ButtonFactory.createNeutralButton("Actualizar", "refresh");
 
         btnNew    .addActionListener(e -> openNewDialog());
         btnEdit   .addActionListener(e -> openEditDialog());
         btnDelete .addActionListener(e -> doDelete());
         btnRefresh.addActionListener(e -> refresh());
 
-        panel.add(btnNew);
-        panel.add(btnEdit);
-        panel.add(btnDelete);
-        panel.add(btnRefresh);
-        return panel;
+        actionsBar.addActionComponent(btnNew);
+        actionsBar.addActionComponent(btnEdit);
+        actionsBar.addActionComponent(btnDelete);
+        actionsBar.addActionComponent(btnRefresh);
     }
 
     private void configurePermissions() {

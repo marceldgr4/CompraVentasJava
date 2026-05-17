@@ -61,12 +61,7 @@ public class DashboardPanel extends JPanel {
         lblLastUpdate.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblLastUpdate.setForeground(Color.GRAY);
 
-        JButton btnRefresh = new JButton("Actualizar");
-        btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnRefresh.setBackground(new Color(25, 118, 210));
-        btnRefresh.setForeground(Color.BLACK);
-        btnRefresh.setFocusPainted(false);
-        btnRefresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JButton btnRefresh = com.app.UI.Components.ButtonFactory.createPrimaryButton("Actualizar", "refresh");
         btnRefresh.addActionListener(e -> loadStats());
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
@@ -146,6 +141,7 @@ public class DashboardPanel extends JPanel {
             try {
                 // Fetch stats efficiently from single database view
                 DashBoardDto metrics = dashBoardDao.getDashboardMetric();
+                java.util.List<com.app.Model.domain.Pawn> recentPawns = new com.app.Model.Dao.PawnDao().findAll();
 
                 // Update UI on EDT
                 SwingUtilities.invokeLater(() -> {
@@ -155,6 +151,16 @@ public class DashboardPanel extends JPanel {
                     cardClientes.setValue(String.valueOf(metrics.getTotalClientes()));
                     cardTotalValue.setValue(CurrencyUtils.format(metrics.getTotalActiveValue()));
                     
+                    recentTableModel.setRowCount(0);
+                    int count = 0;
+                    for (com.app.Model.domain.Pawn p : recentPawns) {
+                        if (count++ >= 15) break;
+                        String client = p.getClientName() != null ? p.getClientName() : "Cliente #" + p.getClientId();
+                        String date = p.getPawnDate() != null ? p.getPawnDate().toString() : "";
+                        String amount = CurrencyUtils.format(p.getTotal());
+                        recentTableModel.addRow(new Object[]{p.getId(), client, date, amount, p.getStatusLabel()});
+                    }
+
                     lblLastUpdate.setText("Actualizado: " + LocalDateTime.now().format(DATE_FORMAT));
                 });
             } catch (Exception e) {
@@ -165,5 +171,9 @@ public class DashboardPanel extends JPanel {
                 });
             }
         });
+    }
+
+    public void refresh() {
+        loadStats();
     }
 }

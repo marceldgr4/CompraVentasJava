@@ -67,8 +67,8 @@ public abstract class BasePanel extends JPanel {
         searchField.putClientProperty("JTextField.placeholderText", placeholder);
         searchField.addActionListener(searchAction);
 
-        JButton btnSearch = ButtonFactory.createPrimaryButton("🔍 Buscar");
-        btnSearch.setPreferredSize(new Dimension(100, 36));
+        JButton btnSearch = ButtonFactory.createPrimaryButton("Buscar", "search");
+        btnSearch.setPreferredSize(new Dimension(120, 36));
         btnSearch.addActionListener(searchAction);
 
         panel.add(searchField);
