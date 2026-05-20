@@ -1,10 +1,9 @@
 package com.app.Controllers;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Enum.RolUser;
 import com.app.Service.AuthService;
 
-import javax.swing.*;
 import java.awt.Component;
 
 public class AuthController extends BaseController {

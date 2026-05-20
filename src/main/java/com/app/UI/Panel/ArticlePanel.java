@@ -1,6 +1,6 @@
 package com.app.UI.Panel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.ArticleController;
 import com.app.Model.domain.Article;
 import com.app.Service.ArticleService;

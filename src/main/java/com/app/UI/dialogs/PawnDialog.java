@@ -7,7 +7,7 @@ import com.app.Model.domain.Cliente;
 import com.app.Model.domain.Pawn;
 import com.app.Service.ArticleService;
 import com.app.Service.ClienteService;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

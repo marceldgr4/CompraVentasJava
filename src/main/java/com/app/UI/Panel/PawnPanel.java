@@ -1,6 +1,6 @@
 package com.app.UI.Panel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.PawnController;
 import com.app.Model.domain.Pawn;
 import com.app.Service.PawnService;
@@ -13,17 +13,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-/**
- * Panel de gestión de empeños (Pawns).
- *
- * <p><strong>Corrección de color en botones:</strong>
- * El import estático de {@code ButtonFactory.createButton()} anterior usaba
- * {@code setBackground()}, que el L&F nativo de Windows ignora.
- * Ahora todos los botones se crean con los métodos tipados de {@link ButtonFactory},
- * que aplican el color mediante {@code paintComponent}.
- */
+
 public class PawnPanel extends JPanel {
 
     private static final String[] COLUMNS = {

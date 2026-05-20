@@ -1,6 +1,6 @@
 package com.app.Model.Dao;
 
-import Infrastructure.DataBase.ConnectionPool;
+import com.app.Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.domain.DashBoardDto;
 
 import java.sql.Connection;

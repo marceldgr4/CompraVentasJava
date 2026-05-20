@@ -3,7 +3,10 @@ package com.app.Repositories.impl;
 import com.app.Model.Dao.ArticleDao;
 import com.app.Model.domain.Article;
 import com.app.Repositories.ArticleRepository;
-
+import com.app.Model.Enum.ArticleCategory;
+import com.app.Model.Enum.SourceType;
+import com.app.Model.Enum.ItemState;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,17 +15,17 @@ public class ArticleRespositoryImpl implements ArticleRepository {
 
     @Override
     public List<Article> findAll() throws Exception {
-        return List.of();
+        return articleDao.findAll();
     }
 
     @Override
     public Optional<Article> findById(long id) throws Exception {
-        return Optional.empty();
+        return articleDao.findById((int)id);
     }
 
     @Override
     public List<Article> findByName(String name_article) throws Exception {
-        return List.of();
+        return articleDao.findByName(name_article);
     }
 
     @Override
@@ -32,21 +35,31 @@ public class ArticleRespositoryImpl implements ArticleRepository {
 
     @Override
     public Article save(Article article) throws Exception {
-        return null;
+        return articleDao.save(article);
     }
 
     @Override
     public boolean update(Article article) throws Exception {
-        return false;
+        return articleDao.update(article);
+    }
+
+    @Override
+    public boolean update(int id, String name, String description, ArticleCategory category, SourceType source, ItemState state) throws Exception {
+        return articleDao.updateBasicFields(id, name, description, category, source, state);
     }
 
     @Override
     public boolean delete(int id) throws Exception {
-        return false;
+        return articleDao.delete(id);
     }
 
     @Override
     public boolean updateAmount(int id, int newAmount) throws Exception {
-        return false;
+        return articleDao.updateAmount(id, newAmount);
+    }
+
+    @Override
+    public boolean updatePrice(int id, BigDecimal newPrice) throws Exception {
+        return articleDao.updatePrice(id, newPrice);
     }
 }

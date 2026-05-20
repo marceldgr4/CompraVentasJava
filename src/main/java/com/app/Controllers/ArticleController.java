@@ -1,7 +1,7 @@
 package com.app.Controllers;
 
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Enum.ArticleCategory;
 import com.app.Model.Enum.ItemState;
 import com.app.Model.Enum.SourceType;
@@ -9,7 +9,6 @@ import com.app.Model.domain.Article;
 import com.app.Service.ArticleService;
 import com.app.Service.exceptions.ServiceException;
 
-import javax.swing.*;
 import java.awt.Component;
 import java.math.BigDecimal;
 import java.util.List;

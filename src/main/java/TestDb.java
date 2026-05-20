@@ -1,4 +1,4 @@
-import Infrastructure.logging.LoggerFactory;
+import com.app.Infrastructure.logging.LoggerFactory;
 import com.app.Config.AppConfig;
 import org.slf4j.Logger;
 

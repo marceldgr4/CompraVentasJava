@@ -1,6 +1,6 @@
 package com.app.Controllers;
 
-import Infrastructure.logging.LoggerFactory;
+import com.app.Infrastructure.logging.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.swing.*;

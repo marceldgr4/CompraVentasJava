@@ -1,9 +1,8 @@
 package com.app.UI.Panel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.SaleController;
 import com.app.Model.domain.Sale;
-import com.app.Service.SaleService;
 import com.app.UI.Components.ButtonFactory;
 import com.app.UI.dialogs.SaleDialog;
 import com.app.Utils.CurrencyUtils;
@@ -13,7 +12,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ExecutionException;
 import java.util.List;
 
 

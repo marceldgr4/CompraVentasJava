@@ -1,6 +1,6 @@
 package com.app;
 
-import Infrastructure.logging.LoggerFactory;
+import com.app.Infrastructure.logging.LoggerFactory;
 import com.app.Service.PawnService;
 import com.app.UI.Frame.LoginFrame;
 import org.slf4j.Logger;

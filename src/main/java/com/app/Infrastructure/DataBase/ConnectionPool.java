@@ -1,4 +1,4 @@
-package Infrastructure.DataBase;
+package com.app.Infrastructure.DataBase;
 
 import com.app.Config.AppConfig;
 import com.zaxxer.hikari.HikariConfig;

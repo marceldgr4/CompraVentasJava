@@ -1,6 +1,6 @@
 package com.app.UI.Panel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.EmployeeController;
 import com.app.Model.domain.Employee;
 import com.app.UI.Components.ButtonFactory;

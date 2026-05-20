@@ -1,4 +1,4 @@
-package Infrastructure.DataBase;
+package com.app.Infrastructure.DataBase;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
