@@ -1,9 +1,8 @@
 package com.app.UI.Panel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.PurchaseController;
 import com.app.Model.domain.Purchase;
-import com.app.Service.PurchaseService;
 import com.app.UI.Components.ButtonFactory;
 import com.app.UI.dialogs.PurchaseDialog;
 import com.app.Utils.CurrencyUtils;
@@ -13,7 +12,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ExecutionException;
 
 public class PurchasePanel extends JPanel {
     private static final String[] COLUMNS_ADMIN ={"ID", "Empleado", "Cliente", "Artículo", "Precio Compra", "Precio Venta", "Fecha", "Notas"};

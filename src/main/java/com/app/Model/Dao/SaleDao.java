@@ -1,7 +1,7 @@
 package com.app.Model.Dao;
 
-import Infrastructure.DataBase.ConnectionPool;
-import Infrastructure.DataBase.DataBaseManeger;
+import com.app.Infrastructure.DataBase.ConnectionPool;
+import com.app.Infrastructure.DataBase.DataBaseManeger;
 import com.app.Model.domain.Sale;
 import com.app.Model.domain.SalesDetail;
 

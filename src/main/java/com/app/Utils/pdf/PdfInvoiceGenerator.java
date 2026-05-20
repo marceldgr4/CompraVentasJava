@@ -4,7 +4,7 @@ import com.app.Model.domain.Pawn;
 import com.app.Model.domain.Sale;
 import com.app.Model.domain.SalesDetail;
 import com.app.Utils.CurrencyUtils;
-import Infrastructure.logging.LoggerFactory;
+import com.app.Infrastructure.logging.LoggerFactory;
 import org.slf4j.Logger;
 
 import com.itextpdf.kernel.pdf.PdfDocument;

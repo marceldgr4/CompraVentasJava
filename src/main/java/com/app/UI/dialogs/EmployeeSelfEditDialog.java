@@ -1,8 +1,7 @@
 package com.app.UI.dialogs;
 
 import com.app.Controllers.EmployeeController;
-import com.app.UI.Frame.MainFrame;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

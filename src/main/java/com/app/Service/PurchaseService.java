@@ -1,7 +1,7 @@
 package com.app.Service;
 
-import Infrastructure.DataBase.DataBaseManeger;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.DataBase.DataBaseManeger;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ArticleDao;
 import com.app.Model.Dao.ClienteDao;
 import com.app.Model.Dao.PurchaseDao;
@@ -10,7 +10,6 @@ import com.app.Model.Enum.SourceType;
 import com.app.Model.domain.Article;
 import com.app.Model.domain.Cliente;
 import com.app.Model.domain.Purchase;
-import com.app.Repositories.ClienteRepository;
 import com.app.Service.exceptions.BusinessException;
 import com.app.Service.exceptions.ServiceException;
 

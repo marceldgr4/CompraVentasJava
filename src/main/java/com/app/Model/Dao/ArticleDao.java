@@ -1,6 +1,5 @@
 package com.app.Model.Dao;
 
-import Infrastructure.DataBase.ConnectionPool;
 import com.app.Model.Enum.ArticleCategory;
 import com.app.Model.Enum.ItemState;
 import com.app.Model.Enum.SourceType;
@@ -8,7 +7,6 @@ import com.app.Model.domain.Article;
 
 import java.sql.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

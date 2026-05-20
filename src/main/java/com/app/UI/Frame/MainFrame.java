@@ -1,9 +1,8 @@
 package com.app.UI.Frame;
 
-import Infrastructure.DataBase.ConnectionPool;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.DataBase.ConnectionPool;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Controllers.AuthController;
-import com.app.UI.Components.ButtonFactory;
 import com.app.UI.Panel.*;
 
 import javax.swing.*;

@@ -1,6 +1,6 @@
 package com.app.Service;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Dao.ClienteDao;
 import com.app.Model.Enum.RegistrationType;
 import com.app.Model.domain.Cliente;

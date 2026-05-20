@@ -1,6 +1,6 @@
 package com.app.Controllers;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.domain.Employee;
 import com.app.Service.EmployeeService;
 import com.app.Service.AuthService;

@@ -1,6 +1,6 @@
 package com.app.Model.Dao;
 
-import Infrastructure.DataBase.ConnectionPool;
+import com.app.Infrastructure.DataBase.ConnectionPool;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

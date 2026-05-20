@@ -1,7 +1,7 @@
 package com.app.UI.Panel;
 
-import Infrastructure.logging.LoggerFactory;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.logging.LoggerFactory;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Dao.DashBoardDao;
 import com.app.Model.domain.DashBoardDto;
 import com.app.UI.Components.KpiCard;

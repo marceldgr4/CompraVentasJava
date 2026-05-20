@@ -1,6 +1,6 @@
 package com.app.ViewModel;
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.domain.Sale;
 import com.app.Model.domain.SalesDetail;
 import com.app.Service.SaleService;

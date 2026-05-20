@@ -1,4 +1,4 @@
-package Infrastructure.logging;
+package com.app.Infrastructure.logging;
 
 import org.slf4j.Logger;
 

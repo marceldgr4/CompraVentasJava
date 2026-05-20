@@ -1,7 +1,7 @@
 package com.app.Service;
 
 
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Config.AppConfig;
 import com.app.Model.Dao.AuthResponse;
 import com.app.Service.exceptions.ServiceException;
@@ -16,7 +16,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import com.app.Model.Enum.RolUser;
 import com.app.Model.domain.Employee;
-import com.app.Service.EmployeeService;
 
 public class AuthService {
     private static final String BASE_URL = AppConfig.get("SUPABASE_URL");

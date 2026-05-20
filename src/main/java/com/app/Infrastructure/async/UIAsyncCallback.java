@@ -1,4 +1,4 @@
-package Infrastructure.async;
+package com.app.Infrastructure.async;
 
 import javax.swing.SwingUtilities;
 import java.util.function.Consumer;

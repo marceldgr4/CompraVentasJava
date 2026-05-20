@@ -1,7 +1,7 @@
 package com.app.Service;
 
-import Infrastructure.DataBase.ConnectionPool;
-import Infrastructure.security.SessionManager;
+import com.app.Infrastructure.DataBase.ConnectionPool;
+import com.app.Infrastructure.security.SessionManager;
 import com.app.Model.Dao.SaleDao;
 import com.app.Model.domain.Sale;
 import com.app.Model.domain.SalesDetail;
