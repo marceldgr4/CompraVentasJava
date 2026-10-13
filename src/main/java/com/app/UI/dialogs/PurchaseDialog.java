@@ -291,7 +291,8 @@ public class PurchaseDialog extends BaseDialog {
         } else if (rbEmpleado.isSelected()) {
             Employee sel = cmbEmpleado.getItemAt(cmbEmpleado.getSelectedIndex());
             if (sel == null) { showValidationError("Seleccione un empleado."); return; }
-            clienteRapido = Cliente.createRapido(null, sel.getFullName(), null, sel.getEmail());
+            clienteRapido = Cliente.createRapido(null, sel.getFullName(), null, null);
+            clienteRapido.setEmail(sel.getEmail());
         }
 
         final int fClienteId     = clienteId;

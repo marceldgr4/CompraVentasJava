@@ -85,7 +85,7 @@ public class ClienteDao extends BaseDao<Cliente> {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?::cliente_status, ?::registration_type)
                 RETURNING id, created_at, updated_at
                 """;
-        return executeInsert(sql, ps -> setClienteParams(ps, cliente), rs -> {
+        return executeInsert(cliente, sql, ps -> setClienteParams(ps, cliente), rs -> {
             try {
                 cliente.setId(rs.getInt("id"));
                 Timestamp created = rs.getTimestamp("created_at");
@@ -151,13 +151,13 @@ public class ClienteDao extends BaseDao<Cliente> {
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     private void setClienteParams(PreparedStatement ps, Cliente c) throws SQLException {
-        ps.setString(1, c.getCedula() != null ? c.getCedula().trim() : null);
-        ps.setString(2, c.getFirstName());
-        ps.setString(3, c.getLastName());
-        ps.setString(4, c.getEmail());
+        ps.setString(1, sanitizeString(c.getCedula()));
+        ps.setString(2, c.getFirstName() != null ? c.getFirstName().trim() : "");
+        ps.setString(3, sanitizeString(c.getLastName()));
+        ps.setString(4, sanitizeString(c.getEmail()));
         ps.setString(5, sanitizePhone(c.getPhone()));
-        ps.setString(6, c.getAddress());
-        ps.setString(7, c.getCity());
+        ps.setString(6, sanitizeString(c.getAddress()));
+        ps.setString(7, sanitizeString(c.getCity()));
         ps.setString(8, (c.getStatus() != null ? c.getStatus() : ClienteStatus.Activo).name());
         ps.setString(9, (c.getRegistrationType() != null ? c.getRegistrationType() : RegistrationType.COMPLETO).name());
     }

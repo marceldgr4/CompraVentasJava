@@ -21,35 +21,35 @@ public class AuthController extends BaseController {
             return;
         }
 
-        log.info("Iniciando login : {}", email,password);
-                runAsyncVoid(
-                        () -> authService.Login(email.trim(), password),
-                        () -> {
-                            log.info("Login exitoso para: {}", email);
-                            onSuccess.run();
-                        },
-                        (msg, ex) -> {
-                            log.warn("Login fallido para {}: {}", email, msg);
-                            onError.onError(msg != null ? msg : "Error de autenticación.", ex);
-                        }
-                );
+        log.info("Iniciando login para: {}", email);
+        runAsyncVoid(
+                () -> authService.Login(email.trim(), password),
+                () -> {
+                    log.info("Login exitoso para: {}", email);
+                    onSuccess.run();
+                },
+                (msg, ex) -> {
+                    log.warn("Login fallido para {}: {}", email, msg);
+                    onError.onError(msg != null ? msg : "Error de autenticación.", ex);
+                }
+        );
     }
 
 
     public void logout(Component parent, Runnable onSuccess) {
         boolean confirmed = showConfirmation(
-                parent, "¿ Seguro que desar cerrar session",
-                "Cerrar Sesion");
-        if(!confirmed) return;
-        log.info("Cerrar session del Usuario: {}", getActiveUserName());
+                parent, "¿Seguro que desea cerrar sesión?",
+                "Cerrar Sesión");
+        if (!confirmed) return;
+        log.info("Cerrar sesión del usuario: {}", getActiveUserName());
         runAsyncVoid(
-                ()-> authService.logout(),
-                ()->{
-                    log.info("Logout");
+                () -> authService.logout(),
+                () -> {
+                    log.info("Logout exitoso");
                     onSuccess.run();
                 },
                 (msg, ex) -> {
-                    log.warn("Logout fallido para: {}", msg);
+                    log.warn("Logout con advertencia: {}", msg);
                     onSuccess.run();
                 }
         );
@@ -57,7 +57,7 @@ public class AuthController extends BaseController {
     public String getActiveUserName() {
         try {
             return SessionManager.getFullName();
-        } catch (IllegalStateException e){
+        } catch (IllegalStateException e) {
             return "";
         }
     }
@@ -75,24 +75,24 @@ public class AuthController extends BaseController {
     public void registerEmployee(String email, String password,
                                  String fullName, RolUser role, Component parent,
                                  Runnable onSuccess, OnError onError) {
-        if(!SessionManager.isAdmin()){
-            showError(parent,"Solo el administrador puede registrar empleados");
+        if (!SessionManager.isAdmin()) {
+            showError(parent, "Solo el administrador puede registrar empleados");
             return;
         }
-        if(!validateRegistrationFields(email,password,fullName,parent,onError)){
+        if (!validateRegistrationFields(email, password, fullName, parent, onError)) {
             return;
         }
-        log.info("Iniciando registro : {}",  fullName,email);
+        log.info("Iniciando registro para {} ({})", fullName, email);
         runAsyncVoid(
-                ()-> authService.registerEmployee(email.trim(),password,fullName.trim(), role),
-                ()->{
+                () -> authService.registerEmployee(email.trim(), password, fullName.trim(), role),
+                () -> {
                     log.info("Registro exitoso para: {}", email);
-                    showSuccess(parent,"Empleado\""+ fullName+ "\"registro exitoso ");
+                    showSuccess(parent, "Empleado \"" + fullName + "\" registrado exitosamente.");
                     onSuccess.run();
                 },
                 (msg, ex) -> {
-                    log.warn("Registro fallido para: {}",email, msg);
-                    onError.onError("No se pudo registrar empleados" + msg, ex);
+                    log.warn("Registro fallido para {}: {}", email, msg);
+                    onError.onError("No se pudo registrar el empleado: " + msg, ex);
                 }
         );
     }

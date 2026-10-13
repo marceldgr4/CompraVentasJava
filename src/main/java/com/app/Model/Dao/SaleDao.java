@@ -56,18 +56,21 @@ public class SaleDao extends BaseDao<Sale> {
 
     public Optional<Sale> findById(int id) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE id = ?";
-        return executeSingle(sql, ps -> ps.setInt(1, id), SaleDao::mapRow);
+        Optional<Sale> opt = executeSingle(sql, ps -> ps.setInt(1, id), SaleDao::mapRow);
+        if (opt.isPresent()) {
+            Sale s = opt.get();
+            try (Connection con = ConnectionPool.getConnection()) {
+                s.setDetails(findDetailsBySaleId(con, s.getId()));
+            }
+        }
+        return opt;
     }
 
     public List<Sale> findAll() throws SQLException {
         String sql = "SELECT " + SELECT_COLS + " FROM public.sales ORDER BY id DESC";
-        return executeList(sql, null, rs -> {
-            Sale sale = mapRow(rs);
-            try (Connection con = ConnectionPool.getConnection()) {
-                sale.setDetails(findDetailsBySaleId(con, sale.getId()));
-            }
-            return sale;
-        });
+        List<Sale> list = executeList(sql, null, SaleDao::mapRow);
+        attachDetails(list);
+        return list;
     }
 
     public List<Sale> findClientes(int clienteId) throws SQLException {
@@ -82,16 +85,12 @@ public class SaleDao extends BaseDao<Sale> {
 
     public List<Sale> findByDateRange(LocalDate from, LocalDate to) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + " FROM public.sales WHERE sale_date::date BETWEEN ? AND ? ORDER BY sale_date DESC";
-        return executeList(sql, ps -> {
+        List<Sale> list = executeList(sql, ps -> {
             ps.setDate(1, Date.valueOf(from));
             ps.setDate(2, Date.valueOf(to));
-        }, rs -> {
-            Sale sale = mapRow(rs);
-            try (Connection con = ConnectionPool.getConnection()) {
-                sale.setDetails(findDetailsBySaleId(con, sale.getId()));
-            }
-            return sale;
-        });
+        }, SaleDao::mapRow);
+        attachDetails(list);
+        return list;
     }
 
     public boolean delete(int id) throws SQLException {
@@ -100,17 +99,28 @@ public class SaleDao extends BaseDao<Sale> {
     }
 
     private List<Sale> findByParam(String sql, SqlSetter setter) throws SQLException {
-        return executeList(sql, setter, rs -> {
-            Sale sale = mapRow(rs);
-            try (Connection con = ConnectionPool.getConnection()) {
-                sale.setDetails(findDetailsBySaleId(con, sale.getId()));
+        List<Sale> list = executeList(sql, setter, SaleDao::mapRow);
+        attachDetails(list);
+        return list;
+    }
+
+    private void attachDetails(List<Sale> sales) throws SQLException {
+        if (sales == null || sales.isEmpty()) return;
+        try (Connection con = ConnectionPool.getConnection()) {
+            for (Sale s : sales) {
+                s.setDetails(findDetailsBySaleId(con, s.getId()));
             }
-            return sale;
-        });
+        }
     }
 
     private List<SalesDetail> findDetailsBySaleId(Connection connection, int saleId) throws SQLException {
-        String sql = "SELECT * FROM public.sales_details WHERE sale_id = ?";
+        String sql = """
+                SELECT d.id, d.sale_id, d.article_id, d.amount, d.unit_price, a.name_article
+                FROM public.sales_details d
+                LEFT JOIN public.articles a ON a.id = d.article_id
+                WHERE d.sale_id = ?
+                ORDER BY d.id ASC
+                """;
         List<SalesDetail> list = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, saleId);
@@ -121,7 +131,8 @@ public class SaleDao extends BaseDao<Sale> {
                             rs.getInt("sale_id"),
                             rs.getInt("article_id"),
                             rs.getInt("amount"),
-                            rs.getBigDecimal("unit_price")
+                            rs.getBigDecimal("unit_price"),
+                            rs.getString("name_article")
                     ));
                 }
             }

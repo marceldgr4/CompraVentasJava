@@ -59,7 +59,10 @@ public class PdfInvoiceGenerator {
             if (sale.getDetails() != null) {
                 for (SalesDetail d : sale.getDetails()) {
                     table.addCell(new Cell().add(new Paragraph(String.valueOf(d.getArticleId()))));
-                    table.addCell(new Cell().add(new Paragraph("Artículo ID " + d.getArticleId())));
+                    String name = d.getArticleName() != null && !d.getArticleName().isBlank()
+                            ? d.getArticleName()
+                            : "Artículo #" + d.getArticleId();
+                    table.addCell(new Cell().add(new Paragraph(name)));
                     table.addCell(new Cell().add(new Paragraph(String.valueOf(d.getAmount()))));
                     table.addCell(new Cell().add(new Paragraph(CurrencyUtils.format(d.getSubtotal()))));
                 }
@@ -74,9 +77,7 @@ public class PdfInvoiceGenerator {
             document.close();
             log.info("Factura de venta PDF generada exitosamente en: {}", filename);
 
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(file);
-            }
+            safeOpenPdf(file);
         } catch (Exception e) {
             log.error("Error al generar factura de venta PDF", e);
         }
@@ -117,11 +118,19 @@ public class PdfInvoiceGenerator {
             document.close();
             log.info("Boleta de empeño PDF generada exitosamente en: {}", filename);
 
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(file);
-            }
+            safeOpenPdf(file);
         } catch (Exception e) {
             log.error("Error al generar boleta de empeño PDF", e);
+        }
+    }
+
+    private static void safeOpenPdf(File file) {
+        try {
+            if (!GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(file);
+            }
+        } catch (Exception ex) {
+            log.warn("No se pudo abrir automáticamente el archivo PDF: {}", ex.getMessage());
         }
     }
 }

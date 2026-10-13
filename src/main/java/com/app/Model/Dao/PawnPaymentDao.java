@@ -13,10 +13,10 @@ public class PawnPaymentDao extends BaseDao<PawnPayment> {
                 VALUES (?, ?, ?, ?, ?::uuid, ?)
                 RETURNING id, created_at
                 """;
-        return executeInsert(sql, ps -> {
+        return executeInsert(pawnPayment, sql, ps -> {
             ps.setInt(1, pawnPayment.getPawnId());
             ps.setBigDecimal(2, pawnPayment.getAmount());
-            ps.setDate(3, Date.valueOf(pawnPayment.getPaymentDate()));
+            ps.setDate(3, Date.valueOf(pawnPayment.getPaymentDate() != null ? pawnPayment.getPaymentDate() : java.time.LocalDate.now()));
             ps.setString(4, pawnPayment.getNotes());
             ps.setString(5, pawnPayment.getCreateByEmployeeId());
             ps.setBoolean(6, pawnPayment.isMissed());

@@ -58,7 +58,7 @@ public class PurchaseDao extends BaseDao<Purchase> {
                 VALUES (?::uuid, ?, ?, ?, ?)
                 RETURNING id, purchase_date
                 """;
-        return executeInsert(sql, ps -> setParams(ps, purchase), rs -> {
+        return executeInsert(purchase, sql, ps -> setParams(ps, purchase), rs -> {
             try {
                 purchase.setId(rs.getInt("id"));
                 Timestamp ts = rs.getTimestamp("purchase_date");

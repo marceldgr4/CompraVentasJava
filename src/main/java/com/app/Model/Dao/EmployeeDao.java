@@ -32,7 +32,7 @@ public class EmployeeDao extends BaseDao<Employee> {
 
     public Employee save(Employee employee) throws SQLException {
         String sql = "INSERT INTO public.employees (id, email, full_name, rol, active) VALUES (?::uuid, ?, ?, ?::role_user, ?) RETURNING created_at, updated_at";
-        return executeInsert(sql, ps -> {
+        return executeInsert(employee, sql, ps -> {
             ps.setString(1, employee.getId());
             ps.setString(2, employee.getEmail());
             ps.setString(3, employee.getFullName());

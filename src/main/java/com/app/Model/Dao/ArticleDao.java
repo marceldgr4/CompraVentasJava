@@ -29,6 +29,19 @@ public class ArticleDao extends BaseDao<Article> {
         return executeSingle(sql, ps -> ps.setInt(1, id), ArticleDao::mapRow);
     }
 
+    public Optional<Article> findById(Connection con, int id) throws SQLException {
+        String sql = "SELECT " + SELECT_COLS + " FROM public.articles WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     public List<Article> findByName(String name) throws SQLException {
         String sql = "SELECT " + SELECT_COLS + " FROM public.articles " +
                 "WHERE LOWER(name_article) LIKE LOWER(?) ORDER BY name_article ASC";
@@ -57,7 +70,7 @@ public class ArticleDao extends BaseDao<Article> {
                 VALUES (?, ?, ?, ?::article_category, ?::source_type, ?::item_state, ?, ?, ?)
                 RETURNING id, created_at, updated_at
                 """;
-        return executeInsert(sql, ps -> setArticleParams(ps, article), rs -> {
+        return executeInsert(article, sql, ps -> setArticleParams(ps, article), rs -> {
             try {
                 article.setId(rs.getInt("id"));
                 Timestamp created = rs.getTimestamp("created_at");

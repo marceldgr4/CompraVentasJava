@@ -67,7 +67,7 @@ public abstract class BaseDao<T> {
     /**
      * Ejecuta una inserción y retorna el objeto con su ID generado.
      */
-    protected T executeInsert(String sql, SqlSetter setter, Consumer<ResultSet> idSetter) throws SQLException {
+    protected T executeInsert(T entity, String sql, SqlSetter setter, Consumer<ResultSet> idSetter) throws SQLException {
         try (Connection con = ConnectionPool.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             if (setter != null) setter.set(ps);
@@ -77,7 +77,14 @@ public abstract class BaseDao<T> {
                 }
             }
         }
-        return null; // El objeto original se modifica vía idSetter
+        return entity;
+    }
+
+    /**
+     * Sobrecarga de conveniencia para compatibilidad hacia atrás.
+     */
+    protected T executeInsert(String sql, SqlSetter setter, Consumer<ResultSet> idSetter) throws SQLException {
+        return executeInsert(null, sql, setter, idSetter);
     }
 
     /**
@@ -108,9 +115,19 @@ public abstract class BaseDao<T> {
 
     /**
      * Helper para limpiar números de teléfono.
+     * Retorna null si la cadena está vacía o no contiene dígitos.
      */
     protected String sanitizePhone(String phone) {
-        if (phone == null) return null;
-        return phone.replaceAll("[^0-9+]", "");
+        if (phone == null || phone.isBlank()) return null;
+        String clean = phone.replaceAll("[^0-9+]", "");
+        return clean.isBlank() ? null : clean;
+    }
+
+    /**
+     * Helper para sanear cadenas opcionales: devuelve null si es nula o vacía.
+     */
+    protected String sanitizeString(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim();
     }
 }

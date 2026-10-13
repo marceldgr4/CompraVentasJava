@@ -78,7 +78,7 @@ public class PawnDao extends BaseDao<Pawn> {
                 VALUES (?::uuid, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?::pawn_status, ?)
                 RETURNING id, updated_at
                 """;
-        return executeInsert(sql, ps -> setPawnParams(ps, pawn), rs -> {
+        return executeInsert(pawn, sql, ps -> setPawnParams(ps, pawn), rs -> {
             try {
                 pawn.setId(rs.getInt("id"));
                 Timestamp ts = rs.getTimestamp("updated_at");

@@ -12,6 +12,7 @@ public class SalesDetail {
     private int articleId;
     private int amount;
     private BigDecimal unitPrice;   // Precio unitario al momento de la venta
+    private String articleName;
 
     public SalesDetail() {}
 
@@ -33,7 +34,15 @@ public class SalesDetail {
         this.id = id;
     }
 
+    public SalesDetail(int id, int saleId, int articleId, int amount, BigDecimal unitPrice, String articleName) {
+        this(id, saleId, articleId, amount, unitPrice);
+        this.articleName = articleName;
+    }
+
     // ---- Getters / Setters ----------------------------------------
+
+    public String getArticleName() { return articleName; }
+    public void setArticleName(String articleName) { this.articleName = articleName; }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
