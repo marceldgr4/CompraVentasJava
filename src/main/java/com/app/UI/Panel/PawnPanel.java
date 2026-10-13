@@ -193,7 +193,7 @@ public class PawnPanel extends JPanel {
                         loadData();
                         com.app.Utils.pdf.PdfInvoiceGenerator.generatePawnInvoice(dlg.getExistingPawn());
                     },
-                    (msg, ex) -> {}
+                    (msg, ex) -> showError(msg)
                 );
             } else {
                 pawnController.create(dlg.getExistingPawn(), this,
@@ -201,7 +201,7 @@ public class PawnPanel extends JPanel {
                         loadData();
                         com.app.Utils.pdf.PdfInvoiceGenerator.generatePawnInvoice(dlg.getExistingPawn());
                     },
-                    (msg, ex) -> {}
+                    (msg, ex) -> showError(msg)
                 );
             }
         }
@@ -233,7 +233,7 @@ public class PawnPanel extends JPanel {
         if (dlg.isConfirmed()) {
             pawnController.update(dlg.getExistingPawn(), this,
                 this::loadData,
-                (msg, ex) -> {}
+                (msg, ex) -> showError(msg)
             );
         }
     }
@@ -244,7 +244,7 @@ public class PawnPanel extends JPanel {
         
         pawnController.markAsReturned(selected.getId(), this,
             this::loadData,
-            (msg, ex) -> {}
+            (msg, ex) -> showError(msg)
         );
     }
 
@@ -254,7 +254,7 @@ public class PawnPanel extends JPanel {
         
         pawnController.delete(selected.getId(), this,
             this::loadData,
-            (msg, ex) -> {}
+            (msg, ex) -> showError(msg)
         );
     }
 

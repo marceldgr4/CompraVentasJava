@@ -17,6 +17,7 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 
 import java.awt.Desktop;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 

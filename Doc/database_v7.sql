@@ -17,8 +17,29 @@
 -- ============================================================
 
 -- ============================================================
--- 0. LIMPIEZA TOTAL (Idempotencia)
+-- 0. BOOTSTRAP ENTORNOS STANDALONE / DOCKER & LIMPIEZA
 -- ============================================================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+        CREATE ROLE anon NOLOGIN;
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+        CREATE ROLE authenticated NOLOGIN;
+    END IF;
+END
+$$;
+
+CREATE SCHEMA IF NOT EXISTS auth;
+
+CREATE TABLE IF NOT EXISTS auth.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE,
+    raw_user_meta_data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- Triggers
 DROP TRIGGER IF EXISTS on_auth_user_created       ON auth.users;

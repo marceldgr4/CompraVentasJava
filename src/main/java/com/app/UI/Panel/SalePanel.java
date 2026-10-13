@@ -220,7 +220,7 @@ public class SalePanel extends JPanel {
         
         saleController.delete(id, this,
             this::loadAll,
-            (msg, ex) -> {} // Error already shown by controller
+            (msg, ex) -> showError(msg)
         );
     }
 

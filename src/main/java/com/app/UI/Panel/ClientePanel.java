@@ -106,7 +106,7 @@ public class ClientePanel extends BasePanel {
         ClienteDialog dlg = new ClienteDialog((JFrame) SwingUtilities.getWindowAncestor(this), null);
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {
-            clienteController.create(dlg.getCliente(), this, this::refresh, (m, e) -> {});
+            clienteController.create(dlg.getCliente(), this, this::refresh, (m, e) -> showError(m));
         }
     }
 
@@ -119,7 +119,7 @@ public class ClientePanel extends BasePanel {
         if (dlg.isConfirmed()) {
             Cliente updated = dlg.getCliente();
             updated.setId(selected.getId());
-            clienteController.update(updated, this, this::refresh, (m, e) -> {});
+            clienteController.update(updated, this, this::refresh, (m, e) -> showError(m));
         }
     }
 
@@ -128,7 +128,7 @@ public class ClientePanel extends BasePanel {
         if (selected == null) return;
         
         if (showConfirmation("¿Está seguro de eliminar al cliente '" + selected.getFullName() + "'?", "Confirmar")) {
-            clienteController.delete(selected.getId(), selected.getFullName(), this, this::refresh, (m, e) -> {});
+            clienteController.delete(selected.getId(), selected.getFullName(), this, this::refresh, (m, e) -> showError(m));
         }
     }
 

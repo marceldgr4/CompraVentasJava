@@ -116,7 +116,9 @@ public class EmployeePanel extends BasePanel {
 
         EmployeeEditDialog dlg = new EmployeeEditDialog((JFrame) SwingUtilities.getWindowAncestor(this), selected);
         dlg.setVisible(true);
-        if (dlg.isConfirmed()) refresh();
+        if (dlg.isConfirmed()) {
+            employeeController.update(dlg.getEmployee(), this, this::refresh, (m, e) -> showError(m));
+        }
     }
 
     private void toggleActive() {

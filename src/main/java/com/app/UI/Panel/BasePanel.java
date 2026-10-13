@@ -57,7 +57,7 @@ public abstract class BasePanel extends JPanel {
         return header;
     }
 
-    /** Construye un panel de búsqueda estándar. */
+    /** Construye un panel de búsqueda estándar con debouncing en tiempo real. */
     protected JPanel buildSearchPanel(String placeholder, JTextField searchField, ActionListener searchAction) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         panel.setOpaque(false);
@@ -66,6 +66,14 @@ public abstract class BasePanel extends JPanel {
         searchField.setFont(UIConstants.FONT_REGULAR);
         searchField.putClientProperty("JTextField.placeholderText", placeholder);
         searchField.addActionListener(searchAction);
+
+        Timer debounceTimer = new Timer(350, searchAction);
+        debounceTimer.setRepeats(false);
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { debounceTimer.restart(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { debounceTimer.restart(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { debounceTimer.restart(); }
+        });
 
         JButton btnSearch = ButtonFactory.createPrimaryButton("Buscar", "search");
         btnSearch.setPreferredSize(new Dimension(120, 36));

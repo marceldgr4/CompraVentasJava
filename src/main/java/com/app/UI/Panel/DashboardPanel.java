@@ -52,8 +52,8 @@ public class DashboardPanel extends JPanel {
         panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 16, 0));
 
         String greeting = greetingByHour();
-        String fullName = SessionManager.getInstance().getFullName();
-        JLabel lblGreeting = new JLabel(greeting + ", " + (fullName != null ? fullName : "Usuario"));
+        String fullName = SessionManager.isActive() ? SessionManager.getFullName() : "Usuario";
+        JLabel lblGreeting = new JLabel(greeting + ", " + (fullName != null && !fullName.isBlank() ? fullName : "Usuario"));
         lblGreeting.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblGreeting.setForeground(new Color(30, 42, 74));
 

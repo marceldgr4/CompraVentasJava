@@ -14,9 +14,13 @@ public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                com.formdev.flatlaf.FlatLightLaf.setup();
             } catch (Exception e) {
-                log.warn("No se pudo cargar el LookAndFeel del sistema, usando el por defecto.", e);
+                try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (Exception ex) {
+                    log.warn("No se pudo cargar el LookAndFeel del sistema, usando el por defecto.", ex);
+                }
             }
             new LoginFrame().setVisible(true);
         });

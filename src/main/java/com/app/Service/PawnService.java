@@ -30,7 +30,8 @@ public class PawnService {
      * Admin/Empleado ven todos; en caso de rol futuro restringido, filtra por empleado.
      */
 
-    // -------------------------------------------------    public List<Pawn> getAll() throws ServiceException {
+    // -------------------------------------------------------
+    public List<Pawn> getAll() throws ServiceException {
         try {
             return pawnDao.findAll();
         } catch (SQLException ex) {

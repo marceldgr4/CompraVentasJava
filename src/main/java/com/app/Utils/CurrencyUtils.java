@@ -11,7 +11,7 @@ import java.util.Locale;
 public final class CurrencyUtils {
 
     /** Locale colombiano para formato de moneda (COP). */
-    private static final Locale LOCALE_CO = new Locale("es", "CO");
+    private static final Locale LOCALE_CO = Locale.of("es", "CO");
 
     private CurrencyUtils() {
         // Clase utilitaria: no instanciar

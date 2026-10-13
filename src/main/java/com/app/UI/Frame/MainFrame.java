@@ -334,6 +334,7 @@ public class MainFrame extends JFrame {
         int idx = indexOf(PANEL_IDS, panelId);
         if (idx >= 0) lblTopTitle.setText(NAV_LABELS[idx]);
         navItems.forEach(ni -> ni.setSelected(ni.panelId.equals(panelId)));
+        refreshActivePanel();
     }
 
     private void toggleSidebar() {

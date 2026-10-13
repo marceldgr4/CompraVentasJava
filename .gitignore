@@ -1,4 +1,6 @@
 .env
+data_local/
+logfile
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

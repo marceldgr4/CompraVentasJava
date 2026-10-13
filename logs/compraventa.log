@@ -1,9 +1,10 @@
-2026-09-22 19:49:32.744 [AWT-EventQueue-0] ERROR com.app.App -- Error al procesar empeños vencidos en el arranque
+2026-10-13 00:42:22.431 [SwingWorker-pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+2026-10-13 00:42:25.038 [AWT-EventQueue-0] ERROR com.app.App -- Error al procesar empeños vencidos en el arranque
 java.util.concurrent.ExecutionException: java.lang.ExceptionInInitializerError
 	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
 	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:191)
 	at java.desktop/javax.swing.SwingWorker.get(SwingWorker.java:612)
-	at com.app.App$1.done(App.java:36)
+	at com.app.App$1.done(App.java:40)
 	at java.desktop/javax.swing.SwingWorker$4.run(SwingWorker.java:749)
 	at java.desktop/javax.swing.SwingWorker$DoSubmitAccumulativeRunnable.run(SwingWorker.java:847)
 	at java.desktop/sun.swing.AccumulativeRunnable.run(AccumulativeRunnable.java:112)
@@ -25,90 +26,9 @@ java.util.concurrent.ExecutionException: java.lang.ExceptionInInitializerError
 	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
 Caused by: java.lang.ExceptionInInitializerError: null
 	at com.app.Model.Dao.PawnDao.expireOverduePawns(PawnDao.java:135)
-	at com.app.Service.PawnService.processOverduePawns(PawnService.java:219)
-	at com.app.App$1.doInBackground(App.java:30)
-	at com.app.App$1.doInBackground(App.java:27)
-	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
-	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: java.lang.RuntimeException: Variable de entorno 'DB_URL' no encontrado verificar tu archivo .env
-	at com.app.Config.AppConfig.get(AppConfig.java:14)
-	at com.app.Infrastructure.DataBase.ConnectionPool.<clinit>(ConnectionPool.java:17)
-	... 10 common frames omitted
-2026-09-22 19:49:56.281 [AWT-EventQueue-0] ERROR com.app.App -- Error al procesar empeños vencidos en el arranque
-java.util.concurrent.ExecutionException: java.lang.ExceptionInInitializerError
-	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
-	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:191)
-	at java.desktop/javax.swing.SwingWorker.get(SwingWorker.java:612)
-	at com.app.App$1.done(App.java:36)
-	at java.desktop/javax.swing.SwingWorker$4.run(SwingWorker.java:749)
-	at java.desktop/javax.swing.SwingWorker$DoSubmitAccumulativeRunnable.run(SwingWorker.java:847)
-	at java.desktop/sun.swing.AccumulativeRunnable.run(AccumulativeRunnable.java:112)
-	at java.desktop/javax.swing.SwingWorker$DoSubmitAccumulativeRunnable.actionPerformed(SwingWorker.java:857)
-	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
-	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
-	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
-Caused by: java.lang.ExceptionInInitializerError: null
-	at com.app.Model.Dao.PawnDao.expireOverduePawns(PawnDao.java:135)
-	at com.app.Service.PawnService.processOverduePawns(PawnService.java:219)
-	at com.app.App$1.doInBackground(App.java:30)
-	at com.app.App$1.doInBackground(App.java:27)
-	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
-	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: java.lang.RuntimeException: Variable de entorno 'DB_URL' no encontrado verificar tu archivo .env
-	at com.app.Config.AppConfig.get(AppConfig.java:14)
-	at com.app.Infrastructure.DataBase.ConnectionPool.<clinit>(ConnectionPool.java:17)
-	... 10 common frames omitted
-2026-09-22 19:51:42.785 [SwingWorker-pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
-2026-09-22 19:51:45.687 [AWT-EventQueue-0] ERROR com.app.App -- Error al procesar empeños vencidos en el arranque
-java.util.concurrent.ExecutionException: java.lang.ExceptionInInitializerError
-	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
-	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:191)
-	at java.desktop/javax.swing.SwingWorker.get(SwingWorker.java:612)
-	at com.app.App$1.done(App.java:36)
-	at java.desktop/javax.swing.SwingWorker$4.run(SwingWorker.java:749)
-	at java.desktop/javax.swing.SwingWorker$DoSubmitAccumulativeRunnable.run(SwingWorker.java:847)
-	at java.desktop/sun.swing.AccumulativeRunnable.run(AccumulativeRunnable.java:112)
-	at java.desktop/javax.swing.SwingWorker$DoSubmitAccumulativeRunnable.actionPerformed(SwingWorker.java:857)
-	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
-	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
-	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
-Caused by: java.lang.ExceptionInInitializerError: null
-	at com.app.Model.Dao.PawnDao.expireOverduePawns(PawnDao.java:135)
-	at com.app.Service.PawnService.processOverduePawns(PawnService.java:219)
-	at com.app.App$1.doInBackground(App.java:30)
-	at com.app.App$1.doInBackground(App.java:27)
+	at com.app.Service.PawnService.processOverduePawns(PawnService.java:235)
+	at com.app.App$1.doInBackground(App.java:34)
+	at com.app.App$1.doInBackground(App.java:31)
 	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
 	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
@@ -136,8 +56,8 @@ Caused by: org.postgresql.util.PSQLException: FATAL: password authentication fai
 	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
 	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:550)
 	... 13 common frames omitted
-2026-09-22 19:52:43.206 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login : admin@gmail.com
-2026-09-22 19:52:43.248 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+2026-10-13 00:42:59.725 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin@gmail.com
+2026-10-13 00:42:59.766 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
 java.lang.IllegalArgumentException: URI with undefined scheme
 	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
 	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
@@ -153,9 +73,9 @@ java.lang.IllegalArgumentException: URI with undefined scheme
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
-2026-09-22 19:52:43.249 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@gmail.com: URI with undefined scheme
-2026-09-22 19:52:44.831 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login : admin@gmail.com
-2026-09-22 19:52:44.866 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+2026-10-13 00:42:59.767 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@gmail.com: URI with undefined scheme
+2026-10-13 00:43:19.036 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin@cv.com
+2026-10-13 00:43:19.070 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
 java.lang.IllegalArgumentException: URI with undefined scheme
 	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
 	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
@@ -171,4 +91,95 @@ java.lang.IllegalArgumentException: URI with undefined scheme
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
-2026-09-22 19:52:44.867 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@gmail.com: URI with undefined scheme
+2026-10-13 00:43:19.071 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@cv.com: URI with undefined scheme
+2026-10-13 00:43:50.204 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin@cv.com
+2026-10-13 00:43:50.266 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+java.lang.IllegalArgumentException: URI with undefined scheme
+	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:71)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:43)
+	at com.app.Service.AuthService.Login(AuthService.java:40)
+	at com.app.Controllers.AuthController.lambda$login$0(AuthController.java:26)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:63)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:60)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-13 00:43:50.277 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@cv.com: URI with undefined scheme
+2026-10-13 00:43:56.772 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin@cv.com
+2026-10-13 00:43:56.807 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+java.lang.IllegalArgumentException: URI with undefined scheme
+	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:71)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:43)
+	at com.app.Service.AuthService.Login(AuthService.java:40)
+	at com.app.Controllers.AuthController.lambda$login$0(AuthController.java:26)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:63)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:60)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-13 00:43:56.808 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@cv.com: URI with undefined scheme
+2026-10-13 00:43:58.199 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin@cv.com
+2026-10-13 00:43:58.237 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+java.lang.IllegalArgumentException: URI with undefined scheme
+	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:71)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:43)
+	at com.app.Service.AuthService.Login(AuthService.java:40)
+	at com.app.Controllers.AuthController.lambda$login$0(AuthController.java:26)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:63)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:60)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-13 00:43:58.238 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin@cv.com: URI with undefined scheme
+2026-10-13 00:50:20.104 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin_prin@cv.com
+2026-10-13 00:50:20.142 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+java.lang.IllegalArgumentException: URI with undefined scheme
+	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:71)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:43)
+	at com.app.Service.AuthService.Login(AuthService.java:40)
+	at com.app.Controllers.AuthController.lambda$login$0(AuthController.java:26)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:63)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:60)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-13 00:50:20.143 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin_prin@cv.com: URI with undefined scheme
+2026-10-13 00:50:21.430 [AWT-EventQueue-0] INFO  com.app.Controllers.AuthController -- Iniciando login para: admin_prin@cv.com
+2026-10-13 00:50:21.465 [AWT-EventQueue-0] ERROR com.app.Controllers.AuthController -- Error en operación void asíncrona: URI with undefined scheme
+java.lang.IllegalArgumentException: URI with undefined scheme
+	at java.net.http/jdk.internal.net.http.common.Utils.newIAE(Utils.java:350)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.checkURI(HttpRequestBuilderImpl.java:79)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:71)
+	at java.net.http/jdk.internal.net.http.HttpRequestBuilderImpl.uri(HttpRequestBuilderImpl.java:43)
+	at com.app.Service.AuthService.Login(AuthService.java:40)
+	at com.app.Controllers.AuthController.lambda$login$0(AuthController.java:26)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:63)
+	at com.app.Controllers.BaseController$2.doInBackground(BaseController.java:60)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-13 00:50:21.466 [AWT-EventQueue-0] WARN  com.app.Controllers.AuthController -- Login fallido para admin_prin@cv.com: URI with undefined scheme
+2026-10-13 00:55:20.318 [main] INFO  com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
